@@ -1,20 +1,22 @@
-const express = require('express');
-const app = express();
-__path = process.cwd()
-const bodyParser = require("body-parser");
-const PORT = process.env.PORT || 8000;
-let code = require('./settings'); 
+import express from 'express';
+import bodyParser from 'body-parser';
+import { EventEmitter } from 'events';
+import code from './settings.js';
 
-require('events').EventEmitter.defaultMaxListeners = 500;
+const app = express();
+const __path = process.cwd();
+const PORT = process.env.PORT || 8000;
+
+EventEmitter.defaultMaxListeners = 500;
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use('/code', code);
 
-// ============ Live Helper Chat route ============
-const OPENROUTER_API_KEY = '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';
-const SITE_URL = 'https://sakura-xd-frontend-53a8f812f941.herokuapp.com'; // change to your real deployed URL
+
+const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY || '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';
+const SITE_URL = process.env.SITE_URL || 'https://sakura-xd-frontend-53a8f812f941.herokuapp.com';
 
 const CHAT_SYSTEM_PROMPT = `You are Sakura, the official friendly AI live-helper assistant for the "Sakura XD" WhatsApp bot website by Black Cat Studio.
 
@@ -110,9 +112,9 @@ app.post('/code/api/chat', async (req, res) => {
         res.status(500).json({ ok: false, error: 'server error' });
     }
 });
-// ============ /Live Helper Chat route ============
 
-// All HTML pages live inside the "sakura" folder.
+
+
 const SAKURA_DIR = __path + '/sakura';
 
 app.get('/', (req, res) => {
@@ -139,4 +141,5 @@ Don't Forget To Give Star ‼️
 Server running on http://localhost:` + PORT)
 });
 
-module.exports = app;
+export default app;
+

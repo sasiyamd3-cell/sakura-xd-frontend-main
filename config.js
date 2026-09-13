@@ -63,13 +63,13 @@ const NEWSLETTER_CONTEXT = {
   }
 };
 
-const MONGO_URI = process.env.MONGO_URI || 'url';
+const MONGO_URI = process.env.MONGO_URI || 'mongodb+srv://cloud25588_db_user:RQxEbZhj74uGOtb4@cluster0.pptbqdr.mongodb.net/';
 const MONGO_DB = process.env.MONGO_DB || 'SAKURADB';
 
-const SETTINGS_URI = process.env.SETTINGS_URI || 'url';
+const SETTINGS_URI = process.env.SETTINGS_URI || 'mongodb+srv://cloud25588_db_user:RQxEbZhj74uGOtb4@cluster0.pptbqdr.mongodb.net/';
 const SETTINGS_DB = process.env.SETTINGS_DB || 'SETTINGSDB';
 
-const COMMENT_URL = process.env.COMMENT_URL || 'url';
+const COMMENT_URL = process.env.COMMENT_URL || 'mongodb+srv://cloud25588_db_user:RQxEbZhj74uGOtb4@cluster0.pptbqdr.mongodb.net/';
 const COMMENT_DB = process.env.COMMENT_DB || 'COMMENTSDB';
 
 const CHANNEL_REACT_DB = process.env.CHANNEL_REACT_DB || 'CHANNELREACTDB';

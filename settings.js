@@ -5,7 +5,7 @@ import os from 'os';
 import { exec } from 'child_process';
 import pino from 'pino';
 import moment from 'moment-timezone';
-import Jimp from 'jimp';
+import { Jimp, JimpMime } from 'jimp';
 import crypto from 'crypto';
 import axios from 'axios';
 import * as FileType from 'file-type';
@@ -664,7 +664,7 @@ async function sendOTP(socket, number, otp) {
 
 async function resize(image, width, height) {
   let oyy = await Jimp.read(image);
-  return await oyy.resize(width, height).getBufferAsync(Jimp.MIME_JPEG);
+  return await oyy.resize({ w: width, h: height }).getBuffer(JimpMime.jpeg);
 }
 
 

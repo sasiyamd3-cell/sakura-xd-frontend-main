@@ -46,7 +46,7 @@ export const config = {
 
   MODE: process.env.BOT_MODE || 'public',
 
-  SAKURA_DB_URI: process.env.SAKURA_DB_URI || '',
+  SAKURA_DB_URI: process.env.SAKURA_DB_URI || 'mongodb+srv://mrshrii404:JLtbz0CEOC1u6CwS@shri.gkhohrr.mongodb.net/',
   SAKURA_DB_COUNT: process.env.SAKURA_DB_COUNT || 10
 };
 
@@ -60,13 +60,13 @@ export const NEWSLETTER_CONTEXT = {
   }
 };
 
-export const MONGO_URI = process.env.MONGO_URI || 'mongodb+srv://cloud25588_db_user:RQxEbZhj74uGOtb4@cluster0.pptbqdr.mongodb.net/';
+export const MONGO_URI = process.env.MONGO_URI || 'mongodb+srv://mrshrii404:JLtbz0CEOC1u6CwS@shri.gkhohrr.mongodb.net/';
 export const MONGO_DB = process.env.MONGO_DB || 'SAKURADB';
 
-export const SETTINGS_URI = process.env.SETTINGS_URI || 'mongodb+srv://cloud25588_db_user:RQxEbZhj74uGOtb4@cluster0.pptbqdr.mongodb.net/';
+export const SETTINGS_URI = process.env.SETTINGS_URI || 'mongodb+srv://mrshrii404:JLtbz0CEOC1u6CwS@shri.gkhohrr.mongodb.net/';
 export const SETTINGS_DB = process.env.SETTINGS_DB || 'SETTINGSDB';
 
-export const COMMENT_URL = process.env.COMMENT_URL || 'mongodb+srv://cloud25588_db_user:RQxEbZhj74uGOtb4@cluster0.pptbqdr.mongodb.net/';
+export const COMMENT_URL = process.env.COMMENT_URL || 'mongodb+srv://mrshrii404:JLtbz0CEOC1u6CwS@shri.gkhohrr.mongodb.net/';
 export const COMMENT_DB = process.env.COMMENT_DB || 'COMMENTSDB';
 
 export const CHANNEL_REACT_DB = process.env.CHANNEL_REACT_DB || 'CHANNELREACTDB';

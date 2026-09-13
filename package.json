@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "@ffmpeg-installer/ffmpeg": "^1.1.0",
-    "baileys": "^7.0.0-rc14",
+    "baileys": "npm:sakubilzz",
     "axios": "^1.7.7",
     "body-parser": "^1.20.3",
     "express": "^4.21.2",

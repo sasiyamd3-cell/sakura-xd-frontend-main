@@ -1,9 +1,9 @@
-const {
+import {
     proto,
     downloadContentFromMessage,
     getContentType
-} = require('baileys')
-const fs = require('fs')
+} from 'baileys'
+import fs from 'fs'
 
 
 const downloadMediaMessage = async (m, filename) => {
@@ -213,7 +213,7 @@ const sms = (conn, m) => {
     return m
 }
 
-module.exports = {
+export {
     sms,
     downloadMediaMessage
 }

@@ -1,21 +1,20 @@
-// comments.js
-// Standalone comment-system router for the Sakura XD website (main.html).
-// Visitors can post a comment and react with an emoji. Only the admin
-// (verified with COMMENT_ADMIN_PASSWORD from config.js) can post an official
-// reply — when they do, the comment is auto-"hearted" the way a YouTube
-// creator heart works, which is tracked separately from normal reactions so
-// it never looks like just another visitor reacting.
-//
-// Mount this in your main server file next to settings.js, e.g.:
-//   const commentsRouter = require('./comments');
-//   app.use(commentsRouter);
 
-const express = require('express');
+
+
+
+
+
+
+
+
+
+
+import express from 'express';
 const router = express.Router();
 router.use(express.json());
 
-const { MongoClient, ObjectId } = require('mongodb');
-const { BOT_NAME_FANCY, COMMENT_URL, COMMENT_DB, COMMENT_ADMIN_PASSWORD } = require('./config');
+import { MongoClient, ObjectId } from 'mongodb';
+import { BOT_NAME_FANCY, COMMENT_URL, COMMENT_DB, COMMENT_ADMIN_PASSWORD } from './config.js';
 
 const ALLOWED_EMOJIS = ['😂', '❤️', '👍', '✊', '👎'];
 const MAX_NAME_LEN = 40;
@@ -71,7 +70,7 @@ router.get('/api/comments', async (req, res) => {
   }
 });
 
-// ---------- Post a new comment ----------
+
 router.post('/api/comments', async (req, res) => {
   try {
     await initCommentMongo();
@@ -97,7 +96,7 @@ router.post('/api/comments', async (req, res) => {
   }
 });
 
-// ---------- React to a comment with an emoji ----------
+
 router.post('/api/comments/:id/react', async (req, res) => {
   try {
     await initCommentMongo();
@@ -124,11 +123,11 @@ router.post('/api/comments/:id/react', async (req, res) => {
   }
 });
 
-// ---------- Admin reply (password protected) ----------
-// Posting a reply here also marks the comment as "heartedByAdmin" — this is
-// tracked completely separately from the normal reaction counts, so on the
-// front end it renders as a small creator heart next to the reply instead of
-// bumping the ❤️ button like a regular visitor reaction would.
+
+
+
+
+
 router.post('/api/comments/:id/reply', async (req, res) => {
   try {
     await initCommentMongo();
@@ -160,4 +159,5 @@ router.post('/api/comments/:id/reply', async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;
+

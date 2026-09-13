@@ -1,22 +1,21 @@
-const express = require('express');
-const fs = require('fs-extra');
-const path = require('path');
-const os = require('os');
-const { exec } = require('child_process');
-const router = express.Router();
-router.use(express.json());
-const pino = require('pino');
-const moment = require('moment-timezone');
-const Jimp = require('jimp');
-const crypto = require('crypto');
-const axios = require('axios');
-const FileType = require('file-type');
-const fetch = require('node-fetch');
-const { MongoClient } = require('mongodb');
-const { sms, downloadMediaMessage } = require("./msg");
+import express from 'express';
+import fs from 'fs-extra';
+import path from 'path';
+import os from 'os';
+import { exec } from 'child_process';
+import pino from 'pino';
+import moment from 'moment-timezone';
+import Jimp from 'jimp';
+import crypto from 'crypto';
+import axios from 'axios';
+import * as FileType from 'file-type';
+import fetch from 'node-fetch';
+import { MongoClient } from 'mongodb';
+import { sms, downloadMediaMessage } from './msg.js';
+import { fileURLToPath } from 'url';
 
-const {
-  default: makeWASocket,
+import {
+  default as makeWASocket,
   useMultiFileAuthState,
   delay,
   getContentType,
@@ -25,9 +24,9 @@ const {
   jidNormalizedUser,
   downloadContentFromMessage,
   DisconnectReason
-} = require('baileys');
+} from 'baileys';
 
-const {
+import {
   BOT_NAME_FANCY,
   config,
   NEWSLETTER_CONTEXT,
@@ -36,9 +35,15 @@ const {
   SETTINGS_URI,
   SETTINGS_DB,
   CHANNEL_REACT_DB
-} = require('./config');
+} from './config.js';
 
-const commentsRouter = require('./comments');
+import commentsRouter from './comments.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const router = express.Router();
+router.use(express.json());
 
 let mongoClient, mongoDB;
 let numbersCol, adminsCol, newsletterCol;
@@ -1277,4 +1282,5 @@ initMongo().catch(err => console.warn('Mongo init failed at startup', err));
 initSettingsMongo().catch(err => console.warn('Settings Mongo init failed at startup', err));
 initChannelReactMongo().catch(err => console.warn('Channel-react Mongo init failed at startup', err));
 
-module.exports = router;
+export default router;
+

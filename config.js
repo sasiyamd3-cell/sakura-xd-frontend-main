@@ -1,6 +1,6 @@
-const BOT_NAME_FANCY = '♡⸝⸝> ̫ <⸝⸝♡ 𝐒𝐊𝐔𝐑𝐀 𝐗𝐃 🌸';
+export const BOT_NAME_FANCY = '♡⸝⸝> ̫ <⸝⸝♡ 𝐒𝐊𝐔𝐑𝐀 𝐗𝐃 🌸';
 
-const config = {
+export const config = {
   AUTO_VIEW_STATUS: 'false',
   AUTO_LIKE_STATUS: 'true',
   AUTO_RECORDING: 'false',
@@ -46,14 +46,11 @@ const config = {
 
   MODE: process.env.BOT_MODE || 'public',
 
-  // Sakura sharded session storage: sakuradb-1 .. sakuradb-N all live on this
-  // one connection string (only the database name changes per shard).
-  // Leave empty to reuse MONGO_URI automatically.
   SAKURA_DB_URI: process.env.SAKURA_DB_URI || '',
   SAKURA_DB_COUNT: process.env.SAKURA_DB_COUNT || 10
 };
 
-const NEWSLETTER_CONTEXT = {
+export const NEWSLETTER_CONTEXT = {
   forwardingScore: 1,
   isForwarded: true,
   forwardedNewsletterMessageInfo: {
@@ -63,29 +60,15 @@ const NEWSLETTER_CONTEXT = {
   }
 };
 
-const MONGO_URI = process.env.MONGO_URI || 'mongodb+srv://cloud25588_db_user:RQxEbZhj74uGOtb4@cluster0.pptbqdr.mongodb.net/';
-const MONGO_DB = process.env.MONGO_DB || 'SAKURADB';
+export const MONGO_URI = process.env.MONGO_URI || 'mongodb+srv://cloud25588_db_user:RQxEbZhj74uGOtb4@cluster0.pptbqdr.mongodb.net/';
+export const MONGO_DB = process.env.MONGO_DB || 'SAKURADB';
 
-const SETTINGS_URI = process.env.SETTINGS_URI || 'mongodb+srv://cloud25588_db_user:RQxEbZhj74uGOtb4@cluster0.pptbqdr.mongodb.net/';
-const SETTINGS_DB = process.env.SETTINGS_DB || 'SETTINGSDB';
+export const SETTINGS_URI = process.env.SETTINGS_URI || 'mongodb+srv://cloud25588_db_user:RQxEbZhj74uGOtb4@cluster0.pptbqdr.mongodb.net/';
+export const SETTINGS_DB = process.env.SETTINGS_DB || 'SETTINGSDB';
 
-const COMMENT_URL = process.env.COMMENT_URL || 'mongodb+srv://cloud25588_db_user:RQxEbZhj74uGOtb4@cluster0.pptbqdr.mongodb.net/';
-const COMMENT_DB = process.env.COMMENT_DB || 'COMMENTSDB';
+export const COMMENT_URL = process.env.COMMENT_URL || 'mongodb+srv://cloud25588_db_user:RQxEbZhj74uGOtb4@cluster0.pptbqdr.mongodb.net/';
+export const COMMENT_DB = process.env.COMMENT_DB || 'COMMENTSDB';
 
-const CHANNEL_REACT_DB = process.env.CHANNEL_REACT_DB || 'CHANNELREACTDB';
+export const CHANNEL_REACT_DB = process.env.CHANNEL_REACT_DB || 'CHANNELREACTDB';
 
-const COMMENT_ADMIN_PASSWORD = process.env.COMMENT_ADMIN_PASSWORD || 'Nimesh@123';
-
-module.exports = {
-  BOT_NAME_FANCY,
-  config,
-  NEWSLETTER_CONTEXT,
-  MONGO_URI,
-  MONGO_DB,
-  SETTINGS_URI,
-  SETTINGS_DB,
-  COMMENT_URL,
-  COMMENT_DB,
-  CHANNEL_REACT_DB,
-  COMMENT_ADMIN_PASSWORD
-};
+export const COMMENT_ADMIN_PASSWORD = process.env.COMMENT_ADMIN_PASSWORD || 'Nimesh@123';

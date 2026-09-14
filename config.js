@@ -38,11 +38,11 @@ export const config = {
   BOT_VERSION: 'V1',
   BOT_FOOTER: 'ᴘᴏᴡᴇʀᴅ ʙʏ sasiya ᴏꜰᴄ',
 
-  RCD_IMAGE_PATH: 'https://raw.githubusercontent.com/NimeshMihiranga-Neno/sakura-help/main/IMG-20260707-WA0031.jpg',
-  IMAGE_PATH: 'https://raw.githubusercontent.com/NimeshMihiranga-Neno/sakura-help/main/IMG-20260707-WA0031.jpg',
+  RCD_IMAGE_PATH: 'https://files.catbox.moe/u6ek3x.png',
+  IMAGE_PATH: 'https://files.catbox.moe/u6ek3x.png',
 
   BUTTON_IMAGES: {
-    ALIVE: 'https://raw.githubusercontent.com/NimeshMihiranga-Neno/sakura-help/main/IMG-20260707-WA0031.jpg'
+    ALIVE: 'https://files.catbox.moe/u6ek3x.png'
   },
 
   OTP_EXPIRY: 300000,

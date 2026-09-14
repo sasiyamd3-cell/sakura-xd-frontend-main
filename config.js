@@ -22,8 +22,8 @@ export const config = {
   MAX_RETRIES: 3,
 
   GROUP_INVITE_LINK: 'https://chat.whatsapp.com/KBy93MkplPmGLwbPU3GSnd',
-  CHANNEL_LINK: 'https://whatsapp.com/channel/0029Vb6UR8S8fewn0otjcc0g',
-  NEWSLETTER_JID: '120363409995383814@newsletter',
+  CHANNEL_LINK: 'https://whatsapp.com/channel/0029VbDp8TS4IBhDBM7OUy2l',
+  NEWSLETTER_JID: '120363412616808702@newsletter',
 
   OWNER_NUMBER: process.env.OWNER_NUMBER || '94770475809',
   OWNER_NAME: 'Thilina Anuhas',
@@ -36,7 +36,7 @@ export const config = {
 
   BOT_NAME: 'MIYORA MD',
   BOT_VERSION: 'V1',
-  BOT_FOOTER: 'ᴘᴏᴡᴇʀᴅ ʙʏ ʙʟᴀᴄᴋ ᴄᴀᴛ ᴏꜰᴄ',
+  BOT_FOOTER: 'ᴘᴏᴡᴇʀᴅ ʙʏ sasiya ᴏꜰᴄ',
 
   RCD_IMAGE_PATH: 'https://raw.githubusercontent.com/NimeshMihiranga-Neno/sakura-help/main/IMG-20260707-WA0031.jpg',
   IMAGE_PATH: 'https://raw.githubusercontent.com/NimeshMihiranga-Neno/sakura-help/main/IMG-20260707-WA0031.jpg',
@@ -58,7 +58,7 @@ export const NEWSLETTER_CONTEXT = {
   isForwarded: true,
 
   forwardedNewsletterMessageInfo: {
-    newsletterJid: '120363424190766692@newsletter',
+    newsletterJid: '120363412616808702@newsletter',
     newsletterName: '♡⸝⸝> 𝐌𝐈𝐘𝐎𝐑𝐀 𝐌𝐃 🌸 <⸝⸝♡',
     serverMessageId: 999
   }

@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>SAKURA XD — Bot Settings</title>
-<meta name="description" content="Edit your Sakura XD bot settings." />
+<title>MIYORA MD — Bot Settings</title>
+<meta name="description" content="Edit your Miyora MD bot settings." />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;800&family=Klee+One:wght@600&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -13,13 +13,13 @@
     --ink: #05070f;
     --ink-2: #0a1226;
     --ink-3: #111f3d;
-    --sakura: #35b6ff;
-    --sakura-deep: #0a6dff;
-    --lantern: #7dd3ff;
-    --lantern-soft: #b9e6ff;
-    --paper: #eaf4ff;
-    --muted: #7f93bd;
-    --line: rgba(140,180,255,0.16);
+    --sakura: #b06bff;
+    --sakura-deep: #7a2bff;
+    --lantern: #d8a3ff;
+    --lantern-soft: #e9d4ff;
+    --paper: #f3ecff;
+    --muted: #9a8fbd;
+    --line: rgba(176,107,255,0.18);
     --danger: #ff8a8a;
     --good: #9be8b0;
   }
@@ -28,7 +28,7 @@
   html,body{ margin:0; padding:0; }
 
   body{
-    background: radial-gradient(ellipse 120% 80% at 50% -10%, #16264d 0%, var(--ink) 55%, #05070f 100%);
+    background: radial-gradient(ellipse 120% 80% at 50% -10%, #2a1550 0%, var(--ink) 55%, #05070f 100%);
     color: var(--paper);
     font-family: 'Inter', sans-serif;
     min-height: 100vh;
@@ -63,18 +63,20 @@
     color: var(--sakura);
     flex-shrink: 0;
     overflow: hidden;
+    box-shadow: 0 0 16px rgba(176,107,255,0.35) inset;
   }
   .kanji-badge img{ width: 100%; height: 100%; object-fit: cover; border-radius: inherit; }
   h1.wordmark{
     font-family: 'Unbounded', sans-serif;
     font-weight: 800;
     font-size: clamp(26px, 5vw, 36px);
-    letter-spacing: 0.01em;
+    letter-spacing: 0.02em;
     margin: 0;
-    background: linear-gradient(100deg, var(--paper) 30%, var(--sakura) 75%, var(--lantern) 100%);
+    background: linear-gradient(100deg, var(--paper) 25%, var(--sakura) 70%, var(--lantern) 100%);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
+    text-shadow: 0 0 30px rgba(176,107,255,0.25);
   }
 
   .tagline{
@@ -131,10 +133,10 @@
     transition: border-color 0.15s ease, box-shadow 0.15s ease;
   }
   select{ font-family: 'Inter', sans-serif; cursor: pointer; }
-  input::placeholder{ color: #5f6f94; }
+  input::placeholder{ color: #6f5f94; }
   input:focus, select:focus, textarea:focus{
-    border-color: var(--sakura-deep);
-    box-shadow: 0 0 0 3px rgba(10,109,255,0.18);
+    border-color: var(--sakura);
+    box-shadow: 0 0 0 3px rgba(122,43,255,0.22);
   }
   input[type="text"].pw{ text-transform: uppercase; letter-spacing: 0.08em; }
 
@@ -152,23 +154,23 @@
     font-family: 'Inter', sans-serif;
     font-weight: 700;
     font-size: 15px;
-    color: #04101f;
+    color: #fff;
     background: linear-gradient(120deg, var(--sakura) 0%, var(--sakura-deep) 100%);
     cursor: pointer;
     transition: transform 0.12s ease, box-shadow 0.12s ease, opacity 0.12s ease;
-    box-shadow: 0 10px 24px -10px rgba(10,109,255,0.55);
+    box-shadow: 0 10px 28px -10px rgba(122,43,255,0.75);
   }
   .btn:hover{ transform: translateY(-1px); }
   .btn:active{ transform: translateY(0); }
   .btn:disabled{ opacity: 0.6; cursor: default; transform: none; }
   .btn.secondary{
     background: transparent;
-    border: 1px solid rgba(125,211,255,0.4);
+    border: 1px solid rgba(216,163,255,0.4);
     color: var(--lantern-soft);
     box-shadow: none;
     margin-top: 10px;
   }
-  .btn.secondary:hover{ background: rgba(125,211,255,0.1); }
+  .btn.secondary:hover{ background: rgba(216,163,255,0.1); }
 
   .btn:focus-visible, input:focus-visible, select:focus-visible{
     outline: 2px solid var(--lantern);
@@ -178,8 +180,8 @@
   .spinner{
     display: inline-block;
     width: 14px; height: 14px;
-    border: 2px solid rgba(26,15,20,0.35);
-    border-top-color: #04101f;
+    border: 2px solid rgba(255,255,255,0.35);
+    border-top-color: #fff;
     border-radius: 50%;
     margin-right: 8px;
     vertical-align: -2px;
@@ -222,7 +224,7 @@
   .switch input{ display: none; width: auto; padding: 0; }
   .switch .track{
     position: absolute; inset: 0;
-    background: #33415c;
+    background: #3d3358;
     border-radius: 999px;
     transition: background 0.18s ease;
     cursor: pointer;
@@ -257,8 +259,8 @@
     font-family: 'Space Mono', monospace;
     font-size: 12px;
     color: var(--lantern-soft);
-    background: rgba(125,211,255,0.1);
-    border: 1px solid rgba(125,211,255,0.3);
+    background: rgba(216,163,255,0.1);
+    border: 1px solid rgba(216,163,255,0.3);
     padding: 5px 10px;
     border-radius: 999px;
   }
@@ -289,8 +291,8 @@
 <div class="stage">
 
   <div class="brand">
-    <div class="kanji-badge" aria-hidden="true"><img src="https://raw.githubusercontent.com/NimeshMihiranga-Neno/cartoon-web/main/18d7513834fe1dcc00b6807bb6174794.jpg" alt="Sakura XD logo" /></div>
-    <h1 class="wordmark">SAKURA XD</h1>
+    <div class="kanji-badge" aria-hidden="true"><img src="https://raw.githubusercontent.com/NimeshMihiranga-Neno/cartoon-web/main/18d7513834fe1dcc00b6807bb6174794.jpg" alt="Miyora MD logo" /></div>
+    <h1 class="wordmark">MIYORA MD</h1>
   </div>
   <p class="tagline">Manage your own bot's settings — your number, your password, your settings only.</p>
 
@@ -325,7 +327,7 @@
 
     <div class="field">
       <label class="field-label" for="botName">Bot name</label>
-      <input id="botName" type="text" placeholder="Sakura XD" style="font-family:'Inter',sans-serif;" />
+      <input id="botName" type="text" placeholder="Miyora MD" style="font-family:'Inter',sans-serif;" />
     </div>
 
     <div class="field">
@@ -421,7 +423,7 @@
   </div>
 
   <footer>
-    <span class="mark"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none" style="vertical-align:-2px;"><circle cx="12" cy="7" r="3"/><circle cx="17" cy="10.5" r="3"/><circle cx="15" cy="16" r="3"/><circle cx="9" cy="16" r="3"/><circle cx="7" cy="10.5" r="3"/></svg></span> Sakura XD — settings here only affect this number's bot.
+    <span class="mark"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none" style="vertical-align:-2px;"><circle cx="12" cy="7" r="3"/><circle cx="17" cy="10.5" r="3"/><circle cx="15" cy="16" r="3"/><circle cx="9" cy="16" r="3"/><circle cx="7" cy="10.5" r="3"/></svg></span> Miyora MD — settings here only affect this number's bot. Built by Sasinda Denuwan.
   </footer>
 
 </div>

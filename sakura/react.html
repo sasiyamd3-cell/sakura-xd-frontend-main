@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MIYORA MD — Channel React</title>
+<meta name="description" content="Add your WhatsApp channel to Miyora MD auto-react list." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;800&family=Klee+One:wght@600&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink: #05070f;
+    --ink-2: #0a1226;
+    --ink-3: #111f3d;
+    --sakura: #b06bff;
+    --sakura-deep: #7a2bff;
+    --lantern: #d8a3ff;
+    --lantern-soft: #e9d4ff;
+    --paper: #f3ecff;
+    --muted: #9a8fbd;
+    --line: rgba(176,107,255,0.18);
+    --danger: #ff8a8a;
+    --good: #9be8b0;
+  }
+
+  *{ box-sizing: border-box; }
+  html,body{ margin:0; padding:0; }
+
+  body{
+    background: radial-gradient(ellipse 120% 80% at 50% -10%, #2a1550 0%, var(--ink) 55%, #05070f 100%);
+    color: var(--paper);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  /* ---------- Ambient miyora petals ---------- */
+  #petals{
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  .stage{
+    position: relative;
+    z-index: 1;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 6vh 20px 8vh;
+  }
+
+  /* ---------- Top bar with back button ---------- */
+  .topbar{
+    width: 100%;
+    max-width: 520px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 22px;
+  }
+  .back-btn{
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    color: var(--lantern-soft);
+    font-size: 13px;
+    font-weight: 600;
+    border: 1px solid rgba(216,163,255,0.35);
+    padding: 8px 14px;
+    border-radius: 999px;
+    transition: background 0.15s ease;
+  }
+  .back-btn:hover{ background: rgba(216,163,255,0.1); }
+  .back-btn svg{ width: 14px; height: 14px; }
+
+  .brand{
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .kanji-badge{
+    width: 40px;
+    height: 40px;
+    border-radius: 13px;
+    background: linear-gradient(160deg, var(--ink-3), var(--ink-2));
+    border: 1px solid var(--line);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    flex-shrink: 0;
+    box-shadow: 0 0 16px rgba(176,107,255,0.35) inset;
+  }
+  .kanji-badge img{ width: 100%; height: 100%; object-fit: cover; border-radius: inherit; }
+  .brand .name{
+    font-family: 'Unbounded', sans-serif;
+    font-weight: 800;
+    font-size: 15px;
+    letter-spacing: 0.03em;
+    background: linear-gradient(100deg, var(--paper) 25%, var(--sakura) 70%, var(--lantern) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* ---------- Hero title ---------- */
+  .hero{
+    width: 100%;
+    max-width: 520px;
+    text-align: center;
+    margin-bottom: 26px;
+  }
+  .eyebrow{
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--lantern);
+    margin: 0 0 12px;
+  }
+  h1.wordmark{
+    font-family: 'Unbounded', sans-serif;
+    font-weight: 800;
+    font-size: clamp(24px, 5vw, 34px);
+    letter-spacing: 0.02em;
+    margin: 0 0 12px;
+    background: linear-gradient(100deg, var(--paper) 25%, var(--sakura) 70%, var(--lantern) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    text-shadow: 0 0 30px rgba(176,107,255,0.25);
+  }
+  .tagline{
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.55;
+    margin: 0;
+    max-width: 440px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  /* ---------- Card ---------- */
+  .card{
+    width: 100%;
+    max-width: 520px;
+    background: linear-gradient(165deg, var(--ink-2), var(--ink) 130%);
+    border: 1px solid var(--line);
+    border-radius: 22px;
+    padding: 28px 26px 30px;
+    box-shadow: 0 30px 60px -20px rgba(0,0,0,0.55);
+  }
+
+  label.field-label{
+    display: block;
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 8px;
+    font-weight: 500;
+  }
+
+  .field{ margin-bottom: 18px; }
+
+  input, select{
+    width: 100%;
+    background: var(--ink-3);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    color: var(--paper);
+    font-family: 'Space Mono', monospace;
+    font-size: 15px;
+    padding: 13px 14px;
+    outline: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  input::placeholder{ color: #6f5f94; }
+  input:focus, select:focus{
+    border-color: var(--sakura);
+    box-shadow: 0 0 0 3px rgba(122,43,255,0.22);
+  }
+
+  .hint{
+    font-size: 12px;
+    color: var(--muted);
+    margin: 8px 0 0;
+    line-height: 1.5;
+  }
+
+  /* ---------- Emoji picker ---------- */
+  .emoji-grid{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 4px;
+  }
+  .emoji-chip{
+    font-size: 20px;
+    line-height: 1;
+    background: var(--ink-3);
+    border: 1.5px solid var(--line);
+    border-radius: 12px;
+    padding: 10px 12px;
+    cursor: pointer;
+    transition: transform 0.12s ease, border-color 0.12s ease, background 0.12s ease;
+    user-select: none;
+  }
+  .emoji-chip:hover{ transform: translateY(-2px); border-color: rgba(176,107,255,0.5); }
+  .emoji-chip.selected{
+    border-color: var(--sakura);
+    background: rgba(122,43,255,0.22);
+    box-shadow: 0 0 16px rgba(176,107,255,0.4);
+  }
+
+  .selected-preview{
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    color: var(--lantern-soft);
+    background: rgba(216,163,255,0.08);
+    border: 1px dashed rgba(216,163,255,0.35);
+    border-radius: 10px;
+    padding: 10px 12px;
+    margin-top: 10px;
+    min-height: 40px;
+    word-break: break-word;
+  }
+  .selected-preview.empty{ color: var(--muted); font-style: italic; }
+
+  .section-title{
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 22px 0 12px;
+  }
+  .section-title:first-of-type{ margin-top: 4px; }
+
+  /* ---------- Toggle ---------- */
+  .toggle-row{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--ink-3);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 13px 14px;
+    margin-bottom: 12px;
+  }
+  .toggle-row .label-group{ display: flex; flex-direction: column; }
+  .toggle-row .t-title{ font-size: 14px; font-weight: 600; color: var(--paper); }
+  .toggle-row .t-sub{ font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .switch{
+    position: relative;
+    width: 46px; height: 26px;
+    flex-shrink: 0;
+    margin-left: 14px;
+  }
+  .switch input{ display: none; }
+  .switch .track{
+    position: absolute; inset: 0;
+    background: #3d3358;
+    border-radius: 999px;
+    transition: background 0.18s ease;
+    cursor: pointer;
+  }
+  .switch .thumb{
+    position: absolute;
+    top: 3px; left: 3px;
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    background: var(--paper);
+    transition: transform 0.18s ease;
+  }
+  .switch input:checked + .track{ background: linear-gradient(120deg, var(--sakura), var(--sakura-deep)); }
+  .switch input:checked + .track .thumb{ transform: translateX(20px); }
+
+  /* ---------- Buttons ---------- */
+  .btn{
+    width: 100%;
+    border: none;
+    border-radius: 12px;
+    padding: 15px 18px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+    font-size: 15px;
+    color: #fff;
+    background: linear-gradient(120deg, var(--sakura) 0%, var(--sakura-deep) 100%);
+    cursor: pointer;
+    transition: transform 0.12s ease, box-shadow 0.12s ease, opacity 0.12s ease;
+    box-shadow: 0 10px 28px -10px rgba(122,43,255,0.75);
+    margin-top: 18px;
+  }
+  .btn:hover{ transform: translateY(-1px); }
+  .btn:active{ transform: translateY(0); }
+  .btn:disabled{ opacity: 0.6; cursor: default; transform: none; }
+
+  .spinner{
+    display: inline-block;
+    width: 14px; height: 14px;
+    border: 2px solid rgba(255,255,255,0.35);
+    border-top-color: #fff;
+    border-radius: 50%;
+    margin-right: 8px;
+    vertical-align: -2px;
+    animation: spin-loader 0.7s linear infinite;
+  }
+  @keyframes spin-loader{ to{ transform: rotate(360deg); } }
+
+  /* ---------- Messages ---------- */
+  .msg{
+    margin-top: 16px;
+    font-size: 13.5px;
+    line-height: 1.5;
+    border-radius: 10px;
+    padding: 12px 14px;
+    display: none;
+  }
+  .msg.show{ display: block; }
+  .msg.error{ background: rgba(255,138,138,0.1); color: var(--danger); border: 1px solid rgba(255,138,138,0.25); }
+  .msg.good{ background: rgba(155,232,176,0.1); color: var(--good); border: 1px solid rgba(155,232,176,0.25); }
+
+  /* ---------- Channel list ---------- */
+  .channel-list{
+    margin-top: 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .channel-item{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    background: var(--ink-3);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 14px 16px;
+    transition: border-color 0.15s ease;
+  }
+  .channel-item:hover{ border-color: rgba(176,107,255,0.4); }
+  .channel-info{ min-width: 0; flex: 1; }
+  .channel-name{
+    font-family: 'Unbounded', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    color: var(--paper);
+    margin: 0 0 4px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .channel-meta{
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .channel-emojis{
+    font-size: 15px;
+    letter-spacing: 1px;
+    margin-top: 4px;
+  }
+  .remove-btn{
+    background: transparent;
+    border: 1px solid rgba(255,138,138,0.35);
+    color: var(--danger);
+    font-size: 12px;
+    font-weight: 600;
+    padding: 7px 12px;
+    border-radius: 9px;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background 0.15s ease;
+  }
+  .remove-btn:hover{ background: rgba(255,138,138,0.12); }
+
+  .empty-state{
+    text-align: center;
+    color: var(--muted);
+    font-size: 13px;
+    padding: 22px 0;
+  }
+
+  footer{
+    margin-top: 38px;
+    color: var(--muted);
+    font-size: 12.5px;
+    text-align: center;
+    max-width: 520px;
+  }
+  footer .mark{ color: var(--sakura); }
+
+  @media (max-width: 480px){
+    .card{ padding: 22px 20px 26px; }
+    .topbar{ flex-direction: column; align-items: flex-start; gap: 14px; }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="petals"></canvas>
+
+<div class="stage">
+
+  <div class="topbar">
+    <a href="/main.html" class="back-btn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      Back to home
+    </a>
+    <div class="brand">
+      <div class="kanji-badge" aria-hidden="true"><img src="https://raw.githubusercontent.com/NimeshMihiranga-Neno/cartoon-web/main/18d7513834fe1dcc00b6807bb6174794.jpg" alt="Miyora MD logo" /></div>
+      <span class="name">MIYORA MD</span>
+    </div>
+  </div>
+
+  <div class="hero">
+    <p class="eyebrow">Channel React</p>
+    <h1 class="wordmark">Auto-react your channels</h1>
+    <p class="tagline">Add your WhatsApp channel link below and pick the emojis Miyora MD will use to auto-react to every new channel post.</p>
+  </div>
+
+  <div class="card">
+
+    <p class="section-title">Your bot number</p>
+    <div class="field">
+      <label class="field-label" for="botNumber">WhatsApp number linked to Miyora MD</label>
+      <input id="botNumber" type="tel" inputmode="numeric" placeholder="94712345678" autocomplete="off" />
+      <p class="hint">Only numbers already paired with Miyora MD can add channels.</p>
+    </div>
+
+    <p class="section-title">Channel details</p>
+    <div class="field">
+      <label class="field-label" for="channelLink">Channel link or JID</label>
+      <input id="channelLink" type="text" placeholder="https://whatsapp.com/channel/..." autocomplete="off" />
+      <p class="hint">Paste the channel invite link, or the channel JID (e.g. 12036304...@newsletter).</p>
+    </div>
+
+    <div class="field">
+      <label class="field-label" for="channelName">Channel name (optional)</label>
+      <input id="channelName" type="text" placeholder="My WhatsApp Channel" autocomplete="off" />
+    </div>
+
+    <p class="section-title">Auto-react emojis</p>
+    <div class="emoji-grid" id="emojiGrid">
+      <span class="emoji-chip" data-emoji="😂">😂</span>
+      <span class="emoji-chip" data-emoji="❤️">❤️</span>
+      <span class="emoji-chip" data-emoji="👍">👍</span>
+      <span class="emoji-chip" data-emoji="🔥">🔥</span>
+      <span class="emoji-chip" data-emoji="🎉">🎉</span>
+      <span class="emoji-chip" data-emoji="😮">😮</span>
+      <span class="emoji-chip" data-emoji="😢">😢</span>
+      <span class="emoji-chip" data-emoji="🙏">🙏</span>
+      <span class="emoji-chip" data-emoji="💯">💯</span>
+      <span class="emoji-chip" data-emoji="✨">✨</span>
+      <span class="emoji-chip" data-emoji="🌸">🌸</span>
+      <span class="emoji-chip" data-emoji="👏">👏</span>
+    </div>
+    <div id="selectedPreview" class="selected-preview empty">No emojis selected yet</div>
+
+    <p class="section-title">Behavior</p>
+
+    <div class="toggle-row">
+      <div class="label-group">
+        <span class="t-title">Auto-follow channel</span>
+        <span class="t-sub">Automatically follow the channel so it shows in your chat list</span>
+      </div>
+      <label class="switch">
+        <input id="autoFollow" type="checkbox" checked />
+        <span class="track"><span class="thumb"></span></span>
+      </label>
+    </div>
+
+    <div class="toggle-row">
+      <div class="label-group">
+        <span class="t-title">React to new posts</span>
+        <span class="t-sub">Auto-react with a random emoji from your selection</span>
+      </div>
+      <label class="switch">
+        <input id="autoReact" type="checkbox" checked />
+        <span class="track"><span class="thumb"></span></span>
+      </label>
+    </div>
+
+    <button id="addBtn" class="btn" type="button">Add channel</button>
+
+    <div id="msg" class="msg" role="status"></div>
+
+    <p class="section-title" style="margin-top: 28px;">Your channels</p>
+    <div id="channelList" class="channel-list">
+      <p class="empty-state">No channels added yet — add your first one above 🌸</p>
+    </div>
+
+  </div>
+
+  <footer>
+    <span class="mark"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none" style="vertical-align:-2px;"><circle cx="12" cy="7" r="3"/><circle cx="17" cy="10.5" r="3"/><circle cx="15" cy="16" r="3"/><circle cx="9" cy="16" r="3"/><circle cx="7" cy="10.5" r="3"/></svg></span>
+    Miyora MD — channel reactions run quietly in the background. Built by Sasinda Denuwan.
+  </footer>
+
+</div>
+
+<script>
+(function(){
+  // ---------- Ambient falling petals ----------
+  const canvas = document.getElementById('petals');
+  const ctx = canvas.getContext('2d');
+  let petals = [];
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function resize(){
+    canvas.width = window.innerWidth;
+    canvas.height = document.documentElement.scrollHeight;
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  function makePetal(){
+    return {
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      size: 6 + Math.random() * 9,
+      speed: 0.35 + Math.random() * 0.8,
+      drift: (Math.random() - 0.5) * 0.5,
+      rot: Math.random() * Math.PI * 2,
+      rotSpeed: (Math.random() - 0.5) * 0.018,
+      opacity: 0.3 + Math.random() * 0.35,
+      gold: Math.random() < 0.22
+    };
+  }
+
+  const PETAL_COUNT = reduceMotion ? 0 : (window.innerWidth < 600 ? 14 : 24);
+  for(let i = 0; i < PETAL_COUNT; i++) petals.push(makePetal());
+
+  function drawPetal(p){
+    ctx.save();
+    ctx.translate(p.x, p.y);
+    ctx.rotate(p.rot);
+    ctx.globalAlpha = p.opacity;
+    const grad = ctx.createLinearGradient(-p.size, -p.size, p.size, p.size);
+    if(p.gold){
+      grad.addColorStop(0, '#e9d4ff');
+      grad.addColorStop(1, '#d8a3ff');
+    } else {
+      grad.addColorStop(0, '#b06bff');
+      grad.addColorStop(1, '#7a2bff');
+    }
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.moveTo(0, -p.size);
+    ctx.quadraticCurveTo(p.size, -p.size * 0.3, 0, p.size);
+    ctx.quadraticCurveTo(-p.size, -p.size * 0.3, 0, -p.size);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function tick(){
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    for(const p of petals){
+      p.y += p.speed;
+      p.x += p.drift;
+      p.rot += p.rotSpeed;
+      if(p.y > canvas.height + 20){
+        p.y = -20;
+        p.x = Math.random() * canvas.width;
+      }
+      drawPetal(p);
+    }
+    requestAnimationFrame(tick);
+  }
+  if(!reduceMotion) requestAnimationFrame(tick);
+
+  // ---------- Emoji picker ----------
+  const emojiGrid = document.getElementById('emojiGrid');
+  const selectedPreview = document.getElementById('selectedPreview');
+  const selectedEmojis = new Set(['🔥', '❤️']); // sensible defaults
+
+  function renderSelectedPreview(){
+    if(selectedEmojis.size === 0){
+      selectedPreview.textContent = 'No emojis selected yet';
+      selectedPreview.classList.add('empty');
+    } else {
+      selectedPreview.textContent = Array.from(selectedEmojis).join('  ');
+      selectedPreview.classList.remove('empty');
+    }
+    emojiGrid.querySelectorAll('.emoji-chip').forEach(chip => {
+      chip.classList.toggle('selected', selectedEmojis.has(chip.dataset.emoji));
+    });
+  }
+
+  emojiGrid.addEventListener('click', (e) => {
+    const chip = e.target.closest('.emoji-chip');
+    if(!chip) return;
+    const emoji = chip.dataset.emoji;
+    if(selectedEmojis.has(emoji)) selectedEmojis.delete(emoji);
+    else selectedEmojis.add(emoji);
+    renderSelectedPreview();
+  });
+
+  renderSelectedPreview();
+
+  // ---------- Form + channel list ----------
+  const botNumberInput = document.getElementById('botNumber');
+  const channelLinkInput = document.getElementById('channelLink');
+  const channelNameInput = document.getElementById('channelName');
+  const autoFollowToggle = document.getElementById('autoFollow');
+  const autoReactToggle = document.getElementById('autoReact');
+  const addBtn = document.getElementById('addBtn');
+  const msgBox = document.getElementById('msg');
+  const channelList = document.getElementById('channelList');
+
+  // Local storage key — per bot number
+  const STORAGE_KEY = 'miyora_channels_v1';
+
+  function loadStore(){
+    try{ return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); }
+    catch(e){ return {}; }
+  }
+  function saveStore(store){
+    try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(store)); }
+    catch(e){}
+  }
+
+  let store = loadStore();
+  let currentNumber = '';
+
+  function showMsg(text, kind){
+    msgBox.textContent = text;
+    msgBox.className = 'msg show ' + kind;
+  }
+  function hideMsg(){
+    msgBox.className = 'msg';
+  }
+
+  function channelKey(link){
+    // normalize: strip URL prefix so the same channel with different link forms matches
+    return link.replace(/^https?:\/\//i, '').replace(/\/+$/, '').toLowerCase();
+  }
+
+  function renderChannels(){
+    const list = store[currentNumber] || [];
+    channelList.innerHTML = '';
+
+    if(list.length === 0){
+      const empty = document.createElement('p');
+      empty.className = 'empty-state';
+      empty.textContent = 'No channels added yet — add your first one above 🌸';
+      channelList.appendChild(empty);
+      return;
+    }
+
+    list.forEach((ch, idx) => {
+      const item = document.createElement('div');
+      item.className = 'channel-item';
+
+      const info = document.createElement('div');
+      info.className = 'channel-info';
+
+      const nameEl = document.createElement('p');
+      nameEl.className = 'channel-name';
+      nameEl.textContent = ch.name || 'Untitled channel';
+      info.appendChild(nameEl);
+
+      const metaEl = document.createElement('div');
+      metaEl.className = 'channel-meta';
+      metaEl.textContent = (ch.autoFollow ? 'Auto-follow' : 'No auto-follow') +
+                          ' · ' + (ch.autoReact ? 'Auto-react ON' : 'Auto-react OFF');
+      info.appendChild(metaEl);
+
+      const emojiEl = document.createElement('div');
+      emojiEl.className = 'channel-emojis';
+      emojiEl.textContent = (ch.emojis && ch.emojis.length) ? ch.emojis.join(' ') : '—';
+      info.appendChild(emojiEl);
+
+      const removeBtn = document.createElement('button');
+      removeBtn.type = 'button';
+      removeBtn.className = 'remove-btn';
+      removeBtn.textContent = 'Remove';
+      removeBtn.addEventListener('click', () => {
+        list.splice(idx, 1);
+        store[currentNumber] = list;
+        saveStore(store);
+        renderChannels();
+      });
+
+      item.appendChild(info);
+      item.appendChild(removeBtn);
+      channelList.appendChild(item);
+    });
+  }
+
+  function requireNumber(){
+    const num = botNumberInput.value.replace(/[^0-9]/g, '');
+    if(!num || num.length < 7){
+      showMsg('Enter a valid bot number first (digits only, country code first).', 'error');
+      return null;
+    }
+    if(num !== currentNumber){
+      currentNumber = num;
+      renderChannels();
+    }
+    return num;
+  }
+
+  botNumberInput.addEventListener('input', () => {
+    const num = botNumberInput.value.replace(/[^0-9]/g, '');
+    if(num.length >= 7){
+      currentNumber = num;
+      renderChannels();
+    }
+  });
+
+  addBtn.addEventListener('click', () => {
+    hideMsg();
+    const num = requireNumber();
+    if(!num) return;
+
+    const link = channelLinkInput.value.trim();
+    if(!link){
+      showMsg('Paste the channel invite link or JID.', 'error');
+      return;
+    }
+
+    const emojis = Array.from(selectedEmojis);
+    if(autoReactToggle.checked && emojis.length === 0){
+      showMsg('Pick at least one emoji for auto-react, or turn auto-react off.', 'error');
+      return;
+    }
+
+    const channel = {
+      name: channelNameInput.value.trim() || 'Untitled channel',
+      link,
+      emojis,
+      autoFollow: autoFollowToggle.checked,
+      autoReact: autoReactToggle.checked,
+      createdAt: Date.now()
+    };
+
+    if(!store[num]) store[num] = [];
+
+    const key = channelKey(link);
+    if(store[num].some(c => channelKey(c.link) === key)){
+      showMsg('That channel is already in the list.', 'error');
+      return;
+    }
+
+    store[num].push(channel);
+    saveStore(store);
+    renderChannels();
+
+    // reset form
+    channelLinkInput.value = '';
+    channelNameInput.value = '';
+    showMsg('Channel added — Miyora MD will start reacting soon.', 'good');
+  });
+
+  // Auto-load channels if browser remembered the number
+  if(botNumberInput.value.replace(/[^0-9]/g, '').length >= 7){
+    currentNumber = botNumberInput.value.replace(/[^0-9]/g, '');
+    renderChannels();
+  } else {
+    renderChannels();
+  }
+})();
+</script>
+
+</body>
+</html>

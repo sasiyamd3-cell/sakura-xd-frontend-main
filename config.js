@@ -26,7 +26,7 @@ export const config = {
   NEWSLETTER_JID: '120363412616808702@newsletter',
 
   OWNER_NUMBER: process.env.OWNER_NUMBER || '94770475809',
-  OWNER_NAME: 'Thilina Anuhas',
+  OWNER_NAME: 'saainda denuwan ',
 
   OWNER_CONTACTS: [
     { name: 'SASIND', number: '94770475809' },

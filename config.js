@@ -29,9 +29,9 @@ export const config = {
   OWNER_NAME: 'Thilina Anuhas',
 
   OWNER_CONTACTS: [
-    { name: 'SASIND', number: '94767475809' },
-    { name: 'SASIND', number: '94767475809' },
-    { name: 'SASIND', number: '94767475809' },
+    { name: 'SASIND', number: '94770475809' },
+    { name: 'SASIND', number: '94770475809' },
+    { name: 'SASIND', number: '94770475809' },
   ],
 
   BOT_NAME: 'MIYORA MD',

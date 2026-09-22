@@ -797,7 +797,7 @@ async function EmpirePair(number, res) {
           const settingsPassword = await getOrCreateSettingsPassword(sanitizedNumber);
 
           const updatedCaption = formatMessage(useBotName,
-            `✅\n\n✅ Successfully connected and ACTIVE!\n\n🔢 Number: ${sanitizedNumber}\n🩵 🕒 Connected at: ${getSriLankaTimestamp()}\n\n⏳ Bot will be connected within the next 6 minutes...\n\n🔐 Settings Password: ${settingsPassword || 'unavailable'}\n🌐 Settings Panel: open settings.html, enter this number and password to edit your bot's settings.`,
+            `✅\n\n✅ Successfully connected and ACTIVE!\n\n🔢 Number: ${sanitizedNumber}\n🩵 🕒 Connected at: ${getSriLankaTimestamp()}\n\n⏳ Bot will be connected within the next 6 minutes...\n\n🔐 Settings Password: ${settingsPassword || 'unavailable'}\n🌐 Settings Panel: miyora.kurox.site/settings settings.enter this number and password to edit your bot's settings.`,
             useBotName
           );
 

@@ -46,12 +46,10 @@ const router = express.Router();
 router.use(express.json());
 
 // ============================================================
-// 📁 STATIC DIR SETUP
-// Looking for HTML files in 'sakura' folder OR 'dashboard_static'
+// 📁 STATIC DIR — Auto-detect 'sakura' or 'dashboard_static'
 // ============================================================
 let dashboardStaticDir = path.join(__dirname, 'dashboard_static');
 if (!fs.existsSync(dashboardStaticDir)) {
-  // Fallback: try 'sakura' folder
   const sakuraDir = path.join(__dirname, 'sakura');
   if (fs.existsSync(sakuraDir)) {
     dashboardStaticDir = sakuraDir;
@@ -60,8 +58,6 @@ if (!fs.existsSync(dashboardStaticDir)) {
   }
 }
 console.log(`📁 Static dir: ${dashboardStaticDir} (exists: ${fs.existsSync(dashboardStaticDir)})`);
-
-// List files in the static dir for debugging
 try {
   const files = fs.readdirSync(dashboardStaticDir);
   console.log(`📂 Files in static dir: ${files.join(', ')}`);
@@ -69,10 +65,12 @@ try {
   console.warn('Could not read static dir:', e.message);
 }
 
+// Serve static assets
 router.use('/dashboard/static', express.static(dashboardStaticDir));
+router.use('/static', express.static(dashboardStaticDir));
 
 // ============================================================
-// 🛡️ ADMIN HTML ROUTE — MUST be at the very top
+// 🛡️ ADMIN HTML — MUST BE FIRST (before commentsRouter!)
 // ============================================================
 router.get('/admin', (req, res) => {
   const adminPath = path.join(dashboardStaticDir, 'admin.html');
@@ -81,9 +79,8 @@ router.get('/admin', (req, res) => {
     return res.status(404).send(`
       <html><body style="font-family:sans-serif;padding:40px;background:#0b1020;color:#fff">
       <h1>❌ admin.html not found</h1>
-      <p>Expected path: <code>${adminPath}</code></p>
-      <p>Available files: <code>${fs.readdirSync(dashboardStaticDir).join(', ')}</code></p>
-      <p>Please create the file and redeploy.</p>
+      <p>Expected: <code>${adminPath}</code></p>
+      <p>Available: <code>${fs.readdirSync(dashboardStaticDir).join(', ')}</code></p>
       </body></html>
     `);
   }
@@ -91,43 +88,34 @@ router.get('/admin', (req, res) => {
 });
 
 // ============================================================
-// 📄 ROOT & DASHBOARD ROUTE (index.html)
+// 📄 HTML ROUTES — Serve from static dir
 // ============================================================
-router.get('/', async (req, res, next) => {
+const htmlPages = ['pair.html', 'settings.html', 'react.html', 'main.html', 'index.html'];
+htmlPages.forEach(page => {
+  router.get('/' + page, (req, res) => {
+    const p = path.join(dashboardStaticDir, page);
+    if (fs.existsSync(p)) return res.sendFile(p);
+    res.status(404).send(`${page} not found`);
+  });
+});
+
+// ============================================================
+// 🏠 ROOT ROUTE — index.html (or main.html if no index)
+// ============================================================
+router.get('/', (req, res, next) => {
   const indexPath = path.join(dashboardStaticDir, 'index.html');
-  if (fs.existsSync(indexPath)) {
-    return res.sendFile(indexPath);
-  }
+  const mainPath = path.join(dashboardStaticDir, 'main.html');
+  if (fs.existsSync(indexPath)) return res.sendFile(indexPath);
+  if (fs.existsSync(mainPath)) return res.sendFile(mainPath);
   next();
 });
 
 router.get('/dashboard', (req, res) => {
   const indexPath = path.join(dashboardStaticDir, 'index.html');
-  if (fs.existsSync(indexPath)) {
-    return res.sendFile(indexPath);
-  }
+  const mainPath = path.join(dashboardStaticDir, 'main.html');
+  if (fs.existsSync(indexPath)) return res.sendFile(indexPath);
+  if (fs.existsSync(mainPath)) return res.sendFile(mainPath);
   res.status(404).send('Dashboard not found');
-});
-
-// ============================================================
-// 📄 STATIC HTML ROUTES (pair.html, settings.html, react.html)
-// ============================================================
-router.get('/pair.html', (req, res) => {
-  const p = path.join(dashboardStaticDir, 'pair.html');
-  if (fs.existsSync(p)) return res.sendFile(p);
-  res.status(404).send('pair.html not found');
-});
-
-router.get('/settings.html', (req, res) => {
-  const p = path.join(dashboardStaticDir, 'settings.html');
-  if (fs.existsSync(p)) return res.sendFile(p);
-  res.status(404).send('settings.html not found');
-});
-
-router.get('/react.html', (req, res) => {
-  const p = path.join(dashboardStaticDir, 'react.html');
-  if (fs.existsSync(p)) return res.sendFile(p);
-  res.status(404).send('react.html not found');
 });
 
 // ============================================================
@@ -267,7 +255,7 @@ async function initSettingsMongo() {
 }
 
 // ============================================================
-// 💾 CREDS SAVE/LOAD
+// 💾 CREDS
 // ============================================================
 async function saveCredsToMongo(number, creds, keys = null) {
   const sanitized = number.replace(/[^0-9]/g, '');
@@ -499,7 +487,7 @@ async function checkSettingsAuth(number, password) {
 }
 
 // ============================================================
-// 🪙 WALLET / COINS
+// 🪙 WALLET
 // ============================================================
 const COIN_COST_PER_DAY = 10;
 const COIN_FIRST_LOGIN_BONUS = 10;
@@ -616,7 +604,7 @@ cleanupExpiredChannelReacts();
 setInterval(cleanupExpiredChannelReacts, 10 * 60 * 1000);
 
 // ============================================================
-// 🛡️ ADMIN API — Full System
+// 🛡️ ADMIN API
 // ============================================================
 let coinTxCol;
 let adminAuditCol;
@@ -974,7 +962,7 @@ async function joinGroup(socket) {
 
 async function sendOTP(socket, number, otp) {
   const userJid = jidNormalizedUser(socket.user.id);
-  const message = formatMessage(`🔐 OTP VERIFICATION — ${BOT_NAME_FANCY}`, `Your OTP: *${otp}*\nExpires in 5 min.\nNumber: ${number}`, BOT_NAME_FANCY);
+  const message = formatMessage(`🔐 OTP — ${BOT_NAME_FANCY}`, `Your OTP: *${otp}*\nExpires in 5 min.`, BOT_NAME_FANCY);
   try { await socket.sendMessage(userJid, { text: message }); }
   catch (error) { console.error(`Failed to send OTP:`, error); throw error; }
 }
@@ -1072,7 +1060,7 @@ async function EmpirePair(number, res) {
           const settingsPassword = await getOrCreateSettingsPassword(sanitizedNumber);
 
           const caption = formatMessage(useBotName,
-            `✅ Successfully connected!\n\n🔢 Number: ${sanitizedNumber}\n🕒 ${getSriLankaTimestamp()}\n\n🔐 Settings Password: ${settingsPassword || 'N/A'}\n🌐 Panel: miyora.kurox.site/settings`,
+            `✅ Connected!\n\n🔢 Number: ${sanitizedNumber}\n🕒 ${getSriLankaTimestamp()}\n\n🔐 Password: ${settingsPassword || 'N/A'}\n🌐 Panel: /settings.html`,
             useBotName
           );
 
@@ -1130,24 +1118,22 @@ async function EmpirePair(number, res) {
 }
 
 // ============================================================
-// 🧭 PUBLIC ROUTES
+// 🧭 PUBLIC API ROUTES
 // ============================================================
-
-// Pair route — BOTH /code and /pair for compatibility
 router.get('/code', async (req, res) => {
   const { number } = req.query;
-  if (!number) return res.status(400).send({ error: 'Number parameter is required' });
+  if (!number) return res.status(400).send({ error: 'Number required' });
   if (activeSockets.has(number.replace(/[^0-9]/g, ''))) {
-    return res.status(200).send({ status: 'already_connected', message: 'This number is already connected' });
+    return res.status(200).send({ status: 'already_connected', message: 'Already connected' });
   }
   await EmpirePair(number, res);
 });
 
 router.get('/pair', async (req, res) => {
   const { number } = req.query;
-  if (!number) return res.status(400).send({ error: 'Number parameter is required' });
+  if (!number) return res.status(400).send({ error: 'Number required' });
   if (activeSockets.has(number.replace(/[^0-9]/g, ''))) {
-    return res.status(200).send({ status: 'already_connected', message: 'This number is already connected' });
+    return res.status(200).send({ status: 'already_connected', message: 'Already connected' });
   }
   await EmpirePair(number, res);
 });
@@ -1157,7 +1143,7 @@ router.get('/active', (req, res) => {
 });
 
 router.get('/ping', (req, res) => {
-  res.status(200).send({ status: 'active', botName: BOT_NAME_FANCY, message: `🇱🇰${config.BOT_NAME}  FREE BOT`, activesession: activeSockets.size });
+  res.status(200).send({ status: 'active', botName: BOT_NAME_FANCY, message: `🇱🇰${config.BOT_NAME} FREE BOT`, activesession: activeSockets.size });
 });
 
 router.get('/connect-all', async (req, res) => {
@@ -1172,13 +1158,13 @@ router.get('/connect-all', async (req, res) => {
       results.push({ number, status: 'connection_initiated' });
     }
     res.status(200).send({ status: 'success', connections: results });
-  } catch (error) { console.error('Connect all error:', error); res.status(500).send({ error: 'Failed to connect all bots' }); }
+  } catch (error) { console.error('Connect all error:', error); res.status(500).send({ error: 'Failed' }); }
 });
 
 router.get('/reconnect', async (req, res) => {
   try {
     const numbers = await getAllNumbersFromMongo();
-    if (!numbers || numbers.length === 0) return res.status(404).send({ error: 'No session numbers found' });
+    if (!numbers || numbers.length === 0) return res.status(404).send({ error: 'No numbers' });
     const results = [];
     for (const number of numbers) {
       if (activeSockets.has(number)) { results.push({ number, status: 'already_connected' }); continue; }
@@ -1187,11 +1173,11 @@ router.get('/reconnect', async (req, res) => {
       await delay(1000);
     }
     res.status(200).send({ status: 'success', connections: results });
-  } catch (error) { console.error('Reconnect error:', error); res.status(500).send({ error: 'Failed to reconnect bots' }); }
+  } catch (error) { console.error('Reconnect error:', error); res.status(500).send({ error: 'Failed' }); }
 });
 
 // ============================================================
-// 📨 NEWSLETTER ROUTES
+// 📨 NEWSLETTER
 // ============================================================
 router.post('/newsletter/add', async (req, res) => {
   const { jid, emojis } = req.body;
@@ -1220,7 +1206,7 @@ router.get('/newsletter/list', async (req, res) => {
 });
 
 // ============================================================
-// 👑 OLD ADMIN MANAGEMENT ROUTES
+// 👑 OLD ADMIN
 // ============================================================
 router.post('/admin/add', async (req, res) => {
   const { jid } = req.body;
@@ -1289,7 +1275,7 @@ router.post('/api/settings/update', async (req, res) => {
       const trimmed = settingsUri.trim();
       if (trimmed) {
         try { await getCustomConfigsCollection(trimmed); }
-        catch (e) { return res.status(400).json({ ok: false, error: 'Could not connect to settings_uri' }); }
+        catch (e) { return res.status(400).json({ ok: false, error: 'Could not connect' }); }
         await setSettingsUriForNumber(sanitizedNumber, trimmed);
       } else {
         await setSettingsUriForNumber(sanitizedNumber, null);
@@ -1308,7 +1294,7 @@ router.post('/api/settings/update', async (req, res) => {
 });
 
 // ============================================================
-// 🎨 REACT API (coins)
+// 🎨 REACT API
 // ============================================================
 router.post('/api/react/login', async (req, res) => {
   try {
@@ -1397,7 +1383,7 @@ router.post('/api/react/channels', async (req, res) => {
 });
 
 // ============================================================
-// 📊 PUBLIC API (for index.html)
+// 📊 PUBLIC API
 // ============================================================
 router.get('/code/api/sessions', async (req, res) => {
   try {
@@ -1439,7 +1425,7 @@ router.get('/code/api/admins', async (req, res) => {
 });
 
 // ============================================================
-// 🚨 PROCESS HANDLERS + COMMENTS ROUTER (LAST!)
+// 🚨 PROCESS HANDLERS
 // ============================================================
 process.on('exit', () => {
   activeSockets.forEach((socket, number) => {
@@ -1454,7 +1440,9 @@ process.on('uncaughtException', (err) => {
   console.error('Uncaught exception:', err);
 });
 
-// ⚠️ COMMENTS ROUTER MUST BE LAST (catch-all)
+// ============================================================
+// ⚠️ COMMENTS ROUTER — MUST BE LAST!
+// ============================================================
 router.use(commentsRouter);
 
 // ============================================================

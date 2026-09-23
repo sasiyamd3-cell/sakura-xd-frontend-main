@@ -52,7 +52,7 @@ export const config = {
   SAKURA_DB_URI: process.env.SAKURA_DB_URI || 'mongodb+srv://mrshrii404:JLtbz0CEOC1u6CwS@shri.gkhohrr.mongodb.net/',
   SAKURA_DB_COUNT: process.env.SAKURA_DB_COUNT || 10,
 
-  // 🔐 ADMIN PANEL — අලුතින් add කරපු ටික
+  // 🔐 ADMIN PANEL
   ADMIN_PANEL_KEY: process.env.ADMIN_PANEL_KEY || 'SASINDA123',
   ADMIN_SESSION_HOURS: Number(process.env.ADMIN_SESSION_HOURS || 12),
   ADMIN_MAX_AMOUNT: Number(process.env.ADMIN_MAX_AMOUNT || 1000000)

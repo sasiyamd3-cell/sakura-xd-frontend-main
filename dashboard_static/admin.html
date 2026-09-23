@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>⚙️ Admin Panel — Bot Control</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+  :root {
+    --bg: #0b1020; --card: #131a33; --card-2: #1a2344;
+    --accent: #6d8cff; --accent-2: #8b5cf6;
+    --success: #22c55e; --warn: #f59e0b; --danger: #ef4444;
+    --text: #e6ecff; --muted: #8b96b8; --border: #232c4d;
+  }
+  body { background: var(--bg); color: var(--text); min-height: 100vh; }
+  a { color: var(--accent); }
+  .login-wrap { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
+  .login-card { background: var(--card); padding: 40px; border-radius: 16px; width: 100%; max-width: 420px;
+    border: 1px solid var(--border); box-shadow: 0 20px 60px rgba(0,0,0,.5); }
+  .login-card h1 { font-size: 22px; margin-bottom: 8px; }
+  .login-card p { color: var(--muted); font-size: 13px; margin-bottom: 24px; }
+  .app { display: none; }
+  .app.active { display: block; }
+  header { background: var(--card); border-bottom: 1px solid var(--border); padding: 14px 24px;
+    display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+  header .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; }
+  header .brand .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--success); box-shadow: 0 0 12px var(--success); }
+  header .actions { display: flex; gap: 10px; align-items: center; }
+  .container { max-width: 1280px; margin: 0 auto; padding: 24px; }
+  .tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 22px; background: var(--card); padding: 6px;
+    border-radius: 12px; border: 1px solid var(--border); }
+  .tab { padding: 9px 16px; border-radius: 8px; cursor: pointer; font-size: 13px; color: var(--muted);
+    transition: .2s; border: none; background: transparent; }
+  .tab:hover { color: var(--text); background: var(--card-2); }
+  .tab.active { background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: white; font-weight: 600; }
+  .panel { display: none; }
+  .panel.active { display: block; animation: fadeIn .25s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 20px; margin-bottom: 18px; }
+  .card h2 { font-size: 16px; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+  .grid { display: grid; gap: 14px; }
+  .grid-4 { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+  .grid-2 { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+  .stat { background: var(--card-2); border-radius: 12px; padding: 16px; border: 1px solid var(--border); }
+  .stat .label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .6px; margin-bottom: 6px; }
+  .stat .value { font-size: 24px; font-weight: 700; }
+  .stat .value.accent { color: var(--accent); }
+  .stat .value.success { color: var(--success); }
+  .stat .value.warn { color: var(--warn); }
+  .field { margin-bottom: 12px; }
+  label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 6px; font-weight: 500; }
+  input, select, textarea { width: 100%; background: var(--bg); border: 1px solid var(--border); color: var(--text);
+    padding: 10px 12px; border-radius: 8px; font-size: 14px; outline: none; transition: .2s; }
+  input:focus, select:focus, textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(109,140,255,.15); }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; }
+  .row > * { flex: 1; min-width: 140px; }
+  button { background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: white; border: none;
+    padding: 10px 18px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: .2s; }
+  button:hover { transform: translateY(-1px); box-shadow: 0 8px 20px rgba(109,140,255,.3); }
+  button:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+  button.ghost { background: var(--card-2); border: 1px solid var(--border); }
+  button.ghost:hover { background: var(--border); box-shadow: none; }
+  button.success { background: linear-gradient(135deg, #16a34a, #22c55e); }
+  button.danger { background: linear-gradient(135deg, #b91c1c, #ef4444); }
+  button.warn { background: linear-gradient(135deg, #b45309, #f59e0b); }
+  button.sm { padding: 6px 12px; font-size: 12px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--border); }
+  th { font-size: 11px; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); font-weight: 600; }
+  tr:hover { background: rgba(109,140,255,.05); }
+  .mono { font-family: 'SF Mono', Menlo, Consolas, monospace; font-size: 12px; }
+  .badge { display: inline-block; padding: 3px 9px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+  .badge.green { background: rgba(34,197,94,.15); color: #4ade80; }
+  .badge.red { background: rgba(239,68,68,.15); color: #f87171; }
+  .badge.amber { background: rgba(245,158,11,.15); color: #fbbf24; }
+  .badge.blue { background: rgba(109,140,255,.15); color: #93a9ff; }
+  .toast-wrap { position: fixed; top: 20px; right: 20px; z-index: 1000; display: flex; flex-direction: column; gap: 8px; }
+  .toast { background: var(--card); border: 1px solid var(--border); padding: 12px 18px; border-radius: 10px;
+    font-size: 13px; box-shadow: 0 10px 30px rgba(0,0,0,.4); animation: slideIn .3s ease; min-width: 220px; }
+  .toast.success { border-left: 3px solid var(--success); }
+  .toast.error { border-left: 3px solid var(--danger); }
+  .toast.info { border-left: 3px solid var(--accent); }
+  @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: none; opacity: 1; } }
+  .muted { color: var(--muted); font-size: 12px; }
+  .loading { display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(255,255,255,.2);
+    border-top-color: white; border-radius: 50%; animation: spin .6s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .empty { text-align: center; padding: 30px; color: var(--muted); font-size: 13px; }
+  .flex-between { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .mt-10 { margin-top: 10px; }
+  .mb-10 { margin-bottom: 10px; }
+  .pagination { display: flex; justify-content: center; gap: 8px; margin-top: 14px; align-items: center; }
+  .pagination button { padding: 6px 12px; font-size: 12px; }
+</style>
+</head>
+<body>
+
+<div class="login-wrap" id="loginScreen">
+  <div class="login-card">
+    <h1>⚙️ Admin Panel</h1>
+    <p>Enter admin key to access control panel</p>
+    <div class="field">
+      <label>Admin Key</label>
+      <input type="password" id="adminKey" placeholder="••••••••••••" autocomplete="off" />
+    </div>
+    <button style="width:100%" onclick="doLogin()" id="loginBtn">🔓 Login</button>
+  </div>
+</div>
+
+<div class="app" id="adminApp">
+  <header>
+    <div class="brand"><span class="dot"></span> Admin Control Panel</div>
+    <div class="actions">
+      <span class="muted" id="sessionInfo"></span>
+      <button class="ghost sm" onclick="refreshAll()">🔄 Refresh</button>
+      <button class="danger sm" onclick="doLogout()">Logout</button>
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="tabs">
+      <button class="tab active" data-tab="stats">📊 Dashboard</button>
+      <button class="tab" data-tab="wallets">🪙 Wallets</button>
+      <button class="tab" data-tab="channels">📢 Channels</button>
+      <button class="tab" data-tab="transactions">📋 Transactions</button>
+      <button class="tab" data-tab="sessions">💻 Sessions</button>
+      <button class="tab" data-tab="audit">🛡️ Audit Log</button>
+    </div>
+
+    <div class="panel active" id="panel-stats">
+      <div class="grid grid-4" id="statGrid"></div>
+      <div class="card mt-10">
+        <h2>🌸 Sakura Shards</h2>
+        <div id="sakuraWrap" class="grid grid-4"></div>
+      </div>
+      <div class="grid grid-2">
+        <div class="card">
+          <h2>💰 Broadcast Bonus</h2>
+          <p class="muted mb-10">Give coins to multiple users at once</p>
+          <div class="field"><label>Amount per user</label><input type="number" id="bcAmount" placeholder="100" /></div>
+          <div class="row">
+            <div class="field"><label>Min coins filter</label><input type="number" id="bcMin" placeholder="0" /></div>
+            <div class="field"><label>Max coins filter</label><input type="number" id="bcMax" placeholder="999999" /></div>
+          </div>
+          <div class="field"><label>Reason</label><input type="text" id="bcReason" placeholder="Festival bonus" /></div>
+          <button class="warn" onclick="doBroadcast()">📢 Broadcast Bonus</button>
+        </div>
+        <div class="card">
+          <h2>⚡ Quick Coin Action</h2>
+          <p class="muted mb-10">Directly give coins to a number</p>
+          <div class="field"><label>Phone number</label><input type="text" id="qcNumber" placeholder="94771234567" /></div>
+          <div class="field"><label>Amount</label><input type="number" id="qcAmount" placeholder="50" /></div>
+          <div class="field"><label>Reason</label><input type="text" id="qcReason" placeholder="Manual grant" /></div>
+          <div class="row">
+            <button class="success" onclick="quickGive()">➕ Give</button>
+            <button class="danger" onclick="quickDeduct()">➖ Deduct</button>
+            <button class="ghost" onclick="quickSet()">🎯 Set</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel" id="panel-wallets">
+      <div class="card">
+        <div class="flex-between mb-10">
+          <h2>🪙 Wallet Browser</h2>
+          <div class="row" style="max-width:400px">
+            <input type="text" id="walletSearch" placeholder="🔍 Search by number" style="min-width:200px" />
+            <button class="sm" onclick="loadWallets(1)">Search</button>
+          </div>
+        </div>
+        <div id="walletsTableWrap"></div>
+        <div class="pagination" id="walletsPagination"></div>
+      </div>
+    </div>
+
+    <div class="panel" id="panel-channels">
+      <div class="card">
+        <h2>➕ Add Channel React (force, no coin cost)</h2>
+        <div class="row">
+          <div class="field"><label>User number</label><input type="text" id="chNumber" placeholder="94771234567" /></div>
+          <div class="field"><label>Newsletter JID</label><input type="text" id="chJid" placeholder="1203630...@newsletter" /></div>
+          <div class="field"><label>Emojis (comma sep)</label><input type="text" id="chEmojis" placeholder="❤️,🔥,👍" /></div>
+          <div class="field"><label>Days</label><input type="number" id="chDays" placeholder="30" /></div>
+        </div>
+        <button class="success" onclick="doAddChannel()">📢 Add Channel</button>
+      </div>
+      <div class="card">
+        <div class="flex-between mb-10">
+          <h2>📢 All Channel Reacts</h2>
+          <div class="row" style="max-width:400px">
+            <input type="text" id="channelSearch" placeholder="🔍 Search by number" style="min-width:200px" />
+            <button class="sm" onclick="loadChannels(1)">Search</button>
+          </div>
+        </div>
+        <div id="channelsTableWrap"></div>
+        <div class="pagination" id="channelsPagination"></div>
+      </div>
+    </div>
+
+    <div class="panel" id="panel-transactions">
+      <div class="card">
+        <div class="flex-between mb-10">
+          <h2>📋 Coin Transaction Log</h2>
+          <div class="row" style="max-width:500px">
+            <input type="text" id="txSearchNumber" placeholder="Filter by number" style="min-width:180px" />
+            <select id="txTypeFilter" style="min-width:150px">
+              <option value="">All types</option>
+              <option value="admin_give">admin_give</option>
+              <option value="admin_set">admin_set</option>
+              <option value="admin_deduct">admin_deduct</option>
+              <option value="admin_broadcast">admin_broadcast</option>
+              <option value="daily_claim">daily_claim</option>
+              <option value="channel_purchase">channel_purchase</option>
+              <option value="refund">refund</option>
+            </select>
+            <button class="sm" onclick="loadTransactions(1)">Filter</button>
+          </div>
+        </div>
+        <div id="txTableWrap"></div>
+        <div class="pagination" id="txPagination"></div>
+      </div>
+    </div>
+
+    <div class="panel" id="panel-sessions">
+      <div class="card">
+        <div class="flex-between mb-10">
+          <h2>💻 Active & Stored Sessions</h2>
+          <span class="muted" id="activeSessionsBadge"></span>
+        </div>
+        <div id="sessionsTableWrap"></div>
+      </div>
+    </div>
+
+    <div class="panel" id="panel-audit">
+      <div class="card">
+        <h2>🛡️ Admin Audit Log</h2>
+        <div id="auditTableWrap"></div>
+        <div class="pagination" id="auditPagination"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script>
+const TOKEN_KEY = 'admin_token_v1';
+let token = localStorage.getItem(TOKEN_KEY) || '';
+let currentWalletPage = 1, currentChannelPage = 1, currentTxPage = 1, currentAuditPage = 1;
+
+function toast(msg, type = 'info', ms = 3200) {
+  const el = document.createElement('div');
+  el.className = 'toast ' + type;
+  el.textContent = msg;
+  document.getElementById('toastWrap').appendChild(el);
+  setTimeout(() => { el.style.opacity = '0'; el.style.transform = 'translateX(100%)'; el.style.transition = '.3s'; }, ms - 300);
+  setTimeout(() => el.remove(), ms);
+}
+
+async function api(path, opts = {}) {
+  const headers = Object.assign(
+    { 'Content-Type': 'application/json', 'x-admin-token': token },
+    opts.headers || {}
+  );
+  const res = await fetch(path, { ...opts, headers });
+  let data;
+  try { data = await res.json(); } catch (e) { data = { ok: false, error: 'Invalid response' }; }
+  if (res.status === 401) {
+    localStorage.removeItem(TOKEN_KEY);
+    token = '';
+    showLogin();
+    throw new Error(data.error || 'Unauthorized');
+  }
+  if (!res.ok || data.ok === false) throw new Error(data.error || ('HTTP ' + res.status));
+  return data;
+}
+
+async function doLogin() {
+  const key = document.getElementById('adminKey').value.trim();
+  if (!key) return toast('Enter admin key', 'error');
+  const btn = document.getElementById('loginBtn');
+  btn.disabled = true; btn.innerHTML = '<span class="loading"></span>';
+  try {
+    const res = await fetch('/api/admin/login', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ key })
+    });
+    const data = await res.json();
+    if (!res.ok || !data.ok) throw new Error(data.error || 'Login failed');
+    token = data.token;
+    localStorage.setItem(TOKEN_KEY, token);
+    toast('Welcome admin! 🎉', 'success');
+    showApp();
+    loadStats();
+  } catch (e) { toast(e.message, 'error'); }
+  finally { btn.disabled = false; btn.textContent = '🔓 Login'; }
+}
+
+function doLogout() {
+  api('/api/admin/logout', { method: 'POST' }).catch(() => {});
+  localStorage.removeItem(TOKEN_KEY);
+  token = '';
+  showLogin();
+}
+
+function showLogin() {
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('adminApp').classList.remove('active');
+  document.getElementById('adminKey').value = '';
+}
+
+function showApp() {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('adminApp').classList.add('active');
+  api('/api/admin/me').then(r => {
+    const d = new Date(r.session.createdAt).toLocaleString();
+    document.getElementById('sessionInfo').textContent = `Session since ${d}`;
+  }).catch(() => {});
+}
+
+document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => {
+  document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(x => x.classList.remove('active'));
+  t.classList.add('active');
+  const panel = document.getElementById('panel-' + t.dataset.tab);
+  if (panel) panel.classList.add('active');
+  const tab = t.dataset.tab;
+  if (tab === 'wallets') loadWallets(1);
+  if (tab === 'channels') loadChannels(1);
+  if (tab === 'transactions') loadTransactions(1);
+  if (tab === 'sessions') loadSessions();
+  if (tab === 'audit') loadAudit(1);
+  if (tab === 'stats') loadStats();
+}));
+
+function refreshAll() {
+  const active = document.querySelector('.tab.active')?.dataset.tab || 'stats';
+  if (active === 'stats') loadStats();
+  else if (active === 'wallets') loadWallets(currentWalletPage);
+  else if (active === 'channels') loadChannels(currentChannelPage);
+  else if (active === 'transactions') loadTransactions(currentTxPage);
+  else if (active === 'sessions') loadSessions();
+  else if (active === 'audit') loadAudit(currentAuditPage);
+}
+
+async function loadStats() {
+  try {
+    const { stats } = await api('/api/admin/stats');
+    const grid = document.getElementById('statGrid');
+    const cards = [
+      { label: 'Total Wallets', value: stats.totalWallets, cls: '' },
+      { label: 'Coins In Circulation', value: stats.totalCoinsInCirculation.toLocaleString(), cls: 'accent' },
+      { label: 'Total Channels', value: stats.totalChannels, cls: '' },
+      { label: 'Active Channels', value: stats.activeChannels, cls: 'success' },
+      { label: 'Expired Channels', value: stats.expiredChannels, cls: 'warn' },
+      { label: 'Active Sockets', value: stats.activeSockets, cls: 'success' },
+      { label: 'Stored Sessions', value: stats.totalSessions, cls: '' },
+      { label: 'Bot Numbers', value: stats.numbersCount, cls: '' },
+      { label: 'Admins', value: stats.adminsCount, cls: '' },
+      { label: 'Newsletters', value: stats.newslettersCount, cls: '' },
+      { label: 'Uptime (min)', value: Math.floor(stats.uptimeSec / 60), cls: '' },
+      { label: 'Server Time', value: stats.timestamp.split(' ')[1], cls: '' }
+    ];
+    grid.innerHTML = cards.map(c => `
+      <div class="stat">
+        <div class="label">${c.label}</div>
+        <div class="value ${c.cls}">${c.value}</div>
+      </div>`).join('');
+
+    const sw = document.getElementById('sakuraWrap');
+    if (stats.sakura && stats.sakura.shards) {
+      sw.innerHTML = stats.sakura.shards.map(s => `
+        <div class="stat">
+          <div class="label">${s.name}</div>
+          <div class="value ${s.full ? 'warn' : ''}">${s.count ?? '?'} <span style="font-size:13px;color:var(--muted)">/ ${s.capacity}</span></div>
+        </div>`).join('');
+    }
+  } catch (e) { toast('Stats: ' + e.message, 'error'); }
+}
+
+async function loadWallets(page = 1) {
+  currentWalletPage = page;
+  try {
+    const search = document.getElementById('walletSearch').value.trim();
+    const data = await api(`/api/admin/wallets?page=${page}&limit=50&search=${encodeURIComponent(search)}`);
+    const wrap = document.getElementById('walletsTableWrap');
+    if (!data.wallets.length) {
+      wrap.innerHTML = '<div class="empty">No wallets found</div>';
+    } else {
+      wrap.innerHTML = `
+        <div class="muted mb-10">Showing ${data.wallets.length} of ${data.total} — Total coins: <b>${data.totalCoinsInCirculation.toLocaleString()}</b></div>
+        <table>
+          <thead><tr><th>Number</th><th>Coins</th><th>Last Daily</th><th>Created</th><th>Actions</th></tr></thead>
+          <tbody>${data.wallets.map(w => `
+            <tr>
+              <td class="mono">${w.number}</td>
+              <td><b style="color:var(--accent)">${(w.coins || 0).toLocaleString()}</b></td>
+              <td class="muted">${w.lastDailyClaimAt ? new Date(w.lastDailyClaimAt).toLocaleDateString() : '—'}</td>
+              <td class="muted">${w.createdAt ? new Date(w.createdAt).toLocaleDateString() : '—'}</td>
+              <td><button class="sm success" onclick="openWallet('${w.number}')">View</button></td>
+            </tr>`).join('')}</tbody>
+        </table>`;
+    }
+    renderPagination('walletsPagination', data.page, data.pages, (p) => loadWallets(p));
+  } catch (e) { toast('Wallets: ' + e.message, 'error'); }
+}
+
+async function openWallet(number) {
+  try {
+    const data = await api('/api/admin/wallet/' + number);
+    const w = data.wallet;
+    const input = window.prompt(`🪙 Wallet: ${w.number}\nCurrent coins: ${w.coins}\n\nEnter action (e.g. +50, -20, =100):`, '');
+    if (!input) return;
+    const m = input.trim().match(/^([+\-=])\s*(\d+)$/);
+    if (!m) return toast('Invalid format. Use +50, -20, or =100', 'error');
+    const [, op, amtStr] = m;
+    const amount = Number(amtStr);
+    let endpoint, body;
+    if (op === '+') { endpoint = '/api/admin/coins/give'; body = { number, amount, reason: 'Quick from wallet view' }; }
+    else if (op === '-') { endpoint = '/api/admin/coins/deduct'; body = { number, amount, reason: 'Quick from wallet view' }; }
+    else { endpoint = '/api/admin/coins/set'; body = { number, amount, reason: 'Quick from wallet view' }; }
+    const r = await api(endpoint, { method: 'POST', headers: { 'x-confirm': 'yes' }, body: JSON.stringify(body) });
+    toast(`✅ Done — new balance: ${r.coins}`, 'success');
+    loadWallets(currentWalletPage);
+  } catch (e) { toast(e.message, 'error'); }
+}
+
+function getQuickBody() {
+  const number = document.getElementById('qcNumber').value.trim();
+  const amount = Number(document.getElementById('qcAmount').value);
+  const reason = document.getElementById('qcReason').value.trim() || 'Admin quick action';
+  if (!number) { toast('Enter a number', 'error'); return null; }
+  if (!Number.isFinite(amount)) { toast('Enter valid amount', 'error'); return null; }
+  return { number, amount, reason };
+}
+async function quickGive() {
+  const b = getQuickBody(); if (!b) return;
+  try { const r = await api('/api/admin/coins/give', { method: 'POST', headers: { 'x-confirm': 'yes' }, body: JSON.stringify(b) });
+    toast(`✅ +${r.added} → ${r.coins}`, 'success'); loadStats();
+  } catch (e) { toast(e.message, 'error'); }
+}
+async function quickDeduct() {
+  const b = getQuickBody(); if (!b) return;
+  try { const r = await api('/api/admin/coins/deduct', { method: 'POST', headers: { 'x-confirm': 'yes' }, body: JSON.stringify(b) });
+    toast(`✅ -${r.deducted} → ${r.coins}`, 'success'); loadStats();
+  } catch (e) { toast(e.message, 'error'); }
+}
+async function quickSet() {
+  const b = getQuickBody(); if (!b) return;
+  try { const r = await api('/api/admin/coins/set', { method: 'POST', headers: { 'x-confirm': 'yes' }, body: JSON.stringify(b) });
+    toast(`✅ set to ${r.coins}`, 'success'); loadStats();
+  } catch (e) { toast(e.message, 'error'); }
+}
+
+async function doBroadcast() {
+  const amount = Number(document.getElementById('bcAmount').value);
+  const minCoins = document.getElementById('bcMin').value;
+  const maxCoins = document.getElementById('bcMax').value;
+  const reason = document.getElementById('bcReason').value.trim() || 'Admin broadcast';
+  if (!Number.isFinite(amount) || amount <= 0) return toast('Enter valid amount', 'error');
+  if (!confirm(`Broadcast ${amount} coins to matching wallets?`)) return;
+  try {
+    const body = { amount, reason };
+    if (minCoins) body.minCoins = Number(minCoins);
+    if (maxCoins) body.maxCoins = Number(maxCoins);
+    const r = await api('/api/admin/coins/broadcast', { method: 'POST', headers: { 'x-confirm': 'yes' }, body: JSON.stringify(body) });
+    toast(`✅ ${r.modified} wallets received +${r.amountPerUser}`, 'success');
+    loadStats();
+  } catch (e) { toast(e.message, 'error'); }
+}
+
+async function loadChannels(page = 1) {
+  currentChannelPage = page;
+  try {
+    const search = document.getElementById('channelSearch').value.trim();
+    const data = await api(`/api/admin/channels?page=${page}&limit=100&search=${encodeURIComponent(search)}`);
+    const wrap = document.getElementById('channelsTableWrap');
+    if (!data.channels.length) {
+      wrap.innerHTML = '<div class="empty">No channels found</div>';
+    } else {
+      const now = Date.now();
+      wrap.innerHTML = `
+        <div class="muted mb-10">Showing ${data.channels.length} of ${data.total}</div>
+        <table>
+          <thead><tr><th>Number</th><th>JID</th><th>Emojis</th><th>Days</th><th>Expires</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody>${data.channels.map(c => {
+            const exp = c.expiresAt ? new Date(c.expiresAt).getTime() : 0;
+            const active = exp > now;
+            return `<tr>
+              <td class="mono">${c.number || '—'}</td>
+              <td class="mono" style="max-width:200px;overflow:hidden;text-overflow:ellipsis">${c.jid}</td>
+              <td>${(c.emojis || []).join(' ')}</td>
+              <td>${c.days || '—'}</td>
+              <td class="muted">${c.expiresAt ? new Date(c.expiresAt).toLocaleDateString() : '—'}</td>
+              <td>${active ? '<span class="badge green">Active</span>' : '<span class="badge red">Expired</span>'}</td>
+              <td>
+                <button class="sm ghost" onclick="extendChannel('${c.jid}')">+30d</button>
+                <button class="sm danger" onclick="deleteChannel('${c.jid}')">Delete</button>
+              </td>
+            </tr>`;
+          }).join('')}</tbody>
+        </table>`;
+    }
+    renderPagination('channelsPagination', data.page, data.pages, (p) => loadChannels(p));
+  } catch (e) { toast('Channels: ' + e.message, 'error'); }
+}
+
+async function doAddChannel() {
+  const number = document.getElementById('chNumber').value.trim();
+  const jid = document.getElementById('chJid').value.trim();
+  const emojisRaw = document.getElementById('chEmojis').value.trim();
+  const days = Number(document.getElementById('chDays').value) || 30;
+  if (!number || !jid) return toast('Number and JID required', 'error');
+  const emojis = emojisRaw.split(',').map(s => s.trim()).filter(Boolean);
+  if (!emojis.length) return toast('Add at least one emoji', 'error');
+  try {
+    await api('/api/admin/channels/add', {
+      method: 'POST', headers: { 'x-confirm': 'yes' },
+      body: JSON.stringify({ number, jid, emojis, days })
+    });
+    toast('✅ Channel added', 'success');
+    document.getElementById('chJid').value = '';
+    document.getElementById('chEmojis').value = '';
+    loadChannels(1);
+  } catch (e) { toast(e.message, 'error'); }
+}
+
+async function extendChannel(jid) {
+  const days = Number(prompt('Extend by how many days?', '30'));
+  if (!Number.isInteger(days) || days < 1) return;
+  try {
+    const r = await api('/api/admin/channels/extend', { method: 'POST', body: JSON.stringify({ jid, days }) });
+    toast('✅ Extended to ' + new Date(r.expiresAt).toLocaleDateString(), 'success');
+    loadChannels(currentChannelPage);
+  } catch (e) { toast(e.message, 'error'); }
+}
+
+async function deleteChannel(jid) {
+  if (!confirm('Delete this channel react?')) return;
+  try {
+    await api('/api/admin/channels/delete', { method: 'POST', headers: { 'x-confirm': 'yes' }, body: JSON.stringify({ jid }) });
+    toast('🗑️ Deleted', 'success');
+    loadChannels(currentChannelPage);
+  } catch (e) { toast(e.message, 'error'); }
+}
+
+async function loadTransactions(page = 1) {
+  currentTxPage = page;
+  try {
+    const number = document.getElementById('txSearchNumber').value.trim();
+    const type = document.getElementById('txTypeFilter').value;
+    const q = new URLSearchParams({ page, limit: 100 });
+    if (number) q.set('number', number);
+    if (type) q.set('type', type);
+    const data = await api('/api/admin/transactions?' + q.toString());
+    const wrap = document.getElementById('txTableWrap');
+    if (!data.transactions.length) {
+      wrap.innerHTML = '<div class="empty">No transactions yet</div>';
+    } else {
+      wrap.innerHTML = `
+        <div class="muted mb-10">Showing ${data.transactions.length} of ${data.total}</div>
+        <table>
+          <thead><tr><th>Time</th><th>Number</th><th>Type</th><th>Amount</th><th>Reason</th></tr></thead>
+          <tbody>${data.transactions.map(t => `
+            <tr>
+              <td class="muted">${new Date(t.at).toLocaleString()}</td>
+              <td class="mono">${t.number}</td>
+              <td><span class="badge blue">${t.type}</span></td>
+              <td style="color:${t.amount > 0 ? 'var(--success)' : 'var(--danger)'};font-weight:700">${t.amount > 0 ? '+' : ''}${t.amount}</td>
+              <td class="muted">${t.reason || '—'}</td>
+            </tr>`).join('')}</tbody>
+        </table>`;
+    }
+    renderPagination('txPagination', data.page, data.pages, (p) => loadTransactions(p));
+  } catch (e) { toast('Tx: ' + e.message, 'error'); }
+}
+
+async function loadSessions() {
+  try {
+    const data = await api('/api/admin/sessions');
+    document.getElementById('activeSessionsBadge').textContent = `${data.activeCount} active socket(s)`;
+    const wrap = document.getElementById('sessionsTableWrap');
+    if (!data.sessions.length) {
+      wrap.innerHTML = '<div class="empty">No sessions stored</div>';
+      return;
+    }
+    wrap.innerHTML = `
+      <table>
+        <thead><tr><th>Number</th><th>DB Shard</th><th>Status</th><th>Updated</th><th>Actions</th></tr></thead>
+        <tbody>${data.sessions.map(s => `
+          <tr>
+            <td class="mono">${s.number}</td>
+            <td><span class="badge blue">sakuradb-${(s.dbIndex ?? 0) + 1}</span></td>
+            <td>${s.active ? '<span class="badge green">● Active</span>' : '<span class="badge amber">○ Stored</span>'}</td>
+            <td class="muted">${s.updatedAt ? new Date(s.updatedAt).toLocaleString() : '—'}</td>
+            <td><button class="sm danger" onclick="deleteSession('${s.number}')">Logout & Delete</button></td>
+          </tr>`).join('')}</tbody>
+      </table>`;
+  } catch (e) { toast('Sessions: ' + e.message, 'error'); }
+}
+
+async function deleteSession(number) {
+  if (!confirm(`Delete session ${number}?\nThis will logout the bot.`)) return;
+  try {
+    await api('/api/admin/sessions/delete', { method: 'POST', headers: { 'x-confirm': 'yes' }, body: JSON.stringify({ number }) });
+    toast('🗑️ Session deleted', 'success');
+    loadSessions();
+  } catch (e) { toast(e.message, 'error'); }
+}
+
+async function loadAudit(page = 1) {
+  currentAuditPage = page;
+  try {
+    const data = await api(`/api/admin/audit?page=${page}&limit=100`);
+    const wrap = document.getElementById('auditTableWrap');
+    if (!data.audit.length) {
+      wrap.innerHTML = '<div class="empty">No audit entries yet</div>';
+    } else {
+      wrap.innerHTML = `
+        <div class="muted mb-10">Showing ${data.audit.length} of ${data.total}</div>
+        <table>
+          <thead><tr><th>Time</th><th>Action</th><th>Details</th></tr></thead>
+          <tbody>${data.audit.map(a => `
+            <tr>
+              <td class="muted">${new Date(a.at).toLocaleString()}</td>
+              <td><span class="badge blue">${a.action}</span></td>
+              <td class="mono" style="font-size:11px;max-width:500px;overflow:hidden;text-overflow:ellipsis">${JSON.stringify(a.meta || {})}</td>
+            </tr>`).join('')}</tbody>
+        </table>`;
+    }
+    renderPagination('auditPagination', data.page, data.pages, (p) => loadAudit(p));
+  } catch (e) { toast('Audit: ' + e.message, 'error'); }
+}
+
+function renderPagination(elId, page, pages, onGo) {
+  const el = document.getElementById(elId);
+  if (pages <= 1) { el.innerHTML = ''; return; }
+  el.innerHTML = `
+    <button class="ghost sm" ${page <= 1 ? 'disabled' : ''} data-p="${page - 1}">‹ Prev</button>
+    <span class="muted">Page ${page} / ${pages}</span>
+    <button class="ghost sm" ${page >= pages ? 'disabled' : ''} data-p="${page + 1}">Next ›</button>
+  `;
+  el.querySelectorAll('button[data-p]').forEach(b => {
+    b.addEventListener('click', () => onGo(Number(b.dataset.p)));
+  });
+}
+
+if (token) {
+  showApp();
+  loadStats();
+  setInterval(() => { if (token && document.querySelector('.tab.active')?.dataset.tab === 'stats') loadStats(); }, 30000);
+} else {
+  showLogin();
+}
+document.getElementById('adminKey').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+</script>
+</body>
+</html>

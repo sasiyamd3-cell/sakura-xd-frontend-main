@@ -32,10 +32,11 @@
     font-family: 'Inter', sans-serif;
     min-height: 100vh;
     overflow-x: hidden;
+    position: relative;
   }
   svg.ic{ display:block; flex-shrink:0; }
 
-  /* ---------- Background petals ---------- */
+  /* Petals canvas */
   #petals{ position: fixed; inset: 0; z-index: 0; pointer-events: none; }
 
   /* ---------- Top bar ---------- */
@@ -62,41 +63,77 @@
     font-weight: 800; font-size: 16px; letter-spacing: 0.04em;
     background: linear-gradient(100deg, var(--paper) 20%, var(--sakura) 60%, var(--lantern) 100%);
     -webkit-background-clip: text; background-clip: text; color: transparent;
+    line-height: 1;
   }
   .brand-mini .sub{
     font-family: 'Space Mono', monospace;
     font-size: 10px; color: var(--lantern);
     letter-spacing: 0.1em; text-transform: uppercase;
+    margin-top: 3px;
   }
-  .top-actions{ display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .actions{ display: flex; gap: 8px; align-items: center; }
+  .actions .session-info{
+    font-family: 'Space Mono', monospace;
+    font-size: 11px; color: var(--muted);
+    display: none;
+  }
+  @media (min-width: 700px){ .actions .session-info{ display: block; } }
 
-  /* ---------- Buttons ---------- */
-  .btn{
-    border: none; border-radius: 10px;
-    padding: 10px 18px;
-    font-family: 'Inter', sans-serif;
-    font-weight: 700; font-size: 13px;
-    text-decoration: none;
-    display: inline-flex; align-items: center; gap: 7px;
-    cursor: pointer;
-    transition: transform 0.12s ease;
-    color: #fff;
+  /* Burger */
+  .burger{
+    width: 42px; height: 42px; border-radius: 12px;
+    border: 1px solid var(--line); background: var(--ink-3);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 5px; cursor: pointer; flex-shrink: 0;
   }
-  .btn:hover{ transform: translateY(-1px); }
-  .btn.primary{
-    background: linear-gradient(120deg, var(--sakura) 0%, var(--sakura-deep) 100%);
-    box-shadow: 0 10px 28px -10px rgba(122,43,255,0.8);
+  .burger span{
+    display: block; width: 18px; height: 2px;
+    background: var(--sakura); border-radius: 2px;
+    transition: transform 0.25s ease, opacity 0.2s ease;
   }
-  .btn.ghost{
-    color: var(--lantern-soft); background: transparent;
-    border: 1px solid rgba(216,163,255,0.4);
+  .burger.open span:nth-child(1){ transform: translateY(7px) rotate(45deg); }
+  .burger.open span:nth-child(2){ opacity: 0; }
+  .burger.open span:nth-child(3){ transform: translateY(-7px) rotate(-45deg); }
+
+  /* Nav menu (matching main site) */
+  .navmenu{
+    position: fixed; top: 73px; right: 20px; z-index: 49;
+    width: min(280px, calc(100vw - 40px));
+    background: linear-gradient(165deg, var(--ink-2), var(--ink) 130%);
+    border: 1px solid var(--line); border-radius: 16px;
+    box-shadow: 0 24px 50px -16px rgba(0,0,0,0.6);
+    padding: 10px;
+    transform: translateY(-12px) scale(0.97);
+    opacity: 0; pointer-events: none;
+    transition: transform 0.18s ease, opacity 0.18s ease;
   }
-  .btn.ghost:hover{ background: rgba(216,163,255,0.1); }
-  .btn.success{ background: linear-gradient(120deg, #16a34a, #22c55e); }
-  .btn.danger{ background: linear-gradient(120deg, #b91c1c, #ef4444); }
-  .btn.warn{ background: linear-gradient(120deg, #b45309, #f59e0b); }
-  .btn.sm{ padding: 7px 12px; font-size: 12px; }
-  .btn:disabled{ opacity: 0.5; cursor: not-allowed; transform: none; }
+  .navmenu.open{ transform: translateY(0) scale(1); opacity: 1; pointer-events: auto; }
+  .navmenu a{
+    display: flex; align-items: center; gap: 12px;
+    padding: 13px 14px; border-radius: 11px;
+    text-decoration: none; color: var(--paper);
+    font-weight: 600; font-size: 14.5px;
+    transition: background 0.15s ease;
+  }
+  .navmenu a:hover, .navmenu a:focus-visible{ background: var(--ink-3); }
+  .navmenu .icon{
+    width: 34px; height: 34px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--ink-3); flex-shrink: 0;
+  }
+  .navmenu .icon.pink{ background: rgba(122,43,255,0.18); color: var(--sakura); }
+  .navmenu .icon.gold{ background: rgba(216,163,255,0.15); color: var(--lantern); }
+  .navmenu .icon.mint{ background: rgba(78,230,160,0.16); color: #4ee6a0; }
+  .navmenu .icon.shield{ background: rgba(255,209,102,0.18); color: #ffd166; }
+  .navmenu .desc{ display: block; font-size: 12px; color: var(--muted); font-weight: 400; margin-top: 2px; }
+  .navmenu .divider{ height: 1px; background: var(--line); margin: 6px 4px; }
+
+  .overlay{
+    position: fixed; inset: 0; background: rgba(6, 8, 18, 0.5);
+    z-index: 48; opacity: 0; pointer-events: none;
+    transition: opacity 0.18s ease;
+  }
+  .overlay.open{ opacity: 1; pointer-events: auto; }
 
   /* ---------- Login screen ---------- */
   .login-wrap{
@@ -107,10 +144,18 @@
   .login-card{
     background: linear-gradient(165deg, var(--ink-2), var(--ink) 130%);
     border: 1px solid var(--line);
-    padding: 40px 32px; border-radius: 20px;
+    padding: 40px 32px; border-radius: 22px;
     width: 100%; max-width: 420px;
-    box-shadow: 0 24px 60px -16px rgba(0,0,0,0.6);
+    box-shadow: 0 30px 60px -20px rgba(0,0,0,0.55);
     text-align: center;
+    position: relative; overflow: hidden;
+  }
+  .login-card::before{
+    content: ''; position: absolute;
+    top: -50%; right: -30%;
+    width: 220px; height: 220px;
+    background: radial-gradient(circle, rgba(176,107,255,0.25), transparent 70%);
+    filter: blur(20px); pointer-events: none;
   }
   .login-card .logo{
     width: 72px; height: 72px; margin: 0 auto 18px;
@@ -120,6 +165,7 @@
     display: flex; align-items: center; justify-content: center;
     overflow: hidden;
     box-shadow: 0 0 36px rgba(176,107,255,0.55);
+    position: relative; z-index: 1;
   }
   .login-card .logo img{ width: 100%; height: 100%; object-fit: cover; }
   .login-card h1{
@@ -127,8 +173,15 @@
     font-size: 22px; margin: 0 0 8px;
     background: linear-gradient(100deg, var(--paper) 20%, var(--sakura) 60%, var(--lantern) 100%);
     -webkit-background-clip: text; background-clip: text; color: transparent;
+    position: relative; z-index: 1;
   }
-  .login-card p{ color: var(--muted); font-size: 13px; margin: 0 0 24px; }
+  .login-card p{ color: var(--muted); font-size: 13px; margin: 0 0 24px; position: relative; z-index: 1; }
+  .login-card .back-home{
+    display: inline-block; margin-top: 18px; font-size: 12px;
+    color: var(--muted); text-decoration: none;
+    font-family: 'Space Mono', monospace;
+  }
+  .login-card .back-home:hover{ color: var(--lantern); }
 
   input, select, textarea{
     width: 100%;
@@ -140,18 +193,20 @@
     font-family: 'Inter', sans-serif;
     font-size: 13.5px;
     outline: none;
-    transition: border-color 0.15s ease;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
   }
-  input:focus, select:focus, textarea:focus{ border-color: rgba(176,107,255,0.6); }
+  input:focus, select:focus, textarea:focus{
+    border-color: var(--sakura);
+    box-shadow: 0 0 0 3px rgba(122,43,255,0.22);
+  }
   textarea{ resize: vertical; }
 
-  .field{ margin-bottom: 12px; text-align: left; }
+  .field{ margin-bottom: 12px; text-align: left; position: relative; z-index: 1; }
   label{
     display: block; font-size: 11.5px; color: var(--muted);
     margin-bottom: 6px; font-weight: 600;
     font-family: 'Space Mono', monospace;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
+    letter-spacing: 0.04em; text-transform: uppercase;
   }
 
   /* ---------- App ---------- */
@@ -159,7 +214,31 @@
   .app.active{ display: block; }
   .container{ max-width: 1280px; margin: 0 auto; padding: 24px 20px 60px; }
 
-  /* ---------- Tabs ---------- */
+  /* Hero header */
+  .admin-hero{
+    text-align: center;
+    padding: 20px 20px 30px;
+    position: relative;
+  }
+  .admin-hero .eyebrow{
+    font-family: 'Space Mono', monospace;
+    font-size: 11px; letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--lantern);
+    margin: 0 0 8px;
+  }
+  .admin-hero h1{
+    font-family: 'Unbounded', sans-serif;
+    font-weight: 800;
+    font-size: clamp(24px, 4vw, 34px);
+    margin: 0 0 8px;
+    background: linear-gradient(100deg, var(--paper) 15%, var(--sakura) 55%, var(--lantern) 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    text-shadow: 0 0 30px rgba(176,107,255,0.25);
+  }
+  .admin-hero p{ color: var(--muted); font-size: 13.5px; margin: 0; }
+
+  /* Tabs */
   .tabs{
     display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 22px;
     background: linear-gradient(165deg, var(--ink-2), var(--ink) 130%);
@@ -180,41 +259,57 @@
     box-shadow: 0 8px 20px -8px rgba(122,43,255,0.8);
   }
 
-  /* ---------- Panels ---------- */
+  /* Panels */
   .panel{ display: none; }
   .panel.active{ display: block; animation: fadeIn 0.25s ease; }
   @keyframes fadeIn{ from{ opacity: 0; transform: translateY(6px); } to{ opacity: 1; transform: none; } }
 
-  /* ---------- Cards ---------- */
+  /* Cards */
   .card{
     background: linear-gradient(165deg, var(--ink-2), var(--ink) 130%);
     border: 1px solid var(--line);
     border-radius: 18px;
     padding: 22px 24px;
     margin-bottom: 18px;
+    position: relative; overflow: hidden;
+  }
+  .card::before{
+    content: ''; position: absolute;
+    top: -40%; right: -20%;
+    width: 180px; height: 180px;
+    background: radial-gradient(circle, rgba(176,107,255,0.08), transparent 70%);
+    filter: blur(10px);
+    pointer-events: none;
   }
   .card h2{
     font-family: 'Unbounded', sans-serif; font-weight: 700;
     font-size: 15px; margin: 0 0 16px;
     color: var(--paper);
     display: flex; align-items: center; gap: 8px;
+    position: relative; z-index: 1;
   }
   .card .sub{
     color: var(--muted); font-size: 12.5px; margin: -10px 0 14px;
+    position: relative; z-index: 1;
   }
 
-  /* ---------- Grid stats ---------- */
+  /* Grid stats */
   .grid{ display: grid; gap: 14px; }
   .grid-4{ grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
   .grid-2{ grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
 
   .stat{
-    background: var(--ink-3);
+    background: linear-gradient(160deg, var(--ink-3), var(--ink-2));
     border: 1px solid var(--line);
     border-radius: 14px;
     padding: 16px 18px;
     position: relative;
     overflow: hidden;
+    transition: border-color 0.2s ease, transform 0.2s ease;
+  }
+  .stat:hover{
+    border-color: rgba(176,107,255,0.4);
+    transform: translateY(-2px);
   }
   .stat::before{
     content: ''; position: absolute;
@@ -244,12 +339,40 @@
   .stat .value.success{ color: var(--success); }
   .stat .value.warn{ color: var(--warn); }
 
-  /* ---------- Forms ---------- */
+  /* Forms */
   .row{ display: flex; gap: 10px; flex-wrap: wrap; }
   .row > *{ flex: 1; min-width: 140px; }
 
-  /* ---------- Table ---------- */
-  .table-wrap{ overflow-x: auto; border-radius: 12px; border: 1px solid var(--line); }
+  /* Buttons */
+  .btn{
+    border: none; border-radius: 10px;
+    padding: 10px 18px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 700; font-size: 13px;
+    text-decoration: none;
+    display: inline-flex; align-items: center; gap: 7px;
+    cursor: pointer;
+    transition: transform 0.12s ease;
+    color: #fff;
+  }
+  .btn:hover{ transform: translateY(-1px); }
+  .btn.primary{
+    background: linear-gradient(120deg, var(--sakura) 0%, var(--sakura-deep) 100%);
+    box-shadow: 0 10px 28px -10px rgba(122,43,255,0.8);
+  }
+  .btn.ghost{
+    color: var(--lantern-soft); background: transparent;
+    border: 1px solid rgba(216,163,255,0.4);
+  }
+  .btn.ghost:hover{ background: rgba(216,163,255,0.1); }
+  .btn.success{ background: linear-gradient(120deg, #16a34a, #22c55e); }
+  .btn.danger{ background: linear-gradient(120deg, #b91c1c, #ef4444); }
+  .btn.warn{ background: linear-gradient(120deg, #b45309, #f59e0b); }
+  .btn.sm{ padding: 7px 12px; font-size: 12px; }
+  .btn:disabled{ opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  /* Table */
+  .table-wrap{ overflow-x: auto; border-radius: 12px; border: 1px solid var(--line); position: relative; z-index: 1; }
   table{ width: 100%; border-collapse: collapse; font-size: 13px; }
   th, td{ text-align: left; padding: 11px 14px; border-bottom: 1px solid var(--line); }
   th{
@@ -263,7 +386,7 @@
   tr:hover td{ background: rgba(176,107,255,0.05); }
   .mono{ font-family: 'Space Mono', monospace; font-size: 12px; }
 
-  /* ---------- Badges ---------- */
+  /* Badges */
   .badge{
     display: inline-flex; align-items: center; gap: 4px;
     padding: 3px 9px; border-radius: 999px;
@@ -276,9 +399,9 @@
   .badge.amber{ background: rgba(251,191,36,0.15); color: #fcd34d; }
   .badge.blue{ background: rgba(176,107,255,0.18); color: var(--lantern-soft); }
 
-  /* ---------- Toast ---------- */
+  /* Toast */
   .toast-wrap{
-    position: fixed; top: 80px; right: 20px; z-index: 1000;
+    position: fixed; top: 20px; right: 20px; z-index: 1000;
     display: flex; flex-direction: column; gap: 8px;
   }
   .toast{
@@ -295,13 +418,12 @@
   .toast.info{ border-left: 3px solid var(--sakura); }
   @keyframes slideIn{ from{ transform: translateX(100%); opacity: 0; } to{ transform: none; opacity: 1; } }
 
-  /* ---------- Misc ---------- */
+  /* Misc */
   .muted{ color: var(--muted); font-size: 12px; }
   .loading{
     display: inline-block; width: 14px; height: 14px;
     border: 2px solid rgba(255,255,255,0.2);
-    border-top-color: white;
-    border-radius: 50%;
+    border-top-color: white; border-radius: 50%;
     animation: spin 0.6s linear infinite;
   }
   @keyframes spin{ to{ transform: rotate(360deg); } }
@@ -312,7 +434,7 @@
   .pagination{ display: flex; justify-content: center; gap: 8px; margin-top: 16px; align-items: center; }
   .pagination button{ padding: 6px 12px; font-size: 12px; }
 
-  /* ---------- Decorative crest ---------- */
+  /* Decorative crest */
   .bg-crest{
     position: fixed; top: 60px; right: -60px;
     width: 380px; height: 380px;
@@ -357,7 +479,7 @@
       <img src="https://raw.githubusercontent.com/NimeshMihiranga-Neno/cartoon-web/main/18d7513834fe1dcc00b6807bb6174794.jpg" alt="Miyora MD" />
     </div>
     <h1>Admin Panel</h1>
-    <p>Enter admin key to access control panel</p>
+    <p>Enter your admin key to access the control panel</p>
     <div class="field">
       <label>Admin Key</label>
       <input type="password" id="adminKey" placeholder="••••••••••••" autocomplete="off" />
@@ -365,6 +487,7 @@
     <button class="btn primary" style="width:100%;justify-content:center" onclick="doLogin()" id="loginBtn">
       🔓 Login
     </button>
+    <a href="/" class="back-home">← Back to home</a>
   </div>
 </div>
 
@@ -379,15 +502,21 @@
         <div class="sub">Admin Control</div>
       </div>
     </div>
-    <div class="top-actions">
-      <a class="btn ghost sm" href="/">🏠 Home</a>
+    <div class="actions">
+      <span class="session-info" id="sessionInfo"></span>
       <button class="btn ghost sm" onclick="refreshAll()">🔄 Refresh</button>
       <button class="btn danger sm" onclick="doLogout()">Logout</button>
     </div>
   </div>
 
   <div class="container">
-    <!-- Tabs -->
+
+    <div class="admin-hero">
+      <p class="eyebrow">Control Center</p>
+      <h1>Bot Management</h1>
+      <p>Manage coins, channels, and sessions for your Miyora MD bot</p>
+    </div>
+
     <div class="tabs">
       <button class="tab active" data-tab="stats">📊 Dashboard</button>
       <button class="tab" data-tab="wallets">🪙 Wallets</button>
@@ -415,7 +544,7 @@
 
         <div class="card">
           <h2>⚡ Quick Coin Action</h2>
-          <p class="sub">Directly give/deduct/set coins to a number</p>
+          <p class="sub">Give/deduct/set coins for any number</p>
           <div class="field"><label>Phone number</label><input type="text" id="qcNumber" placeholder="94771234567" /></div>
           <div class="field"><label>Amount</label><input type="number" id="qcAmount" placeholder="50" /></div>
           <div class="field"><label>Reason</label><input type="text" id="qcReason" placeholder="Manual grant" /></div>
@@ -447,7 +576,6 @@
     <div class="panel" id="panel-channels">
       <div class="card">
         <h2>➕ Add Channel React (free, no coin cost)</h2>
-        <p class="sub">Force add a channel to any user without deducting coins</p>
         <div class="row">
           <div class="field" style="flex:1"><label>User number</label><input type="text" id="chNumber" placeholder="94771234567" /></div>
           <div class="field" style="flex:2"><label>Newsletter JID</label><input type="text" id="chJid" placeholder="1203630...@newsletter" /></div>
@@ -480,22 +608,24 @@
         <div id="sessionsTableWrap"></div>
       </div>
     </div>
+
   </div>
 </div>
 
 <div class="toast-wrap" id="toastWrap"></div>
 
 <script>
-// ============ PETALS BACKGROUND ============
+// ==================== PETALS ====================
 (function(){
   const canvas = document.getElementById('petals');
+  if(!canvas) return;
   const ctx = canvas.getContext('2d');
   let petals = [];
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   function resize(){
     canvas.width = window.innerWidth;
-    canvas.height = document.documentElement.scrollHeight;
+    canvas.height = window.innerHeight;
   }
   window.addEventListener('resize', resize);
   resize();
@@ -503,19 +633,21 @@
   function makePetal(){
     return {
       x: Math.random() * canvas.width,
-      y: Math.random() * canvas.height,
+      y: Math.random() * -canvas.height,
       size: 6 + Math.random() * 9,
-      speed: 0.35 + Math.random() * 0.8,
-      drift: (Math.random() - 0.5) * 0.5,
+      speed: 0.4 + Math.random() * 0.9,
+      drift: (Math.random() - 0.5) * 0.6,
       rot: Math.random() * Math.PI * 2,
-      rotSpeed: (Math.random() - 0.5) * 0.018,
-      opacity: 0.3 + Math.random() * 0.35,
-      gold: Math.random() < 0.22
+      rotSpeed: (Math.random() - 0.5) * 0.02,
+      opacity: 0.35 + Math.random() * 0.4
     };
   }
-
-  const PETAL_COUNT = reduceMotion ? 0 : (window.innerWidth < 600 ? 14 : 24);
-  for(let i = 0; i < PETAL_COUNT; i++) petals.push(makePetal());
+  const PETAL_COUNT = reduceMotion ? 0 : (window.innerWidth < 600 ? 16 : 28);
+  for(let i = 0; i < PETAL_COUNT; i++){
+    const p = makePetal();
+    p.y = Math.random() * canvas.height;
+    petals.push(p);
+  }
 
   function drawPetal(p){
     ctx.save();
@@ -523,13 +655,8 @@
     ctx.rotate(p.rot);
     ctx.globalAlpha = p.opacity;
     const grad = ctx.createLinearGradient(-p.size, -p.size, p.size, p.size);
-    if(p.gold){
-      grad.addColorStop(0, '#e9d4ff');
-      grad.addColorStop(1, '#d8a3ff');
-    } else {
-      grad.addColorStop(0, '#b06bff');
-      grad.addColorStop(1, '#7a2bff');
-    }
+    grad.addColorStop(0, '#b06bff');
+    grad.addColorStop(1, '#7a2bff');
     ctx.fillStyle = grad;
     ctx.beginPath();
     ctx.moveTo(0, -p.size);
@@ -556,7 +683,7 @@
   if(!reduceMotion) requestAnimationFrame(tick);
 })();
 
-// ============ ADMIN PANEL LOGIC ============
+// ==================== ADMIN LOGIC ====================
 const TOKEN_KEY = 'miyora_admin_token';
 let token = localStorage.getItem(TOKEN_KEY) || '';
 let currentWalletPage = 1, currentChannelPage = 1;
@@ -693,7 +820,7 @@ async function loadWallets(page = 1) {
       wrap.innerHTML = '<div class="empty">No wallets found</div>';
     } else {
       wrap.innerHTML = `
-        <div class="muted mb-10">Showing ${data.wallets.length} of ${data.total} — Total coins: <b style="color:var(--sakura)">${data.totalCoinsInCirculation.toLocaleString()}</b></div>
+        <div class="muted mb-10">Showing ${data.wallets.length} of ${data.total} — Total coins: <b style="color:var(--lantern)">${data.totalCoinsInCirculation.toLocaleString()}</b></div>
         <div class="table-wrap"><table>
           <thead><tr><th>Number</th><th>Coins</th><th>Last Daily</th><th>Created</th><th>Actions</th></tr></thead>
           <tbody>${data.wallets.map(w => `

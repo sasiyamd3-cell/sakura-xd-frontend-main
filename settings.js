@@ -46,16 +46,33 @@ const router = express.Router();
 router.use(express.json());
 
 // ============================================================
-// 📁 STATIC DIR SETUP — MUST be at the very top!
+// 📁 STATIC DIR SETUP
+// Looking for HTML files in 'sakura' folder OR 'dashboard_static'
 // ============================================================
-const dashboardStaticDir = path.join(__dirname, 'dashboard_static');
-if (!fs.existsSync(dashboardStaticDir)) fs.ensureDirSync(dashboardStaticDir);
+let dashboardStaticDir = path.join(__dirname, 'dashboard_static');
+if (!fs.existsSync(dashboardStaticDir)) {
+  // Fallback: try 'sakura' folder
+  const sakuraDir = path.join(__dirname, 'sakura');
+  if (fs.existsSync(sakuraDir)) {
+    dashboardStaticDir = sakuraDir;
+  } else {
+    fs.ensureDirSync(dashboardStaticDir);
+  }
+}
 console.log(`📁 Static dir: ${dashboardStaticDir} (exists: ${fs.existsSync(dashboardStaticDir)})`);
+
+// List files in the static dir for debugging
+try {
+  const files = fs.readdirSync(dashboardStaticDir);
+  console.log(`📂 Files in static dir: ${files.join(', ')}`);
+} catch (e) {
+  console.warn('Could not read static dir:', e.message);
+}
 
 router.use('/dashboard/static', express.static(dashboardStaticDir));
 
 // ============================================================
-// 🛡️ ADMIN HTML ROUTE — CRITICAL! Must be before commentsRouter
+// 🛡️ ADMIN HTML ROUTE — MUST be at the very top
 // ============================================================
 router.get('/admin', (req, res) => {
   const adminPath = path.join(dashboardStaticDir, 'admin.html');
@@ -65,6 +82,7 @@ router.get('/admin', (req, res) => {
       <html><body style="font-family:sans-serif;padding:40px;background:#0b1020;color:#fff">
       <h1>❌ admin.html not found</h1>
       <p>Expected path: <code>${adminPath}</code></p>
+      <p>Available files: <code>${fs.readdirSync(dashboardStaticDir).join(', ')}</code></p>
       <p>Please create the file and redeploy.</p>
       </body></html>
     `);
@@ -73,14 +91,43 @@ router.get('/admin', (req, res) => {
 });
 
 // ============================================================
-// 📄 DASHBOARD ROUTE (index.html)
+// 📄 ROOT & DASHBOARD ROUTE (index.html)
 // ============================================================
+router.get('/', async (req, res, next) => {
+  const indexPath = path.join(dashboardStaticDir, 'index.html');
+  if (fs.existsSync(indexPath)) {
+    return res.sendFile(indexPath);
+  }
+  next();
+});
+
 router.get('/dashboard', (req, res) => {
   const indexPath = path.join(dashboardStaticDir, 'index.html');
   if (fs.existsSync(indexPath)) {
     return res.sendFile(indexPath);
   }
   res.status(404).send('Dashboard not found');
+});
+
+// ============================================================
+// 📄 STATIC HTML ROUTES (pair.html, settings.html, react.html)
+// ============================================================
+router.get('/pair.html', (req, res) => {
+  const p = path.join(dashboardStaticDir, 'pair.html');
+  if (fs.existsSync(p)) return res.sendFile(p);
+  res.status(404).send('pair.html not found');
+});
+
+router.get('/settings.html', (req, res) => {
+  const p = path.join(dashboardStaticDir, 'settings.html');
+  if (fs.existsSync(p)) return res.sendFile(p);
+  res.status(404).send('settings.html not found');
+});
+
+router.get('/react.html', (req, res) => {
+  const p = path.join(dashboardStaticDir, 'react.html');
+  if (fs.existsSync(p)) return res.sendFile(p);
+  res.status(404).send('react.html not found');
 });
 
 // ============================================================
@@ -226,16 +273,12 @@ async function saveCredsToMongo(number, creds, keys = null) {
   const sanitized = number.replace(/[^0-9]/g, '');
   try {
     const index = await assignShardForNumber(sanitized);
-    if (index === null) {
-      console.error(`🛑 All sakura DBs are full. Cannot save session for ${sanitized}.`);
-      return { ok: false, full: true };
-    }
+    if (index === null) return { ok: false, full: true };
     const shard = await getSakuraShard(index);
     const now = new Date();
     const doc = { number: sanitized, creds, keys, updatedAt: now };
     await shard.sessionsCol.updateOne({ number: sanitized }, { $set: doc }, { upsert: true });
     await shardMapCol.updateOne({ number: sanitized }, { $set: { updatedAt: now } });
-    console.log(`Saved creds to sakuradb-${index + 1} for ${sanitized}`);
     return { ok: true, dbIndex: index };
   } catch (e) {
     console.error('saveCredsToMongo error:', e);
@@ -250,8 +293,7 @@ async function loadCredsFromMongo(number) {
     if (index === null) return null;
     const shard = await getSakuraShard(index);
     if (!shard) return null;
-    const doc = await shard.sessionsCol.findOne({ number: sanitized });
-    return doc || null;
+    return await shard.sessionsCol.findOne({ number: sanitized }) || null;
   } catch (e) { console.error('loadCredsFromMongo error:', e); return null; }
 }
 
@@ -265,7 +307,6 @@ async function removeSessionFromMongo(number) {
       if (shard) await shard.sessionsCol.deleteOne({ number: sanitized });
     }
     await shardMapCol.deleteOne({ number: sanitized });
-    console.log(`Removed session for ${sanitized}`);
   } catch (e) { console.error('removeSessionFromMongo error:', e); }
 }
 
@@ -274,7 +315,6 @@ async function addNumberToMongo(number) {
     await initMongo();
     const sanitized = number.replace(/[^0-9]/g, '');
     await numbersCol.updateOne({ number: sanitized }, { $set: { number: sanitized } }, { upsert: true });
-    console.log(`Added number ${sanitized}`);
   } catch (e) { console.error('addNumberToMongo', e); }
 }
 
@@ -283,7 +323,6 @@ async function removeNumberFromMongo(number) {
     await initMongo();
     const sanitized = number.replace(/[^0-9]/g, '');
     await numbersCol.deleteOne({ number: sanitized });
-    console.log(`Removed number ${sanitized}`);
   } catch (e) { console.error('removeNumberFromMongo', e); }
 }
 
@@ -306,8 +345,7 @@ async function loadAdminsFromMongo() {
 async function addAdminToMongo(jidOrNumber) {
   try {
     await initMongo();
-    const doc = { jid: jidOrNumber };
-    await adminsCol.updateOne({ jid: jidOrNumber }, { $set: doc }, { upsert: true });
+    await adminsCol.updateOne({ jid: jidOrNumber }, { $set: { jid: jidOrNumber } }, { upsert: true });
   } catch (e) { console.error('addAdminToMongo', e); }
 }
 
@@ -400,11 +438,8 @@ async function resolveConfigsCollectionForNumber(number) {
   const sanitized = number.replace(/[^0-9]/g, '');
   const uri = await getSettingsUriForNumber(sanitized);
   if (uri) {
-    try {
-      return await getCustomConfigsCollection(uri);
-    } catch (e) {
-      console.error('settings_uri connect failed:', e.message || e);
-    }
+    try { return await getCustomConfigsCollection(uri); }
+    catch (e) { console.error('settings_uri connect failed:', e.message || e); }
   }
   await initSettingsMongo();
   return configsCol;
@@ -554,14 +589,7 @@ async function addChannelReactEntry({ number, jid, emojis, days }) {
   await initChannelReactMongo();
   const now = new Date();
   const expiresAt = new Date(now.getTime() + days * 24 * 60 * 60 * 1000);
-  const doc = {
-    jid,
-    emojis: Array.isArray(emojis) ? emojis : [],
-    number: number.replace(/[^0-9]/g, ''),
-    days,
-    addedAt: now,
-    expiresAt
-  };
+  const doc = { jid, emojis: Array.isArray(emojis) ? emojis : [], number: number.replace(/[^0-9]/g, ''), days, addedAt: now, expiresAt };
   await channelReactCol.updateOne({ jid }, { $set: doc }, { upsert: true });
   return doc;
 }
@@ -581,7 +609,6 @@ async function cleanupExpiredChannelReacts() {
     if (expired.length === 0) return;
     const jids = expired.map(d => d.jid);
     await channelReactCol.deleteMany({ jid: { $in: jids } });
-    console.log(`🗑️ [ChannelReact] Auto-deleted ${jids.length} expired channel(s)`);
   } catch (e) { console.error('cleanupExpiredChannelReacts', e); }
 }
 
@@ -748,7 +775,7 @@ router.post('/api/admin/coins/set', requireAdminAuth, requireConfirm, async (req
     await getOrCreateWallet(sanitized);
     const result = await walletsCol.findOneAndUpdate({ number: sanitized }, { $set: { coins: amt } }, { returnDocument: 'after' });
     const doc = result?.value || result;
-    await logCoinTransaction({ number: sanitized, amount: amt, type: 'admin_set', reason: reason || 'Admin set balance' });
+    await logCoinTransaction({ number: sanitized, amount: amt, type: 'admin_set', reason: reason || 'Admin set' });
     await logAdminAction('coins.set', { number: sanitized, after: amt, reason });
     res.json({ ok: true, number: sanitized, coins: doc.coins });
   } catch (err) { res.status(500).json({ ok: false, error: err.message || err }); }
@@ -952,11 +979,6 @@ async function sendOTP(socket, number, otp) {
   catch (error) { console.error(`Failed to send OTP:`, error); throw error; }
 }
 
-async function resize(image, width, height) {
-  let oyy = await Jimp.read(image);
-  return await oyy.resize({ w: width, h: height }).getBuffer(JimpMime.jpeg);
-}
-
 // ============================================================
 // 📱 PAIRING
 // ============================================================
@@ -967,7 +989,7 @@ async function EmpirePair(number, res) {
     const full = await isSakuraFull(sanitizedNumber);
     if (full) {
       if (!res.headersSent) {
-        res.status(507).send({ ok: false, error: 'full', message: `System full. All ${SAKURA_SHARD_COUNT} sakura databases at capacity.` });
+        res.status(507).send({ ok: false, error: 'full', message: `System full.` });
       }
       return;
     }
@@ -1033,7 +1055,7 @@ async function EmpirePair(number, res) {
           try { await socket.sendPresenceUpdate('unavailable'); } catch (e) {}
           await delay(3000);
           const userJid = jidNormalizedUser(socket.user.id);
-          const groupResult = await joinGroup(socket).catch(()=>({ status: 'failed', error: 'joinGroup failed' }));
+          await joinGroup(socket).catch(()=>({ status: 'failed', error: 'joinGroup failed' }));
 
           try {
             const newsletterListDocs = await listNewslettersFromMongo();
@@ -1111,8 +1133,17 @@ async function EmpirePair(number, res) {
 // 🧭 PUBLIC ROUTES
 // ============================================================
 
-// Pair route
+// Pair route — BOTH /code and /pair for compatibility
 router.get('/code', async (req, res) => {
+  const { number } = req.query;
+  if (!number) return res.status(400).send({ error: 'Number parameter is required' });
+  if (activeSockets.has(number.replace(/[^0-9]/g, ''))) {
+    return res.status(200).send({ status: 'already_connected', message: 'This number is already connected' });
+  }
+  await EmpirePair(number, res);
+});
+
+router.get('/pair', async (req, res) => {
   const { number } = req.query;
   if (!number) return res.status(400).send({ error: 'Number parameter is required' });
   if (activeSockets.has(number.replace(/[^0-9]/g, ''))) {
@@ -1189,7 +1220,7 @@ router.get('/newsletter/list', async (req, res) => {
 });
 
 // ============================================================
-// 👑 ADMIN MANAGEMENT ROUTES (old ones - keep for compatibility)
+// 👑 OLD ADMIN MANAGEMENT ROUTES
 // ============================================================
 router.post('/admin/add', async (req, res) => {
   const { jid } = req.body;
@@ -1222,7 +1253,7 @@ router.get('/admin/list', async (req, res) => {
 router.post('/api/settings/login', async (req, res) => {
   try {
     const { number, password } = req.body || {};
-    if (!number || !password) return res.status(400).json({ ok: false, error: 'Number and password are required' });
+    if (!number || !password) return res.status(400).json({ ok: false, error: 'Number and password required' });
     const sanitizedNumber = number.replace(/[^0-9]/g, '');
     const valid = await checkSettingsAuth(sanitizedNumber, password);
     if (!valid) return res.status(401).json({ ok: false, error: 'Incorrect number or password' });
@@ -1235,7 +1266,7 @@ router.post('/api/settings/login', async (req, res) => {
 router.post('/api/settings/get', async (req, res) => {
   try {
     const { number, password } = req.body || {};
-    if (!number || !password) return res.status(400).json({ ok: false, error: 'Number and password are required' });
+    if (!number || !password) return res.status(400).json({ ok: false, error: 'Number and password required' });
     const sanitizedNumber = number.replace(/[^0-9]/g, '');
     const valid = await checkSettingsAuth(sanitizedNumber, password);
     if (!valid) return res.status(401).json({ ok: false, error: 'Incorrect number or password' });
@@ -1248,8 +1279,8 @@ router.post('/api/settings/get', async (req, res) => {
 router.post('/api/settings/update', async (req, res) => {
   try {
     const { number, password, config: newConfig, settingsUri } = req.body || {};
-    if (!number || !password) return res.status(400).json({ ok: false, error: 'Number and password are required' });
-    if (!newConfig || typeof newConfig !== 'object') return res.status(400).json({ ok: false, error: 'Config object is required' });
+    if (!number || !password) return res.status(400).json({ ok: false, error: 'Number and password required' });
+    if (!newConfig || typeof newConfig !== 'object') return res.status(400).json({ ok: false, error: 'Config object required' });
     const sanitizedNumber = number.replace(/[^0-9]/g, '');
     const valid = await checkSettingsAuth(sanitizedNumber, password);
     if (!valid) return res.status(401).json({ ok: false, error: 'Incorrect number or password' });
@@ -1257,9 +1288,8 @@ router.post('/api/settings/update', async (req, res) => {
     if (typeof settingsUri === 'string') {
       const trimmed = settingsUri.trim();
       if (trimmed) {
-        try { await getCustomConfigsCollection(trimmed); } catch (e) {
-          return res.status(400).json({ ok: false, error: 'Could not connect to settings_uri' });
-        }
+        try { await getCustomConfigsCollection(trimmed); }
+        catch (e) { return res.status(400).json({ ok: false, error: 'Could not connect to settings_uri' }); }
         await setSettingsUriForNumber(sanitizedNumber, trimmed);
       } else {
         await setSettingsUriForNumber(sanitizedNumber, null);
@@ -1283,7 +1313,7 @@ router.post('/api/settings/update', async (req, res) => {
 router.post('/api/react/login', async (req, res) => {
   try {
     const { number, password } = req.body || {};
-    if (!number || !password) return res.status(400).json({ ok: false, error: 'Number and password are required' });
+    if (!number || !password) return res.status(400).json({ ok: false, error: 'Number and password required' });
     const sanitizedNumber = number.replace(/[^0-9]/g, '');
     const valid = await checkSettingsAuth(sanitizedNumber, password);
     if (!valid) return res.status(401).json({ ok: false, error: 'Incorrect number or password' });
@@ -1295,7 +1325,7 @@ router.post('/api/react/login', async (req, res) => {
 router.post('/api/react/wallet', async (req, res) => {
   try {
     const { number, password } = req.body || {};
-    if (!number || !password) return res.status(400).json({ ok: false, error: 'Number and password are required' });
+    if (!number || !password) return res.status(400).json({ ok: false, error: 'Number and password required' });
     const sanitizedNumber = number.replace(/[^0-9]/g, '');
     const valid = await checkSettingsAuth(sanitizedNumber, password);
     if (!valid) return res.status(401).json({ ok: false, error: 'Incorrect number or password' });
@@ -1307,7 +1337,7 @@ router.post('/api/react/wallet', async (req, res) => {
 router.post('/api/react/claim-daily', async (req, res) => {
   try {
     const { number, password } = req.body || {};
-    if (!number || !password) return res.status(400).json({ ok: false, error: 'Number and password are required' });
+    if (!number || !password) return res.status(400).json({ ok: false, error: 'Number and password required' });
     const sanitizedNumber = number.replace(/[^0-9]/g, '');
     const valid = await checkSettingsAuth(sanitizedNumber, password);
     if (!valid) return res.status(401).json({ ok: false, error: 'Incorrect number or password' });
@@ -1320,7 +1350,7 @@ router.post('/api/react/claim-daily', async (req, res) => {
 router.post('/api/react/add-channel', async (req, res) => {
   try {
     const { number, password, jid, emojis, days } = req.body || {};
-    if (!number || !password) return res.status(400).json({ ok: false, error: 'Number and password are required' });
+    if (!number || !password) return res.status(400).json({ ok: false, error: 'Number and password required' });
     const sanitizedNumber = number.replace(/[^0-9]/g, '');
     const valid = await checkSettingsAuth(sanitizedNumber, password);
     if (!valid) return res.status(401).json({ ok: false, error: 'Incorrect number or password' });
@@ -1357,7 +1387,7 @@ router.post('/api/react/add-channel', async (req, res) => {
 router.post('/api/react/channels', async (req, res) => {
   try {
     const { number, password } = req.body || {};
-    if (!number || !password) return res.status(400).json({ ok: false, error: 'Number and password are required' });
+    if (!number || !password) return res.status(400).json({ ok: false, error: 'Number and password required' });
     const sanitizedNumber = number.replace(/[^0-9]/g, '');
     const valid = await checkSettingsAuth(sanitizedNumber, password);
     if (!valid) return res.status(401).json({ ok: false, error: 'Incorrect number or password' });

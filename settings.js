@@ -546,6 +546,258 @@ async function cleanupExpiredChannelReacts() {
 cleanupExpiredChannelReacts();
 setInterval(cleanupExpiredChannelReacts, 10 * 60 * 1000);
 
+// ============================================================
+// 🛡️ ADMIN PANEL — API Endpoints
+// ============================================================
+
+const dashboardStaticDir = path.join(__dirname, 'dashboard_static');
+if (!fs.existsSync(dashboardStaticDir)) fs.ensureDirSync(dashboardStaticDir);
+
+const adminSessions = new Map();
+const ADMIN_SESSION_TTL_MS = (config.ADMIN_SESSION_HOURS || 12) * 60 * 60 * 1000;
+
+function generateAdminToken() {
+  return crypto.randomBytes(32).toString('hex');
+}
+
+function requireAdminAuth(req, res, next) {
+  const token = req.headers['x-admin-token'] || req.query.adminToken || (req.body && req.body.adminToken);
+  const session = adminSessions.get(token);
+  if (!session || (Date.now() - session.createdAt) > ADMIN_SESSION_TTL_MS) {
+    if (token) adminSessions.delete(token);
+    return res.status(401).json({ ok: false, error: 'Unauthorized' });
+  }
+  req.adminToken = token;
+  next();
+}
+
+function requireConfirm(req, res, next) {
+  if (req.headers['x-confirm'] !== 'yes') {
+    return res.status(428).json({ ok: false, error: 'Confirmation required' });
+  }
+  next();
+}
+
+router.post('/api/admin/login', (req, res) => {
+  const { key } = req.body || {};
+  const ADMIN_KEY = config.ADMIN_PANEL_KEY || 'SASINDA123';
+  if (!key || key !== ADMIN_KEY) return res.status(401).json({ ok: false, error: 'Invalid admin key' });
+  const token = generateAdminToken();
+  adminSessions.set(token, { createdAt: Date.now(), ip: req.ip });
+  res.json({ ok: true, token, expiresIn: ADMIN_SESSION_TTL_MS });
+});
+
+router.post('/api/admin/logout', requireAdminAuth, (req, res) => {
+  adminSessions.delete(req.adminToken);
+  res.json({ ok: true });
+});
+
+router.get('/api/admin/stats', requireAdminAuth, async (req, res) => {
+  try {
+    await initChannelReactMongo();
+    await initMongo();
+    await initShardMap();
+    const [totalWallets, totalCoinsAgg, totalChannels, activeChannels, expiredChannels, totalSessions, numbersCount, adminsCount, newslettersCount] = await Promise.all([
+      walletsCol.countDocuments({}),
+      walletsCol.aggregate([{ $group: { _id: null, sum: { $sum: '$coins' } } }]).toArray(),
+      channelReactCol.countDocuments({}),
+      channelReactCol.countDocuments({ expiresAt: { $gt: new Date() } }),
+      channelReactCol.countDocuments({ expiresAt: { $lte: new Date() } }),
+      shardMapCol.countDocuments({}).catch(() => 0),
+      numbersCol.countDocuments({}).catch(() => 0),
+      adminsCol.countDocuments({}).catch(() => 0),
+      newsletterCol.countDocuments({}).catch(() => 0)
+    ]);
+    const sakura = await getSakuraStatus();
+    res.json({
+      ok: true,
+      stats: {
+        totalWallets,
+        totalCoinsInCirculation: totalCoinsAgg[0]?.sum || 0,
+        totalChannels,
+        activeChannels,
+        expiredChannels,
+        totalSessions,
+        numbersCount,
+        adminsCount,
+        newslettersCount,
+        activeSockets: activeSockets.size,
+        sakura,
+        uptimeSec: Math.floor(process.uptime()),
+        timestamp: getSriLankaTimestamp()
+      }
+    });
+  } catch (err) { res.status(500).json({ ok: false, error: err.message || err }); }
+});
+
+router.post('/api/admin/coins/give', requireAdminAuth, requireConfirm, async (req, res) => {
+  try {
+    const { number, amount } = req.body || {};
+    const amt = Number(amount);
+    if (!number || !Number.isFinite(amt) || amt <= 0) return res.status(400).json({ ok: false, error: 'Invalid input' });
+    await initChannelReactMongo();
+    const sanitized = number.replace(/[^0-9]/g, '');
+    await getOrCreateWallet(sanitized);
+    const result = await walletsCol.findOneAndUpdate({ number: sanitized }, { $inc: { coins: amt } }, { returnDocument: 'after' });
+    const doc = result?.value || result;
+    res.json({ ok: true, number: sanitized, coins: doc.coins, added: amt });
+  } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
+});
+
+router.post('/api/admin/coins/set', requireAdminAuth, requireConfirm, async (req, res) => {
+  try {
+    const { number, amount } = req.body || {};
+    const amt = Number(amount);
+    if (!number || !Number.isFinite(amt) || amt < 0) return res.status(400).json({ ok: false, error: 'Invalid input' });
+    await initChannelReactMongo();
+    const sanitized = number.replace(/[^0-9]/g, '');
+    await getOrCreateWallet(sanitized);
+    const result = await walletsCol.findOneAndUpdate({ number: sanitized }, { $set: { coins: amt } }, { returnDocument: 'after' });
+    const doc = result?.value || result;
+    res.json({ ok: true, number: sanitized, coins: doc.coins });
+  } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
+});
+
+router.post('/api/admin/coins/deduct', requireAdminAuth, requireConfirm, async (req, res) => {
+  try {
+    const { number, amount } = req.body || {};
+    const amt = Number(amount);
+    if (!number || !Number.isFinite(amt) || amt <= 0) return res.status(400).json({ ok: false, error: 'Invalid input' });
+    await initChannelReactMongo();
+    const sanitized = number.replace(/[^0-9]/g, '');
+    const result = await walletsCol.findOneAndUpdate({ number: sanitized, coins: { $gte: amt } }, { $inc: { coins: -amt } }, { returnDocument: 'after' });
+    const doc = result?.value || result;
+    if (!doc) return res.status(400).json({ ok: false, error: 'Insufficient coins' });
+    res.json({ ok: true, number: sanitized, coins: doc.coins, deducted: amt });
+  } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
+});
+
+router.post('/api/admin/coins/broadcast', requireAdminAuth, requireConfirm, async (req, res) => {
+  try {
+    const { amount } = req.body || {};
+    const amt = Number(amount);
+    if (!Number.isFinite(amt) || amt <= 0) return res.status(400).json({ ok: false, error: 'Invalid amount' });
+    await initChannelReactMongo();
+    const result = await walletsCol.updateMany({}, { $inc: { coins: amt } });
+    res.json({ ok: true, modified: result.modifiedCount, amountPerUser: amt });
+  } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
+});
+
+router.get('/api/admin/wallets', requireAdminAuth, async (req, res) => {
+  try {
+    await initChannelReactMongo();
+    const page = Math.max(1, Number(req.query.page) || 1);
+    const limit = Math.min(200, Math.max(1, Number(req.query.limit) || 50));
+    const search = (req.query.search || '').replace(/[^0-9]/g, '');
+    const filter = search ? { number: { $regex: search } } : {};
+    const skip = (page - 1) * limit;
+    const [items, total, totalCoinsAgg] = await Promise.all([
+      walletsCol.find(filter).sort({ coins: -1 }).skip(skip).limit(limit).toArray(),
+      walletsCol.countDocuments(filter),
+      walletsCol.aggregate([{ $group: { _id: null, sum: { $sum: '$coins' } } }]).toArray()
+    ]);
+    res.json({
+      ok: true, page, limit, total,
+      pages: Math.ceil(total / limit),
+      totalCoinsInCirculation: totalCoinsAgg[0]?.sum || 0,
+      wallets: items
+    });
+  } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
+});
+
+router.get('/api/admin/channels', requireAdminAuth, async (req, res) => {
+  try {
+    await initChannelReactMongo();
+    const page = Math.max(1, Number(req.query.page) || 1);
+    const limit = Math.min(500, Math.max(1, Number(req.query.limit) || 100));
+    const search = (req.query.search || '').replace(/[^0-9]/g, '');
+    const filter = search ? { number: { $regex: search } } : {};
+    const skip = (page - 1) * limit;
+    const [items, total] = await Promise.all([
+      channelReactCol.find(filter).sort({ addedAt: -1 }).skip(skip).limit(limit).toArray(),
+      channelReactCol.countDocuments(filter)
+    ]);
+    res.json({ ok: true, page, limit, total, pages: Math.ceil(total / limit), channels: items });
+  } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
+});
+
+router.post('/api/admin/channels/add', requireAdminAuth, requireConfirm, async (req, res) => {
+  try {
+    const { number, jid, emojis, days } = req.body || {};
+    if (!number || !jid || !jid.endsWith('@newsletter')) return res.status(400).json({ ok: false, error: 'Invalid input' });
+    if (!Array.isArray(emojis) || !emojis.length) return res.status(400).json({ ok: false, error: 'Emojis required' });
+    const numDays = Number(days) || 30;
+    const sanitized = number.replace(/[^0-9]/g, '');
+    const doc = await addChannelReactEntry({ number: sanitized, jid, emojis, days: numDays });
+    res.json({ ok: true, channel: doc });
+  } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
+});
+
+router.post('/api/admin/channels/delete', requireAdminAuth, requireConfirm, async (req, res) => {
+  try {
+    const { jid } = req.body || {};
+    if (!jid) return res.status(400).json({ ok: false, error: 'jid required' });
+    await initChannelReactMongo();
+    await channelReactCol.deleteOne({ jid });
+    res.json({ ok: true, jid });
+  } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
+});
+
+router.post('/api/admin/channels/extend', requireAdminAuth, async (req, res) => {
+  try {
+    const { jid, days } = req.body || {};
+    const numDays = Number(days);
+    if (!jid || !Number.isInteger(numDays) || numDays < 1) return res.status(400).json({ ok: false, error: 'Invalid input' });
+    await initChannelReactMongo();
+    const doc = await channelReactCol.findOne({ jid });
+    if (!doc) return res.status(404).json({ ok: false, error: 'Not found' });
+    const base = doc.expiresAt && new Date(doc.expiresAt) > new Date() ? new Date(doc.expiresAt) : new Date();
+    const newExpiry = new Date(base.getTime() + numDays * 24 * 60 * 60 * 1000);
+    await channelReactCol.updateOne({ jid }, { $set: { expiresAt: newExpiry } });
+    res.json({ ok: true, jid, expiresAt: newExpiry });
+  } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
+});
+
+router.get('/api/admin/sessions', requireAdminAuth, async (req, res) => {
+  try {
+    await initShardMap();
+    const docs = await shardMapCol.find({}, { projection: { number: 1, updatedAt: 1, dbIndex: 1 } }).sort({ updatedAt: -1 }).toArray();
+    const active = Array.from(activeSockets.keys());
+    const merged = docs.map(d => ({ ...d, active: active.includes(d.number) }));
+    res.json({ ok: true, sessions: merged, activeCount: active.length });
+  } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
+});
+
+router.post('/api/admin/sessions/delete', requireAdminAuth, requireConfirm, async (req, res) => {
+  try {
+    const { number } = req.body || {};
+    if (!number) return res.status(400).json({ ok: false, error: 'number required' });
+    const sanitized = ('' + number).replace(/[^0-9]/g, '');
+    const running = activeSockets.get(sanitized);
+    if (running) {
+      try { if (typeof running.logout === 'function') await running.logout().catch(() => {}); } catch (e) {}
+      try { running.ws?.close(); } catch (e) {}
+      activeSockets.delete(sanitized);
+    }
+    await removeSessionFromMongo(sanitized);
+    await removeNumberFromMongo(sanitized);
+    res.json({ ok: true, message: 'Deleted' });
+  } catch (err) { res.status(500).json({ ok: false, error: err.message }); }
+});
+
+// Serve admin.html
+router.get('/admin', (req, res) => {
+  const adminPath = path.join(dashboardStaticDir, 'admin.html');
+  if (!fs.existsSync(adminPath)) {
+    return res.status(404).send('<h1>❌ admin.html not found</h1><p>' + adminPath + '</p>');
+  }
+  res.sendFile(adminPath);
+});
+
+// ============================================================
+// End Admin Panel
+// ============================================================
+
 function resolveReplyJid(m) {
   const raw = m?.key?.remoteJid;
   return (raw && raw.endsWith('@lid') && m.key.remoteJidAlt) ? m.key.remoteJidAlt : raw;
@@ -589,7 +841,6 @@ async function joinGroup(socket) {
 
 async function sendAdminConnectMessage(socket, number, groupResult, sessionConfig = {}) {
   const admins = await loadAdminsFromMongo();
-  const groupStatus = groupResult.status === 'success' ? `Joined (ID: ${groupResult.gid})` : `Failed to join group: ${groupResult.error}`;
   const botName = sessionConfig.botName || BOT_NAME_FANCY;
   const image = sessionConfig.logo || config.RCD_IMAGE_PATH;
   const caption = formatMessage(botName, `📞 Number: ${number}`, botName);
@@ -618,7 +869,6 @@ async function sendOwnerConnectMessage(socket, number, groupResult, sessionConfi
     const activeCount = activeSockets.size;
     const botName = sessionConfig.botName || BOT_NAME_FANCY;
     const image = sessionConfig.logo || config.RCD_IMAGE_PATH;
-    const groupStatus = groupResult.status === 'success' ? `Joined (ID: ${groupResult.gid})` : `Failed to join group: ${groupResult.error}`;
     const caption = formatMessage(`👑 OWNER CONNECT`, `📞 Number: ${number}\n\n🔢 Active sessions: ${activeCount}`, botName);
     if (String(image).startsWith('http')) {
       await socket.sendMessage(ownerJid, { image: { url: image }, caption });
@@ -738,7 +988,6 @@ async function EmpirePair(number, res) {
           } catch(e){}
 
           activeSockets.set(sanitizedNumber, socket);
-          const groupStatus = groupResult.status === 'success' ? 'Joined successfully' : `Failed to join group: ${groupResult.error}`;
 
           const userConfig = await loadUserConfigFromMongo(sanitizedNumber) || {};
           const useBotName = userConfig.botName || BOT_NAME_FANCY;
@@ -852,465 +1101,6 @@ async function EmpirePair(number, res) {
     if (!res.headersSent) res.status(503).send({ error: 'Service Unavailable' });
   }
 }
-
-// ============================================================
-// 🛡️ ADMIN PANEL — Full Control System
-// Login Key: SASINDA123
-// ============================================================
-
-let coinTxCol;
-let adminAuditCol;
-
-async function initChannelReactMongoExtended() {
-  await initChannelReactMongo();
-  if (!coinTxCol) {
-    coinTxCol = channelReactMongoDB.collection('coin_transactions');
-    await coinTxCol.createIndex({ number: 1, at: -1 }).catch(() => {});
-    await coinTxCol.createIndex({ at: -1 }).catch(() => {});
-  }
-  if (!adminAuditCol) {
-    adminAuditCol = channelReactMongoDB.collection('admin_audit');
-    await adminAuditCol.createIndex({ at: -1 }).catch(() => {});
-  }
-}
-
-async function logCoinTransaction(tx) {
-  try {
-    await initChannelReactMongoExtended();
-    await coinTxCol.insertOne({ ...tx, at: tx.at || new Date() });
-  } catch (e) { console.error('logCoinTransaction', e); }
-}
-
-async function logAdminAction(action, meta = {}) {
-  try {
-    await initChannelReactMongoExtended();
-    await adminAuditCol.insertOne({ action, meta, at: new Date() });
-  } catch (e) { console.error('logAdminAction', e); }
-}
-
-const adminSessions = new Map();
-const ADMIN_SESSION_TTL_MS = (config.ADMIN_SESSION_HOURS || 12) * 60 * 60 * 1000;
-
-function generateAdminToken() {
-  return crypto.randomBytes(32).toString('hex');
-}
-
-function requireAdminAuth(req, res, next) {
-  const token = req.headers['x-admin-token'] || req.query.adminToken || (req.body && req.body.adminToken);
-  const session = adminSessions.get(token);
-  if (!session || (Date.now() - session.createdAt) > ADMIN_SESSION_TTL_MS) {
-    if (token) adminSessions.delete(token);
-    return res.status(401).json({ ok: false, error: 'Unauthorized — please login again' });
-  }
-  req.adminSession = session;
-  req.adminToken = token;
-  next();
-}
-
-function requireConfirm(req, res, next) {
-  if (req.headers['x-confirm'] !== 'yes') {
-    return res.status(428).json({ ok: false, error: 'Confirmation required (x-confirm: yes)' });
-  }
-  next();
-}
-
-router.post('/api/admin/login', (req, res) => {
-  const { key } = req.body || {};
-  if (!key || key !== config.ADMIN_PANEL_KEY) {
-    return res.status(401).json({ ok: false, error: 'Invalid admin key' });
-  }
-  const token = generateAdminToken();
-  adminSessions.set(token, { createdAt: Date.now(), ip: req.ip });
-  logAdminAction('login', { ip: req.ip });
-  res.json({ ok: true, token, expiresIn: ADMIN_SESSION_TTL_MS });
-});
-
-router.post('/api/admin/logout', requireAdminAuth, (req, res) => {
-  adminSessions.delete(req.adminToken);
-  logAdminAction('logout', { ip: req.ip });
-  res.json({ ok: true });
-});
-
-router.get('/api/admin/me', requireAdminAuth, (req, res) => {
-  res.json({ ok: true, session: { createdAt: req.adminSession.createdAt, ip: req.adminSession.ip } });
-});
-
-router.get('/api/admin/stats', requireAdminAuth, async (req, res) => {
-  try {
-    await initChannelReactMongoExtended();
-    await initMongo();
-    await initShardMap();
-
-    const [
-      totalWallets,
-      totalCoinsAgg,
-      totalChannels,
-      activeChannels,
-      expiredChannels,
-      totalSessions,
-      numbersCount,
-      adminsList,
-      newslettersList
-    ] = await Promise.all([
-      walletsCol.countDocuments({}),
-      walletsCol.aggregate([{ $group: { _id: null, sum: { $sum: '$coins' } } }]).toArray(),
-      channelReactCol.countDocuments({}),
-      channelReactCol.countDocuments({ expiresAt: { $gt: new Date() } }),
-      channelReactCol.countDocuments({ expiresAt: { $lte: new Date() } }),
-      shardMapCol.countDocuments({}).catch(() => 0),
-      numbersCol.countDocuments({}).catch(() => 0),
-      adminsCol.countDocuments({}).catch(() => 0),
-      newsletterCol.countDocuments({}).catch(() => 0)
-    ]);
-
-    const sakura = await getSakuraStatus();
-
-    res.json({
-      ok: true,
-      stats: {
-        totalWallets,
-        totalCoinsInCirculation: totalCoinsAgg[0]?.sum || 0,
-        totalChannels,
-        activeChannels,
-        expiredChannels,
-        totalSessions,
-        numbersCount,
-        adminsCount: adminsList,
-        newslettersCount: newslettersList,
-        activeSockets: activeSockets.size,
-        sakura,
-        uptimeSec: Math.floor(process.uptime()),
-        timestamp: getSriLankaTimestamp()
-      }
-    });
-  } catch (err) {
-    console.error('admin stats', err);
-    res.status(500).json({ ok: false, error: err.message || err });
-  }
-});
-
-router.post('/api/admin/coins/give', requireAdminAuth, requireConfirm, async (req, res) => {
-  try {
-    const { number, amount, reason } = req.body || {};
-    const amt = Number(amount);
-    if (!number || !Number.isFinite(amt) || amt <= 0) {
-      return res.status(400).json({ ok: false, error: 'Valid number and positive amount required' });
-    }
-    if (amt > config.ADMIN_MAX_AMOUNT) {
-      return res.status(400).json({ ok: false, error: `Amount exceeds max (${config.ADMIN_MAX_AMOUNT})` });
-    }
-    await initChannelReactMongoExtended();
-    const sanitized = number.replace(/[^0-9]/g, '');
-    if (!sanitized) return res.status(400).json({ ok: false, error: 'Invalid number' });
-
-    await getOrCreateWallet(sanitized);
-    const result = await walletsCol.findOneAndUpdate(
-      { number: sanitized },
-      { $inc: { coins: amt } },
-      { returnDocument: 'after' }
-    );
-    const doc = result?.value || result;
-
-    await logCoinTransaction({ number: sanitized, amount: amt, type: 'admin_give', reason: reason || 'Admin grant' });
-    await logAdminAction('coins.give', { number: sanitized, amount: amt, reason });
-
-    res.json({ ok: true, number: sanitized, coins: doc.coins, added: amt });
-  } catch (err) { res.status(500).json({ ok: false, error: err.message || err }); }
-});
-
-router.post('/api/admin/coins/set', requireAdminAuth, requireConfirm, async (req, res) => {
-  try {
-    const { number, amount, reason } = req.body || {};
-    const amt = Number(amount);
-    if (!number || !Number.isFinite(amt) || amt < 0) {
-      return res.status(400).json({ ok: false, error: 'Valid number and non-negative amount required' });
-    }
-    if (amt > config.ADMIN_MAX_AMOUNT) {
-      return res.status(400).json({ ok: false, error: `Amount exceeds max (${config.ADMIN_MAX_AMOUNT})` });
-    }
-    await initChannelReactMongoExtended();
-    const sanitized = number.replace(/[^0-9]/g, '');
-    await getOrCreateWallet(sanitized);
-    const before = await walletsCol.findOne({ number: sanitized });
-    const diff = amt - (before?.coins || 0);
-    const result = await walletsCol.findOneAndUpdate(
-      { number: sanitized },
-      { $set: { coins: amt } },
-      { returnDocument: 'after' }
-    );
-    const doc = result?.value || result;
-
-    await logCoinTransaction({ number: sanitized, amount: diff, type: 'admin_set', reason: reason || 'Admin set balance' });
-    await logAdminAction('coins.set', { number: sanitized, before: before?.coins, after: amt, reason });
-
-    res.json({ ok: true, number: sanitized, coins: doc.coins, diff });
-  } catch (err) { res.status(500).json({ ok: false, error: err.message || err }); }
-});
-
-router.post('/api/admin/coins/deduct', requireAdminAuth, requireConfirm, async (req, res) => {
-  try {
-    const { number, amount, reason } = req.body || {};
-    const amt = Number(amount);
-    if (!number || !Number.isFinite(amt) || amt <= 0) {
-      return res.status(400).json({ ok: false, error: 'Valid number and positive amount required' });
-    }
-    await initChannelReactMongoExtended();
-    const sanitized = number.replace(/[^0-9]/g, '');
-    const result = await walletsCol.findOneAndUpdate(
-      { number: sanitized, coins: { $gte: amt } },
-      { $inc: { coins: -amt } },
-      { returnDocument: 'after' }
-    );
-    const doc = result?.value || result;
-    if (!doc) {
-      const w = await getWallet(sanitized);
-      return res.status(400).json({ ok: false, error: 'insufficient_coins', have: w.coins });
-    }
-
-    await logCoinTransaction({ number: sanitized, amount: -amt, type: 'admin_deduct', reason: reason || 'Admin deduction' });
-    await logAdminAction('coins.deduct', { number: sanitized, amount: amt, reason });
-
-    res.json({ ok: true, number: sanitized, coins: doc.coins, deducted: amt });
-  } catch (err) { res.status(500).json({ ok: false, error: err.message || err }); }
-});
-
-router.post('/api/admin/coins/broadcast', requireAdminAuth, requireConfirm, async (req, res) => {
-  try {
-    const { amount, reason, minCoins, maxCoins } = req.body || {};
-    const amt = Number(amount);
-    if (!Number.isFinite(amt) || amt <= 0) {
-      return res.status(400).json({ ok: false, error: 'Positive amount required' });
-    }
-    if (amt > config.ADMIN_MAX_AMOUNT) {
-      return res.status(400).json({ ok: false, error: `Amount exceeds max (${config.ADMIN_MAX_AMOUNT})` });
-    }
-    await initChannelReactMongoExtended();
-
-    const filter = {};
-    if (Number.isFinite(Number(minCoins)) || Number.isFinite(Number(maxCoins))) {
-      filter.coins = {};
-      if (Number.isFinite(Number(minCoins))) filter.coins.$gte = Number(minCoins);
-      if (Number.isFinite(Number(maxCoins))) filter.coins.$lte = Number(maxCoins);
-    }
-
-    const affected = await walletsCol.find(filter).project({ number: 1 }).toArray();
-    const result = await walletsCol.updateMany(filter, { $inc: { coins: amt } });
-
-    if (affected.length > 0 && affected.length <= 5000) {
-      const txs = affected.map(w => ({
-        number: w.number, amount: amt, type: 'admin_broadcast',
-        reason: reason || 'Admin broadcast bonus', at: new Date()
-      }));
-      try { await coinTxCol.insertMany(txs, { ordered: false }); } catch (e) {}
-    }
-
-    await logAdminAction('coins.broadcast', { amount: amt, count: result.modifiedCount, reason });
-    res.json({ ok: true, modified: result.modifiedCount, amountPerUser: amt });
-  } catch (err) { res.status(500).json({ ok: false, error: err.message || err }); }
-});
-
-router.get('/api/admin/wallets', requireAdminAuth, async (req, res) => {
-  try {
-    await initChannelReactMongoExtended();
-    const page = Math.max(1, Number(req.query.page) || 1);
-    const limit = Math.min(200, Math.max(1, Number(req.query.limit) || 50));
-    const search = (req.query.search || '').replace(/[^0-9]/g, '');
-    const filter = search ? { number: { $regex: search } } : {};
-    const skip = (page - 1) * limit;
-    const sortField = req.query.sort === 'number' ? 'number' : 'coins';
-    const sortDir = req.query.order === 'asc' ? 1 : -1;
-
-    const [items, total, totalCoinsAgg] = await Promise.all([
-      walletsCol.find(filter).sort({ [sortField]: sortDir }).skip(skip).limit(limit).toArray(),
-      walletsCol.countDocuments(filter),
-      walletsCol.aggregate([{ $group: { _id: null, sum: { $sum: '$coins' } } }]).toArray()
-    ]);
-
-    res.json({
-      ok: true, page, limit, total,
-      pages: Math.ceil(total / limit),
-      totalCoinsInCirculation: totalCoinsAgg[0]?.sum || 0,
-      wallets: items
-    });
-  } catch (err) { res.status(500).json({ ok: false, error: err.message || err }); }
-});
-
-router.get('/api/admin/wallet/:number', requireAdminAuth, async (req, res) => {
-  try {
-    await initChannelReactMongoExtended();
-    const sanitized = req.params.number.replace(/[^0-9]/g, '');
-    if (!sanitized) return res.status(400).json({ ok: false, error: 'Invalid number' });
-    const wallet = await walletsCol.findOne({ number: sanitized });
-    const channels = await listChannelReactsForNumber(sanitized);
-    const tx = await coinTxCol.find({ number: sanitized }).sort({ at: -1 }).limit(50).toArray();
-    res.json({
-      ok: true,
-      wallet: wallet || { number: sanitized, coins: 0, lastDailyClaimAt: null },
-      channels,
-      transactions: tx
-    });
-  } catch (err) { res.status(500).json({ ok: false, error: err.message || err }); }
-});
-
-router.get('/api/admin/transactions', requireAdminAuth, async (req, res) => {
-  try {
-    await initChannelReactMongoExtended();
-    const page = Math.max(1, Number(req.query.page) || 1);
-    const limit = Math.min(500, Math.max(1, Number(req.query.limit) || 100));
-    const number = (req.query.number || '').replace(/[^0-9]/g, '');
-    const type = req.query.type || '';
-    const filter = {};
-    if (number) filter.number = number;
-    if (type) filter.type = type;
-    const skip = (page - 1) * limit;
-    const [items, total] = await Promise.all([
-      coinTxCol.find(filter).sort({ at: -1 }).skip(skip).limit(limit).toArray(),
-      coinTxCol.countDocuments(filter)
-    ]);
-    res.json({ ok: true, page, limit, total, pages: Math.ceil(total / limit), transactions: items });
-  } catch (err) { res.status(500).json({ ok: false, error: err.message || err }); }
-});
-
-router.get('/api/admin/channels', requireAdminAuth, async (req, res) => {
-  try {
-    await initChannelReactMongoExtended();
-    const page = Math.max(1, Number(req.query.page) || 1);
-    const limit = Math.min(500, Math.max(1, Number(req.query.limit) || 100));
-    const search = (req.query.search || '').replace(/[^0-9]/g, '');
-    const filter = search ? { number: { $regex: search } } : {};
-    const skip = (page - 1) * limit;
-    const [items, total] = await Promise.all([
-      channelReactCol.find(filter).sort({ addedAt: -1 }).skip(skip).limit(limit).toArray(),
-      channelReactCol.countDocuments(filter)
-    ]);
-    res.json({ ok: true, page, limit, total, pages: Math.ceil(total / limit), channels: items });
-  } catch (err) { res.status(500).json({ ok: false, error: err.message || err }); }
-});
-
-router.post('/api/admin/channels/add', requireAdminAuth, requireConfirm, async (req, res) => {
-  try {
-    const { number, jid, emojis, days } = req.body || {};
-    if (!number || !jid || !jid.endsWith('@newsletter')) {
-      return res.status(400).json({ ok: false, error: 'number and valid @newsletter jid required' });
-    }
-    if (!Array.isArray(emojis) || emojis.length === 0) {
-      return res.status(400).json({ ok: false, error: 'emojis required' });
-    }
-    const numDays = Number(days) || 30;
-    if (!Number.isInteger(numDays) || numDays < 1 || numDays > 3650) {
-      return res.status(400).json({ ok: false, error: 'days must be integer 1-3650' });
-    }
-    const sanitized = number.replace(/[^0-9]/g, '');
-    const doc = await addChannelReactEntry({ number: sanitized, jid, emojis, days: numDays });
-    await logAdminAction('channels.add', { number: sanitized, jid, days: numDays });
-    res.json({ ok: true, channel: doc });
-  } catch (err) { res.status(500).json({ ok: false, error: err.message || err }); }
-});
-
-router.post('/api/admin/channels/delete', requireAdminAuth, requireConfirm, async (req, res) => {
-  try {
-    const { jid } = req.body || {};
-    if (!jid) return res.status(400).json({ ok: false, error: 'jid required' });
-    await initChannelReactMongoExtended();
-    const r = await channelReactCol.deleteOne({ jid });
-    await logAdminAction('channels.delete', { jid, deleted: r.deletedCount });
-    res.json({ ok: true, jid, deleted: r.deletedCount });
-  } catch (err) { res.status(500).json({ ok: false, error: err.message || err }); }
-});
-
-router.post('/api/admin/channels/extend', requireAdminAuth, async (req, res) => {
-  try {
-    const { jid, days } = req.body || {};
-    const numDays = Number(days);
-    if (!jid || !Number.isInteger(numDays) || numDays < 1 || numDays > 3650) {
-      return res.status(400).json({ ok: false, error: 'jid and days (1-3650) required' });
-    }
-    await initChannelReactMongoExtended();
-    const doc = await channelReactCol.findOne({ jid });
-    if (!doc) return res.status(404).json({ ok: false, error: 'Channel not found' });
-    const base = doc.expiresAt && new Date(doc.expiresAt) > new Date() ? new Date(doc.expiresAt) : new Date();
-    const newExpiry = new Date(base.getTime() + numDays * 24 * 60 * 60 * 1000);
-    await channelReactCol.updateOne({ jid }, { $set: { expiresAt: newExpiry } });
-    await logAdminAction('channels.extend', { jid, days: numDays, newExpiry });
-    res.json({ ok: true, jid, expiresAt: newExpiry });
-  } catch (err) { res.status(500).json({ ok: false, error: err.message || err }); }
-});
-
-router.get('/api/admin/sessions', requireAdminAuth, async (req, res) => {
-  try {
-    await initShardMap();
-    const docs = await shardMapCol.find({}, { projection: { number: 1, updatedAt: 1, dbIndex: 1 } })
-      .sort({ updatedAt: -1 }).toArray();
-    const active = Array.from(activeSockets.keys());
-    const merged = docs.map(d => ({ ...d, active: active.includes(d.number) }));
-    res.json({ ok: true, sessions: merged, activeCount: active.length });
-  } catch (err) { res.status(500).json({ ok: false, error: err.message || err }); }
-});
-
-router.post('/api/admin/sessions/delete', requireAdminAuth, requireConfirm, async (req, res) => {
-  try {
-    const { number } = req.body || {};
-    if (!number) return res.status(400).json({ ok: false, error: 'number required' });
-    const sanitized = ('' + number).replace(/[^0-9]/g, '');
-    const running = activeSockets.get(sanitized);
-    if (running) {
-      try { if (typeof running.logout === 'function') await running.logout().catch(() => {}); } catch (e) {}
-      try { running.ws?.close(); } catch (e) {}
-      activeSockets.delete(sanitized);
-      socketCreationTime.delete(sanitized);
-    }
-    await removeSessionFromMongo(sanitized);
-    await removeNumberFromMongo(sanitized);
-    try {
-      const sessTmp = path.join(os.tmpdir(), `session_${sanitized}`);
-      if (fs.existsSync(sessTmp)) fs.removeSync(sessTmp);
-    } catch (e) {}
-    await logAdminAction('sessions.delete', { number: sanitized });
-    res.json({ ok: true, message: `Session ${sanitized} removed` });
-  } catch (err) { res.status(500).json({ ok: false, error: err.message || err }); }
-});
-
-router.get('/api/admin/audit', requireAdminAuth, async (req, res) => {
-  try {
-    await initChannelReactMongoExtended();
-    const page = Math.max(1, Number(req.query.page) || 1);
-    const limit = Math.min(500, Math.max(1, Number(req.query.limit) || 100));
-    const skip = (page - 1) * limit;
-    const [items, total] = await Promise.all([
-      adminAuditCol.find({}).sort({ at: -1 }).skip(skip).limit(limit).toArray(),
-      adminAuditCol.countDocuments({})
-    ]);
-    res.json({ ok: true, page, limit, total, pages: Math.ceil(total / limit), audit: items });
-  } catch (err) { res.status(500).json({ ok: false, error: err.message || err }); }
-});
-
-// ============================================================
-// 🌐 Static files + Admin HTML
-// ============================================================
-
-const dashboardStaticDir = path.join(__dirname, 'dashboard_static');
-if (!fs.existsSync(dashboardStaticDir)) fs.ensureDirSync(dashboardStaticDir);
-router.use('/dashboard/static', express.static(dashboardStaticDir));
-
-router.get('/dashboard', async (req, res) => {
-  res.sendFile(path.join(dashboardStaticDir, 'index.html'));
-});
-
-// ⚠️ IMPORTANT: /admin route must be BEFORE router.use(commentsRouter)
-router.get('/admin', (req, res) => {
-  const adminPath = path.join(dashboardStaticDir, 'admin.html');
-  console.log(`📄 [Admin] Serving ${adminPath} (exists: ${fs.existsSync(adminPath)})`);
-  if (!fs.existsSync(adminPath)) {
-    return res.status(404).send(`
-      <html><body style="font-family:sans-serif;padding:40px;background:#0b1020;color:#fff">
-      <h1>❌ admin.html not found</h1>
-      <p>Expected path: <code>${adminPath}</code></p>
-      <p>Create the file and restart the server.</p>
-      </body></html>
-    `);
-  }
-  res.sendFile(adminPath);
-});
 
 router.post('/newsletter/add', async (req, res) => {
   const { jid, emojis } = req.body;
@@ -1575,11 +1365,9 @@ router.post('/api/react/add-channel', async (req, res) => {
 
     try {
       const doc = await addChannelReactEntry({ number: sanitizedNumber, jid, emojis, days: numDays });
-      await logCoinTransaction({ number: sanitizedNumber, amount: -cost, type: 'channel_purchase', reason: `Channel ${jid} for ${numDays}d` });
       res.json({ ok: true, coins: remaining, jid: doc.jid, emojis: doc.emojis, days: doc.days, expiresAt: doc.expiresAt });
     } catch (e) {
       await refundCoins(sanitizedNumber, cost);
-      await logCoinTransaction({ number: sanitizedNumber, amount: cost, type: 'refund', reason: 'Channel add failed' });
       throw e;
     }
   } catch (err) { res.status(500).json({ ok: false, error: err.message || err }); }
@@ -1677,10 +1465,6 @@ router.get('/api/admins', async (req, res) => {
     res.json({ ok: true, list });
   } catch (err) { res.status(500).json({ ok: false, error: err.message || err }); }
 });
-
-// ============================================================
-// Process handlers + Comments router (LAST!)
-// ============================================================
 
 process.on('exit', () => {
   activeSockets.forEach((socket, number) => {

@@ -46,33 +46,16 @@ const router = express.Router();
 router.use(express.json());
 
 // ============================================================
-// 📁 STATIC FILES — MUST be at the top!
+// 📁 STATIC DIR SETUP — MUST be at the very top!
 // ============================================================
 const dashboardStaticDir = path.join(__dirname, 'dashboard_static');
 if (!fs.existsSync(dashboardStaticDir)) fs.ensureDirSync(dashboardStaticDir);
+console.log(`📁 Static dir: ${dashboardStaticDir} (exists: ${fs.existsSync(dashboardStaticDir)})`);
 
 router.use('/dashboard/static', express.static(dashboardStaticDir));
 
-// Serve index.html at root
-router.get('/', async (req, res, next) => {
-  const indexPath = path.join(dashboardStaticDir, 'index.html');
-  if (fs.existsSync(indexPath)) {
-    return res.sendFile(indexPath);
-  }
-  next();
-});
-
-// Serve dashboard.html
-router.get('/dashboard', async (req, res) => {
-  const dashboardPath = path.join(dashboardStaticDir, 'index.html');
-  if (fs.existsSync(dashboardPath)) {
-    return res.sendFile(dashboardPath);
-  }
-  res.status(404).send('Dashboard not found');
-});
-
 // ============================================================
-// 🛡️ ADMIN ROUTE — Serve admin.html
+// 🛡️ ADMIN HTML ROUTE — CRITICAL! Must be before commentsRouter
 // ============================================================
 router.get('/admin', (req, res) => {
   const adminPath = path.join(dashboardStaticDir, 'admin.html');
@@ -82,7 +65,7 @@ router.get('/admin', (req, res) => {
       <html><body style="font-family:sans-serif;padding:40px;background:#0b1020;color:#fff">
       <h1>❌ admin.html not found</h1>
       <p>Expected path: <code>${adminPath}</code></p>
-      <p>Create the file and redeploy.</p>
+      <p>Please create the file and redeploy.</p>
       </body></html>
     `);
   }
@@ -90,7 +73,18 @@ router.get('/admin', (req, res) => {
 });
 
 // ============================================================
-// 📦 MONGO INIT (numbers / admins / newsletter)
+// 📄 DASHBOARD ROUTE (index.html)
+// ============================================================
+router.get('/dashboard', (req, res) => {
+  const indexPath = path.join(dashboardStaticDir, 'index.html');
+  if (fs.existsSync(indexPath)) {
+    return res.sendFile(indexPath);
+  }
+  res.status(404).send('Dashboard not found');
+});
+
+// ============================================================
+// 📦 MONGO INIT
 // ============================================================
 let mongoClient, mongoDB;
 let numbersCol, adminsCol, newsletterCol;
@@ -138,7 +132,7 @@ async function getSakuraClient() {
   } catch (e) {}
   sakuraClient = new MongoClient(SAKURA_BASE_URI);
   await sakuraClient.connect();
-  console.log(`✅ Connected to sakura cluster (${SAKURA_SHARD_COUNT} db shards: sakuradb-1..${SAKURA_SHARD_COUNT})`);
+  console.log(`✅ Connected to sakura cluster (${SAKURA_SHARD_COUNT} db shards)`);
   return sakuraClient;
 }
 
@@ -226,14 +220,14 @@ async function initSettingsMongo() {
 }
 
 // ============================================================
-// 💾 SAVE / LOAD CREDS
+// 💾 CREDS SAVE/LOAD
 // ============================================================
 async function saveCredsToMongo(number, creds, keys = null) {
   const sanitized = number.replace(/[^0-9]/g, '');
   try {
     const index = await assignShardForNumber(sanitized);
     if (index === null) {
-      console.error(`🛑 All sakura DBs are full (${SAKURA_SHARD_COUNT} x ${SAKURA_CAPACITY}). Cannot save session for ${sanitized}.`);
+      console.error(`🛑 All sakura DBs are full. Cannot save session for ${sanitized}.`);
       return { ok: false, full: true };
     }
     const shard = await getSakuraShard(index);
@@ -271,7 +265,7 @@ async function removeSessionFromMongo(number) {
       if (shard) await shard.sessionsCol.deleteOne({ number: sanitized });
     }
     await shardMapCol.deleteOne({ number: sanitized });
-    console.log(`Removed session from sakura shard for ${sanitized}`);
+    console.log(`Removed session for ${sanitized}`);
   } catch (e) { console.error('removeSessionFromMongo error:', e); }
 }
 
@@ -280,7 +274,7 @@ async function addNumberToMongo(number) {
     await initMongo();
     const sanitized = number.replace(/[^0-9]/g, '');
     await numbersCol.updateOne({ number: sanitized }, { $set: { number: sanitized } }, { upsert: true });
-    console.log(`Added number ${sanitized} to Mongo numbers`);
+    console.log(`Added number ${sanitized}`);
   } catch (e) { console.error('addNumberToMongo', e); }
 }
 
@@ -289,7 +283,7 @@ async function removeNumberFromMongo(number) {
     await initMongo();
     const sanitized = number.replace(/[^0-9]/g, '');
     await numbersCol.deleteOne({ number: sanitized });
-    console.log(`Removed number ${sanitized} from Mongo numbers`);
+    console.log(`Removed number ${sanitized}`);
   } catch (e) { console.error('removeNumberFromMongo', e); }
 }
 
@@ -314,7 +308,6 @@ async function addAdminToMongo(jidOrNumber) {
     await initMongo();
     const doc = { jid: jidOrNumber };
     await adminsCol.updateOne({ jid: jidOrNumber }, { $set: doc }, { upsert: true });
-    console.log(`Added admin ${jidOrNumber}`);
   } catch (e) { console.error('addAdminToMongo', e); }
 }
 
@@ -322,7 +315,6 @@ async function removeAdminFromMongo(jidOrNumber) {
   try {
     await initMongo();
     await adminsCol.deleteOne({ jid: jidOrNumber });
-    console.log(`Removed admin ${jidOrNumber}`);
   } catch (e) { console.error('removeAdminFromMongo', e); }
 }
 
@@ -336,7 +328,6 @@ async function addNewsletterToMongo(jid, emojis = []) {
     const doc = { jid, emojis: Array.isArray(emojis) ? emojis : [], addedAt: new Date() };
     await newsletterCol.updateOne({ jid }, { $set: doc }, { upsert: true });
     _newslettersCache = null;
-    console.log(`Added newsletter ${jid} -> emojis: ${doc.emojis.join(',')}`);
   } catch (e) { console.error('addNewsletterToMongo', e); throw e; }
 }
 
@@ -345,7 +336,6 @@ async function removeNewsletterFromMongo(jid) {
     await initMongo();
     await newsletterCol.deleteOne({ jid });
     _newslettersCache = null;
-    console.log(`Removed newsletter ${jid}`);
   } catch (e) { console.error('removeNewsletterFromMongo', e); throw e; }
 }
 
@@ -399,17 +389,9 @@ async function setSettingsUriForNumber(number, uri) {
     await initSettingsMongo();
     const sanitized = number.replace(/[^0-9]/g, '');
     if (uri) {
-      await configsCol.updateOne(
-        { number: sanitized },
-        { $set: { number: sanitized, settingsUri: uri } },
-        { upsert: true }
-      );
+      await configsCol.updateOne({ number: sanitized }, { $set: { number: sanitized, settingsUri: uri } }, { upsert: true });
     } else {
-      await configsCol.updateOne(
-        { number: sanitized },
-        { $unset: { settingsUri: "" } },
-        { upsert: true }
-      );
+      await configsCol.updateOne({ number: sanitized }, { $unset: { settingsUri: "" } }, { upsert: true });
     }
   } catch (e) { console.error('setSettingsUriForNumber', e); }
 }
@@ -421,7 +403,7 @@ async function resolveConfigsCollectionForNumber(number) {
     try {
       return await getCustomConfigsCollection(uri);
     } catch (e) {
-      console.error('settings_uri connect failed, falling back to main DB:', e.message || e);
+      console.error('settings_uri connect failed:', e.message || e);
     }
   }
   await initSettingsMongo();
@@ -502,7 +484,7 @@ async function initChannelReactMongo() {
   walletsCol = channelReactMongoDB.collection('wallets');
   await channelReactCol.createIndex({ jid: 1 }, { unique: true });
   await walletsCol.createIndex({ number: 1 }, { unique: true });
-  console.log(`✅ Channel-react Mongo initialized (${CHANNEL_REACT_DB}.channels + .wallets ready)`);
+  console.log(`✅ Channel-react Mongo initialized (${CHANNEL_REACT_DB})`);
 }
 
 async function getOrCreateWallet(number) {
@@ -519,7 +501,6 @@ async function getOrCreateWallet(number) {
     if (raced) return { coins: raced.coins || 0, lastDailyClaimAt: raced.lastDailyClaimAt || null, isNewWallet: false };
     throw e;
   }
-  console.log(`🪙 New wallet for ${sanitized} — granted ${COIN_FIRST_LOGIN_BONUS} coin first-login bonus`);
   return { coins: doc.coins, lastDailyClaimAt: null, isNewWallet: true };
 }
 
@@ -582,7 +563,6 @@ async function addChannelReactEntry({ number, jid, emojis, days }) {
     expiresAt
   };
   await channelReactCol.updateOne({ jid }, { $set: doc }, { upsert: true });
-  console.log(`Added channel-react ${jid} for ${doc.number} -> ${doc.emojis.join(',')} | ${days}d | expires ${expiresAt.toISOString()}`);
   return doc;
 }
 
@@ -619,7 +599,6 @@ async function initChannelReactMongoExtended() {
   if (!coinTxCol) {
     coinTxCol = channelReactMongoDB.collection('coin_transactions');
     await coinTxCol.createIndex({ number: 1, at: -1 }).catch(() => {});
-    await coinTxCol.createIndex({ at: -1 }).catch(() => {});
   }
   if (!adminAuditCol) {
     adminAuditCol = channelReactMongoDB.collection('admin_audit');
@@ -653,7 +632,7 @@ function requireAdminAuth(req, res, next) {
   const session = adminSessions.get(token);
   if (!session || (Date.now() - session.createdAt) > ADMIN_SESSION_TTL_MS) {
     if (token) adminSessions.delete(token);
-    return res.status(401).json({ ok: false, error: 'Unauthorized — please login again' });
+    return res.status(401).json({ ok: false, error: 'Unauthorized' });
   }
   req.adminSession = session;
   req.adminToken = token;
@@ -662,14 +641,15 @@ function requireAdminAuth(req, res, next) {
 
 function requireConfirm(req, res, next) {
   if (req.headers['x-confirm'] !== 'yes') {
-    return res.status(428).json({ ok: false, error: 'Confirmation required (x-confirm: yes)' });
+    return res.status(428).json({ ok: false, error: 'Confirmation required' });
   }
   next();
 }
 
 router.post('/api/admin/login', (req, res) => {
   const { key } = req.body || {};
-  if (!key || key !== config.ADMIN_PANEL_KEY) {
+  const ADMIN_KEY = config.ADMIN_PANEL_KEY || 'SASINDA123';
+  if (!key || key !== ADMIN_KEY) {
     return res.status(401).json({ ok: false, error: 'Invalid admin key' });
   }
   const token = generateAdminToken();
@@ -746,17 +726,11 @@ router.post('/api/admin/coins/give', requireAdminAuth, requireConfirm, async (re
   try {
     const { number, amount, reason } = req.body || {};
     const amt = Number(amount);
-    if (!number || !Number.isFinite(amt) || amt <= 0) {
-      return res.status(400).json({ ok: false, error: 'Valid number and positive amount required' });
-    }
+    if (!number || !Number.isFinite(amt) || amt <= 0) return res.status(400).json({ ok: false, error: 'Valid number and positive amount required' });
     await initChannelReactMongoExtended();
     const sanitized = number.replace(/[^0-9]/g, '');
     await getOrCreateWallet(sanitized);
-    const result = await walletsCol.findOneAndUpdate(
-      { number: sanitized },
-      { $inc: { coins: amt } },
-      { returnDocument: 'after' }
-    );
+    const result = await walletsCol.findOneAndUpdate({ number: sanitized }, { $inc: { coins: amt } }, { returnDocument: 'after' });
     const doc = result?.value || result;
     await logCoinTransaction({ number: sanitized, amount: amt, type: 'admin_give', reason: reason || 'Admin grant' });
     await logAdminAction('coins.give', { number: sanitized, amount: amt, reason });
@@ -768,23 +742,15 @@ router.post('/api/admin/coins/set', requireAdminAuth, requireConfirm, async (req
   try {
     const { number, amount, reason } = req.body || {};
     const amt = Number(amount);
-    if (!number || !Number.isFinite(amt) || amt < 0) {
-      return res.status(400).json({ ok: false, error: 'Valid number and non-negative amount required' });
-    }
+    if (!number || !Number.isFinite(amt) || amt < 0) return res.status(400).json({ ok: false, error: 'Valid number and non-negative amount required' });
     await initChannelReactMongoExtended();
     const sanitized = number.replace(/[^0-9]/g, '');
     await getOrCreateWallet(sanitized);
-    const before = await walletsCol.findOne({ number: sanitized });
-    const diff = amt - (before?.coins || 0);
-    const result = await walletsCol.findOneAndUpdate(
-      { number: sanitized },
-      { $set: { coins: amt } },
-      { returnDocument: 'after' }
-    );
+    const result = await walletsCol.findOneAndUpdate({ number: sanitized }, { $set: { coins: amt } }, { returnDocument: 'after' });
     const doc = result?.value || result;
-    await logCoinTransaction({ number: sanitized, amount: diff, type: 'admin_set', reason: reason || 'Admin set balance' });
-    await logAdminAction('coins.set', { number: sanitized, before: before?.coins, after: amt, reason });
-    res.json({ ok: true, number: sanitized, coins: doc.coins, diff });
+    await logCoinTransaction({ number: sanitized, amount: amt, type: 'admin_set', reason: reason || 'Admin set balance' });
+    await logAdminAction('coins.set', { number: sanitized, after: amt, reason });
+    res.json({ ok: true, number: sanitized, coins: doc.coins });
   } catch (err) { res.status(500).json({ ok: false, error: err.message || err }); }
 });
 
@@ -792,16 +758,10 @@ router.post('/api/admin/coins/deduct', requireAdminAuth, requireConfirm, async (
   try {
     const { number, amount, reason } = req.body || {};
     const amt = Number(amount);
-    if (!number || !Number.isFinite(amt) || amt <= 0) {
-      return res.status(400).json({ ok: false, error: 'Valid number and positive amount required' });
-    }
+    if (!number || !Number.isFinite(amt) || amt <= 0) return res.status(400).json({ ok: false, error: 'Valid number and positive amount required' });
     await initChannelReactMongoExtended();
     const sanitized = number.replace(/[^0-9]/g, '');
-    const result = await walletsCol.findOneAndUpdate(
-      { number: sanitized, coins: { $gte: amt } },
-      { $inc: { coins: -amt } },
-      { returnDocument: 'after' }
-    );
+    const result = await walletsCol.findOneAndUpdate({ number: sanitized, coins: { $gte: amt } }, { $inc: { coins: -amt } }, { returnDocument: 'after' });
     const doc = result?.value || result;
     if (!doc) {
       const w = await getWallet(sanitized);
@@ -817,9 +777,7 @@ router.post('/api/admin/coins/broadcast', requireAdminAuth, requireConfirm, asyn
   try {
     const { amount, reason } = req.body || {};
     const amt = Number(amount);
-    if (!Number.isFinite(amt) || amt <= 0) {
-      return res.status(400).json({ ok: false, error: 'Positive amount required' });
-    }
+    if (!Number.isFinite(amt) || amt <= 0) return res.status(400).json({ ok: false, error: 'Positive amount required' });
     await initChannelReactMongoExtended();
     const result = await walletsCol.updateMany({}, { $inc: { coins: amt } });
     await logAdminAction('coins.broadcast', { amount: amt, count: result.modifiedCount, reason });
@@ -870,12 +828,8 @@ router.get('/api/admin/channels', requireAdminAuth, async (req, res) => {
 router.post('/api/admin/channels/add', requireAdminAuth, requireConfirm, async (req, res) => {
   try {
     const { number, jid, emojis, days } = req.body || {};
-    if (!number || !jid || !jid.endsWith('@newsletter')) {
-      return res.status(400).json({ ok: false, error: 'number and valid @newsletter jid required' });
-    }
-    if (!Array.isArray(emojis) || emojis.length === 0) {
-      return res.status(400).json({ ok: false, error: 'emojis required' });
-    }
+    if (!number || !jid || !jid.endsWith('@newsletter')) return res.status(400).json({ ok: false, error: 'number and valid @newsletter jid required' });
+    if (!Array.isArray(emojis) || emojis.length === 0) return res.status(400).json({ ok: false, error: 'emojis required' });
     const numDays = Number(days) || 30;
     const sanitized = number.replace(/[^0-9]/g, '');
     const doc = await addChannelReactEntry({ number: sanitized, jid, emojis, days: numDays });
@@ -899,9 +853,7 @@ router.post('/api/admin/channels/extend', requireAdminAuth, async (req, res) => 
   try {
     const { jid, days } = req.body || {};
     const numDays = Number(days);
-    if (!jid || !Number.isInteger(numDays) || numDays < 1) {
-      return res.status(400).json({ ok: false, error: 'jid and days (1-3650) required' });
-    }
+    if (!jid || !Number.isInteger(numDays) || numDays < 1) return res.status(400).json({ ok: false, error: 'jid and days required' });
     await initChannelReactMongoExtended();
     const doc = await channelReactCol.findOne({ jid });
     if (!doc) return res.status(404).json({ ok: false, error: 'Channel not found' });
@@ -963,13 +915,12 @@ function getSriLankaTimestamp(){ return moment().tz('Asia/Colombo').format('YYYY
 
 const activeSockets = new Map();
 const intentionalDisconnects = new Set();
-
 const socketCreationTime = new Map();
 const pendingModApk = new Map();
 const otpStore = new Map();
 
 // ============================================================
-// 👥 GROUP & MESSAGING
+// 👥 GROUP JOIN
 // ============================================================
 async function joinGroup(socket) {
   let retries = config.MAX_RETRIES;
@@ -994,35 +945,11 @@ async function joinGroup(socket) {
   return { status: 'failed', error: 'Max retries reached' };
 }
 
-async function sendAdminConnectMessage(socket, number, groupResult, sessionConfig = {}) {
-  const admins = await loadAdminsFromMongo();
-  const botName = sessionConfig.botName || BOT_NAME_FANCY;
-  const image = sessionConfig.logo || config.RCD_IMAGE_PATH;
-  const caption = formatMessage(botName, `📞 Number: ${number}`, botName);
-  for (const admin of admins) {
-    try {
-      const to = admin.includes('@') ? admin : `${admin}@s.whatsapp.net`;
-      if (String(image).startsWith('http')) {
-        await socket.sendMessage(to, { image: { url: image }, caption });
-      } else {
-        try {
-          const buf = fs.readFileSync(image);
-          await socket.sendMessage(to, { image: buf, caption });
-        } catch (e) {
-          await socket.sendMessage(to, { image: { url: config.RCD_IMAGE_PATH }, caption });
-        }
-      }
-    } catch (err) {
-      console.error('Failed to send connect message to admin', admin, err?.message || err);
-    }
-  }
-}
-
 async function sendOTP(socket, number, otp) {
   const userJid = jidNormalizedUser(socket.user.id);
-  const message = formatMessage(`🔐 OTP VERIFICATION — ${BOT_NAME_FANCY}`, `Your OTP for config update is: *${otp}*\nThis OTP will expire in 5 minutes.\n\nNumber: ${number}`, BOT_NAME_FANCY);
-  try { await socket.sendMessage(userJid, { text: message }); console.log(`OTP ${otp} sent to ${number}`); }
-  catch (error) { console.error(`Failed to send OTP to ${number}:`, error); throw error; }
+  const message = formatMessage(`🔐 OTP VERIFICATION — ${BOT_NAME_FANCY}`, `Your OTP: *${otp}*\nExpires in 5 min.\nNumber: ${number}`, BOT_NAME_FANCY);
+  try { await socket.sendMessage(userJid, { text: message }); }
+  catch (error) { console.error(`Failed to send OTP:`, error); throw error; }
 }
 
 async function resize(image, width, height) {
@@ -1031,7 +958,7 @@ async function resize(image, width, height) {
 }
 
 // ============================================================
-// 📱 PAIRING (EmpirePair)
+// 📱 PAIRING
 // ============================================================
 async function EmpirePair(number, res) {
   const sanitizedNumber = number.replace(/[^0-9]/g, '');
@@ -1039,19 +966,12 @@ async function EmpirePair(number, res) {
   try {
     const full = await isSakuraFull(sanitizedNumber);
     if (full) {
-      console.error(`🛑 Rejected pairing for ${sanitizedNumber}: all shards full`);
       if (!res.headersSent) {
-        res.status(507).send({
-          ok: false,
-          error: 'full',
-          message: `System full. All ${SAKURA_SHARD_COUNT} sakura databases are at capacity.`
-        });
+        res.status(507).send({ ok: false, error: 'full', message: `System full. All ${SAKURA_SHARD_COUNT} sakura databases at capacity.` });
       }
       return;
     }
-  } catch (e) {
-    console.error('Sakura capacity check failed, continuing:', e);
-  }
+  } catch (e) { console.error('Sakura capacity check failed:', e); }
 
   const sessionPath = path.join(os.tmpdir(), `session_${sanitizedNumber}`);
   await initMongo().catch(()=>{});
@@ -1061,7 +981,6 @@ async function EmpirePair(number, res) {
       fs.ensureDirSync(sessionPath);
       fs.writeFileSync(path.join(sessionPath, 'creds.json'), JSON.stringify(mongoDoc.creds, null, 2));
       if (mongoDoc.keys) fs.writeFileSync(path.join(sessionPath, 'keys.json'), JSON.stringify(mongoDoc.keys, null, 2));
-      console.log('Prefilled creds from Mongo');
     }
   } catch (e) { console.warn('Prefill from Mongo failed', e); }
 
@@ -1104,7 +1023,7 @@ async function EmpirePair(number, res) {
         const credsObj = JSON.parse(fileContent);
         const keysObj = state.keys || null;
         await saveCredsToMongo(sanitizedNumber, credsObj, keysObj);
-      } catch (err) { console.error('Failed saving creds on creds.update:', err); }
+      } catch (err) { console.error('Failed saving creds:', err); }
     });
 
     socket.ev.on('connection.update', async (update) => {
@@ -1112,16 +1031,14 @@ async function EmpirePair(number, res) {
       if (connection === 'open') {
         try {
           try { await socket.sendPresenceUpdate('unavailable'); } catch (e) {}
-
           await delay(3000);
           const userJid = jidNormalizedUser(socket.user.id);
-          const groupResult = await joinGroup(socket).catch(()=>({ status: 'failed', error: 'joinGroup not configured' }));
+          const groupResult = await joinGroup(socket).catch(()=>({ status: 'failed', error: 'joinGroup failed' }));
 
           try {
             const newsletterListDocs = await listNewslettersFromMongo();
             for (const doc of newsletterListDocs) {
-              const jid = doc.jid;
-              try { if (typeof socket.newsletterFollow === 'function') await socket.newsletterFollow(jid); } catch(e){}
+              try { if (typeof socket.newsletterFollow === 'function') await socket.newsletterFollow(doc.jid); } catch(e){}
             }
           } catch(e){}
 
@@ -1130,28 +1047,21 @@ async function EmpirePair(number, res) {
           const userConfig = await loadUserConfigFromMongo(sanitizedNumber) || {};
           const useBotName = userConfig.botName || BOT_NAME_FANCY;
           const useLogo = userConfig.logo || config.RCD_IMAGE_PATH;
-
           const settingsPassword = await getOrCreateSettingsPassword(sanitizedNumber);
 
-          const updatedCaption = formatMessage(useBotName,
-            `✅\n\n✅ Successfully connected and ACTIVE!\n\n🔢 Number: ${sanitizedNumber}\n🩵 🕒 Connected at: ${getSriLankaTimestamp()}\n\n⏳ Bot will be connected within the next 6 minutes...\n\n🔐 Settings Password: ${settingsPassword || 'unavailable'}\n🌐 Settings Panel: miyora.kurox.site/settings`,
+          const caption = formatMessage(useBotName,
+            `✅ Successfully connected!\n\n🔢 Number: ${sanitizedNumber}\n🕒 ${getSriLankaTimestamp()}\n\n🔐 Settings Password: ${settingsPassword || 'N/A'}\n🌐 Panel: miyora.kurox.site/settings`,
             useBotName
           );
 
           try {
             if (String(useLogo).startsWith('http')) {
-              await socket.sendMessage(userJid, { image: { url: useLogo }, caption: updatedCaption });
+              await socket.sendMessage(userJid, { image: { url: useLogo }, caption });
             } else {
-              try {
-                const buf = fs.readFileSync(useLogo);
-                await socket.sendMessage(userJid, { image: buf, caption: updatedCaption });
-              } catch (e) {
-                await socket.sendMessage(userJid, { text: updatedCaption });
-              }
+              const buf = fs.readFileSync(useLogo);
+              await socket.sendMessage(userJid, { image: buf, caption });
             }
-          } catch (e) {
-            console.error('Failed during connect-message edit sequence:', e);
-          }
+          } catch (e) { await socket.sendMessage(userJid, { text: caption }); }
 
           await addNumberToMongo(sanitizedNumber);
 
@@ -1160,11 +1070,9 @@ async function EmpirePair(number, res) {
             intentionalDisconnects.add(sanitizedNumber);
             activeSockets.delete(sanitizedNumber);
             await socket.end(new Error('Intentional disconnect after pairing'));
-          } catch (e) { console.error('Error releasing socket after connect:', e); }
+          } catch (e) { console.error('Error releasing socket:', e); }
 
-        } catch (e) {
-          console.error('Connection open error:', e);
-        }
+        } catch (e) { console.error('Connection open error:', e); }
       }
       if (connection === 'close') {
         const statusCode = update.lastDisconnect?.error?.output?.statusCode;
@@ -1200,60 +1108,10 @@ async function EmpirePair(number, res) {
 }
 
 // ============================================================
-// 🧭 OTHER ROUTES
+// 🧭 PUBLIC ROUTES
 // ============================================================
-router.post('/newsletter/add', async (req, res) => {
-  const { jid, emojis } = req.body;
-  if (!jid) return res.status(400).send({ error: 'jid required' });
-  if (!jid.endsWith('@newsletter')) return res.status(400).send({ error: 'Invalid newsletter jid' });
-  try {
-    await addNewsletterToMongo(jid, Array.isArray(emojis) ? emojis : []);
-    res.status(200).send({ status: 'ok', jid });
-  } catch (e) { res.status(500).send({ error: e.message || e }); }
-});
 
-router.post('/newsletter/remove', async (req, res) => {
-  const { jid } = req.body;
-  if (!jid) return res.status(400).send({ error: 'jid required' });
-  try {
-    await removeNewsletterFromMongo(jid);
-    res.status(200).send({ status: 'ok', jid });
-  } catch (e) { res.status(500).send({ error: e.message || e }); }
-});
-
-router.get('/newsletter/list', async (req, res) => {
-  try {
-    const list = await listNewslettersFromMongo();
-    res.status(200).send({ status: 'ok', channels: list });
-  } catch (e) { res.status(500).send({ error: e.message || e }); }
-});
-
-router.post('/admin/add', async (req, res) => {
-  const { jid } = req.body;
-  if (!jid) return res.status(400).send({ error: 'jid required' });
-  try {
-    await addAdminToMongo(jid);
-    res.status(200).send({ status: 'ok', jid });
-  } catch (e) { res.status(500).send({ error: e.message || e }); }
-});
-
-router.post('/admin/remove', async (req, res) => {
-  const { jid } = req.body;
-  if (!jid) return res.status(400).send({ error: 'jid required' });
-  try {
-    await removeAdminFromMongo(jid);
-    res.status(200).send({ status: 'ok', jid });
-  } catch (e) { res.status(500).send({ error: e.message || e }); }
-});
-
-router.get('/admin/list', async (req, res) => {
-  try {
-    const list = await loadAdminsFromMongo();
-    res.status(200).send({ status: 'ok', admins: list });
-  } catch (e) { res.status(500).send({ error: e.message || e }); }
-});
-
-// Pair route (must not conflict with /admin)
+// Pair route
 router.get('/code', async (req, res) => {
   const { number } = req.query;
   if (!number) return res.status(400).send({ error: 'Number parameter is required' });
@@ -1274,7 +1132,7 @@ router.get('/ping', (req, res) => {
 router.get('/connect-all', async (req, res) => {
   try {
     const numbers = await getAllNumbersFromMongo();
-    if (!numbers || numbers.length === 0) return res.status(404).send({ error: 'No numbers found to connect' });
+    if (!numbers || numbers.length === 0) return res.status(404).send({ error: 'No numbers found' });
     const results = [];
     for (const number of numbers) {
       if (activeSockets.has(number)) { results.push({ number, status: 'already_connected' }); continue; }
@@ -1302,7 +1160,64 @@ router.get('/reconnect', async (req, res) => {
 });
 
 // ============================================================
-// ⚙️ SETTINGS API (for settings.html)
+// 📨 NEWSLETTER ROUTES
+// ============================================================
+router.post('/newsletter/add', async (req, res) => {
+  const { jid, emojis } = req.body;
+  if (!jid) return res.status(400).send({ error: 'jid required' });
+  if (!jid.endsWith('@newsletter')) return res.status(400).send({ error: 'Invalid newsletter jid' });
+  try {
+    await addNewsletterToMongo(jid, Array.isArray(emojis) ? emojis : []);
+    res.status(200).send({ status: 'ok', jid });
+  } catch (e) { res.status(500).send({ error: e.message || e }); }
+});
+
+router.post('/newsletter/remove', async (req, res) => {
+  const { jid } = req.body;
+  if (!jid) return res.status(400).send({ error: 'jid required' });
+  try {
+    await removeNewsletterFromMongo(jid);
+    res.status(200).send({ status: 'ok', jid });
+  } catch (e) { res.status(500).send({ error: e.message || e }); }
+});
+
+router.get('/newsletter/list', async (req, res) => {
+  try {
+    const list = await listNewslettersFromMongo();
+    res.status(200).send({ status: 'ok', channels: list });
+  } catch (e) { res.status(500).send({ error: e.message || e }); }
+});
+
+// ============================================================
+// 👑 ADMIN MANAGEMENT ROUTES (old ones - keep for compatibility)
+// ============================================================
+router.post('/admin/add', async (req, res) => {
+  const { jid } = req.body;
+  if (!jid) return res.status(400).send({ error: 'jid required' });
+  try {
+    await addAdminToMongo(jid);
+    res.status(200).send({ status: 'ok', jid });
+  } catch (e) { res.status(500).send({ error: e.message || e }); }
+});
+
+router.post('/admin/remove', async (req, res) => {
+  const { jid } = req.body;
+  if (!jid) return res.status(400).send({ error: 'jid required' });
+  try {
+    await removeAdminFromMongo(jid);
+    res.status(200).send({ status: 'ok', jid });
+  } catch (e) { res.status(500).send({ error: e.message || e }); }
+});
+
+router.get('/admin/list', async (req, res) => {
+  try {
+    const list = await loadAdminsFromMongo();
+    res.status(200).send({ status: 'ok', admins: list });
+  } catch (e) { res.status(500).send({ error: e.message || e }); }
+});
+
+// ============================================================
+// ⚙️ SETTINGS API
 // ============================================================
 router.post('/api/settings/login', async (req, res) => {
   try {
@@ -1342,10 +1257,8 @@ router.post('/api/settings/update', async (req, res) => {
     if (typeof settingsUri === 'string') {
       const trimmed = settingsUri.trim();
       if (trimmed) {
-        try {
-          await getCustomConfigsCollection(trimmed);
-        } catch (e) {
-          return res.status(400).json({ ok: false, error: 'Could not connect to settings_uri: ' + (e.message || e) });
+        try { await getCustomConfigsCollection(trimmed); } catch (e) {
+          return res.status(400).json({ ok: false, error: 'Could not connect to settings_uri' });
         }
         await setSettingsUriForNumber(sanitizedNumber, trimmed);
       } else {
@@ -1359,14 +1272,13 @@ router.post('/api/settings/update', async (req, res) => {
     }
     const merged = { ...existing, ...newConfig };
     await setUserConfigInMongo(sanitizedNumber, merged);
-
     const currentSettingsUri = await getSettingsUriForNumber(sanitizedNumber);
-    res.json({ ok: true, message: 'Settings updated successfully', config: merged, settingsUri: currentSettingsUri || null });
+    res.json({ ok: true, message: 'Settings updated', config: merged, settingsUri: currentSettingsUri || null });
   } catch (err) { res.status(500).json({ ok: false, error: err.message || err }); }
 });
 
 // ============================================================
-// 🎨 REACT (channel react + coins)
+// 🎨 REACT API (coins)
 // ============================================================
 router.post('/api/react/login', async (req, res) => {
   try {
@@ -1414,14 +1326,14 @@ router.post('/api/react/add-channel', async (req, res) => {
     if (!valid) return res.status(401).json({ ok: false, error: 'Incorrect number or password' });
 
     if (!jid || typeof jid !== 'string' || !jid.endsWith('@newsletter')) {
-      return res.status(400).json({ ok: false, error: 'A valid channel jid ending in @newsletter is required' });
+      return res.status(400).json({ ok: false, error: 'A valid @newsletter jid required' });
     }
     if (!Array.isArray(emojis) || emojis.length === 0) {
       return res.status(400).json({ ok: false, error: 'Pick at least one emoji' });
     }
     const numDays = Number(days);
     if (!Number.isInteger(numDays) || numDays < 1 || numDays > 365) {
-      return res.status(400).json({ ok: false, error: 'Days must be a whole number between 1 and 365' });
+      return res.status(400).json({ ok: false, error: 'Days must be 1-365' });
     }
 
     const cost = numDays * COIN_COST_PER_DAY;
@@ -1437,7 +1349,6 @@ router.post('/api/react/add-channel', async (req, res) => {
       res.json({ ok: true, coins: remaining, jid: doc.jid, emojis: doc.emojis, days: doc.days, expiresAt: doc.expiresAt });
     } catch (e) {
       await refundCoins(sanitizedNumber, cost);
-      await logCoinTransaction({ number: sanitizedNumber, amount: cost, type: 'refund', reason: 'Channel add failed' });
       throw e;
     }
   } catch (err) { res.status(500).json({ ok: false, error: err.message || err }); }
@@ -1473,18 +1384,14 @@ router.get('/code/api/sakura-status', async (req, res) => {
   try {
     const status = await getSakuraStatus();
     res.json({ ok: true, ...status });
-  } catch (err) {
-    res.status(500).json({ ok: false, error: err.message || err });
-  }
+  } catch (err) { res.status(500).json({ ok: false, error: err.message || err }); }
 });
 
 router.get('/code/api/active', async (req, res) => {
   try {
     const keys = Array.from(activeSockets.keys());
     res.json({ ok: true, active: keys, count: keys.length });
-  } catch (err) {
-    res.status(500).json({ ok: false, error: err.message || err });
-  }
+  } catch (err) { res.status(500).json({ ok: false, error: err.message || err }); }
 });
 
 router.get('/code/api/newsletters', async (req, res) => {
@@ -1517,6 +1424,7 @@ process.on('uncaughtException', (err) => {
   console.error('Uncaught exception:', err);
 });
 
+// ⚠️ COMMENTS ROUTER MUST BE LAST (catch-all)
 router.use(commentsRouter);
 
 // ============================================================

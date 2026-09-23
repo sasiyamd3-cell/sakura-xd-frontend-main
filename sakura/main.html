@@ -13,7 +13,7 @@
     --ink: #05070f;
     --ink-2: #0a1226;
     --ink-3: #111f3d;
-    --sakura: #b06bff;        /* Miyora signature purple */
+    --sakura: #b06bff;
     --sakura-deep: #7a2bff;
     --lantern: #d8a3ff;
     --lantern-soft: #e9d4ff;
@@ -37,10 +37,8 @@
 
   svg.ic{ display:block; flex-shrink:0; }
 
-  /* ---------- Ambient miyora petals ---------- */
   #petals{ position: fixed; inset: 0; z-index: 0; pointer-events: none; }
 
-  /* ---------- Top bar ---------- */
   .topbar{
     position: sticky;
     top: 0;
@@ -101,7 +99,6 @@
   .burger.open span:nth-child(3){ transform: translateY(-7px) rotate(-45deg); }
   .burger:focus-visible{ outline: 2px solid var(--lantern); outline-offset: 2px; }
 
-  /* ---------- Nav menu ---------- */
   .navmenu{
     position: fixed;
     top: 73px;
@@ -147,6 +144,7 @@
   .navmenu .icon.pink{ background: rgba(122,43,255,0.18); color: var(--sakura); }
   .navmenu .icon.gold{ background: rgba(216,163,255,0.15); color: var(--lantern); }
   .navmenu .icon.mint{ background: rgba(78,230,160,0.16); color: #4ee6a0; }
+  .navmenu .icon.admin{ background: rgba(255,209,102,0.18); color: var(--gold); }
   .navmenu .desc{ display: block; font-size: 12px; color: var(--muted); font-weight: 400; margin-top: 2px; }
   .navmenu .divider{ height: 1px; background: var(--line); margin: 6px 4px; }
 
@@ -160,7 +158,6 @@
   }
   .overlay.open{ opacity: 1; pointer-events: auto; }
 
-  /* ---------- Hero ---------- */
   .hero{
     position: relative;
     z-index: 1;
@@ -319,7 +316,6 @@
     background: rgba(255,255,255,0.02);
   }
 
-  /* ---------- Sections ---------- */
   .section{
     position: relative;
     z-index: 1;
@@ -388,7 +384,6 @@
     margin: 0;
   }
 
-  /* ---------- Live status ---------- */
   .status-card{
     position: relative;
     display: flex;
@@ -492,7 +487,6 @@
     .status-right{ width: 100%; justify-content: flex-start; }
   }
 
-  /* ---------- Owner card ---------- */
   .owner-card{
     display: flex;
     align-items: center;
@@ -560,7 +554,6 @@
   }
   .owner-links a:hover{ background: rgba(216,163,255,0.1); }
 
-  /* ---------- Comments ---------- */
   .comment-form{
     display: flex;
     flex-direction: column;
@@ -750,6 +743,7 @@
 
 <div id="overlay" class="overlay"></div>
 
+<!-- ===================== NAV MENU (with Admin Panel at end) ===================== -->
 <nav id="navMenu" class="navmenu" aria-label="Main menu">
   <a href="/pair.html">
     <span class="icon pink">
@@ -778,6 +772,19 @@
     <span>
       Channel React
       <span class="desc">Add your channel to auto-react</span>
+    </span>
+  </a>
+  <div class="divider"></div>
+  <a href="/admin">
+    <span class="icon admin">
+      <svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 2l7 3v6c0 5-3.4 8-7 9-3.6-1-7-4-7-9V5z"/>
+        <path d="M9 12l2 2 4-4"/>
+      </svg>
+    </span>
+    <span>
+      Admin Panel
+      <span class="desc">Manage bot & coin system</span>
     </span>
   </a>
 </nav>
@@ -1252,11 +1259,9 @@
   });
 })();
 </script>
-<!-- ============ /Live Helper Chat Widget ============ -->
 
 <script>
 (function(){
-  // ---------- Ambient falling petals ----------
   const canvas = document.getElementById('petals');
   const ctx = canvas.getContext('2d');
   let petals = [];
@@ -1324,7 +1329,6 @@
   }
   if(!reduceMotion) requestAnimationFrame(tick);
 
-  // ---------- Hamburger nav menu ----------
   const burgerBtn = document.getElementById('burgerBtn');
   const navMenu = document.getElementById('navMenu');
   const overlay = document.getElementById('overlay');
@@ -1351,7 +1355,6 @@
     if(e.key === 'Escape') closeMenu();
   });
 
-  // ---------- Live connected-bots counter ----------
   const botCountEl = document.getElementById('botCount');
   const liveDotEl = document.getElementById('liveDot');
 
@@ -1374,7 +1377,6 @@
   refreshBotCount();
   setInterval(refreshBotCount, 15000);
 
-  // ---------- Comment system ----------
   const REACTION_EMOJIS = ['😂', '❤️', '👍', '✊', '👎'];
   const commentForm = document.getElementById('commentForm');
   const commentNameInput = document.getElementById('commentName');

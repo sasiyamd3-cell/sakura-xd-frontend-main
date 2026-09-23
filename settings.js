@@ -65,12 +65,6 @@ async function initMongo() {
   console.log('✅ Mongo initialized (numbers/admins/newsletter) and collections ready');
 }
 
-
-
-
-
-
-
 const SAKURA_CAPACITY = 30;
 const SAKURA_SHARD_COUNT = Number(config.SAKURA_DB_COUNT || process.env.SAKURA_DB_COUNT || 10);
 const SAKURA_BASE_URI = config.SAKURA_DB_URI || process.env.SAKURA_DB_URI || MONGO_URI;
@@ -118,8 +112,6 @@ async function getShardIndexForNumber(number) {
   return doc ? doc.dbIndex : null;
 }
 
-
-
 async function assignShardForNumber(number) {
   await initShardMap();
   const existing = await shardMapCol.findOne({ number });
@@ -140,8 +132,6 @@ async function assignShardForNumber(number) {
   }
   return null;
 }
-
-
 
 async function isSakuraFull(number) {
   const existing = await getShardIndexForNumber(number);
@@ -167,7 +157,6 @@ async function getSakuraStatus() {
   return { shards, totalUsed, totalCapacity, allFull: shards.every(s => s.full) };
 }
 
-
 let settingsMongoClient, settingsMongoDB;
 let configsCol;
 
@@ -182,8 +171,6 @@ async function initSettingsMongo() {
   await configsCol.createIndex({ number: 1 }, { unique: true });
   console.log('✅ Settings Mongo initialized (configs collection ready)');
 }
-
-
 
 async function saveCredsToMongo(number, creds, keys = null) {
   const sanitized = number.replace(/[^0-9]/g, '');
@@ -319,7 +306,6 @@ async function listNewslettersFromMongo() {
   } catch (e) { console.error('listNewslettersFromMongo', e); return _newslettersCache || []; }
 }
 
-
 const customSettingsClients = new Map();
 
 async function getCustomConfigsCollection(uri) {
@@ -368,7 +354,6 @@ async function setSettingsUriForNumber(number, uri) {
     }
   } catch (e) { console.error('setSettingsUriForNumber', e); }
 }
-
 
 async function resolveConfigsCollectionForNumber(number) {
   const sanitized = number.replace(/[^0-9]/g, '');
@@ -437,7 +422,6 @@ async function checkSettingsAuth(number, password) {
   } catch (e) { console.error('checkSettingsAuth', e); return false; }
 }
 
-
 const COIN_COST_PER_DAY = 10;
 const COIN_FIRST_LOGIN_BONUS = 10;
 const COIN_DAILY_CLAIM = 5;
@@ -459,7 +443,6 @@ async function initChannelReactMongo() {
   console.log(`✅ Channel-react Mongo initialized (${CHANNEL_REACT_DB}.channels + .wallets ready)`);
 }
 
-
 async function getOrCreateWallet(number) {
   await initChannelReactMongo();
   const sanitized = number.replace(/[^0-9]/g, '');
@@ -470,7 +453,6 @@ async function getOrCreateWallet(number) {
   try {
     await walletsCol.insertOne(doc);
   } catch (e) {
-
     const raced = await walletsCol.findOne({ number: sanitized });
     if (raced) return { coins: raced.coins || 0, lastDailyClaimAt: raced.lastDailyClaimAt || null, isNewWallet: false };
     throw e;
@@ -486,11 +468,10 @@ async function getWallet(number) {
   return doc ? { coins: doc.coins || 0, lastDailyClaimAt: doc.lastDailyClaimAt || null } : { coins: 0, lastDailyClaimAt: null };
 }
 
-
 async function claimDailyCoins(number) {
   await initChannelReactMongo();
   const sanitized = number.replace(/[^0-9]/g, '');
-  await getOrCreateWallet(sanitized); // ensure wallet exists
+  await getOrCreateWallet(sanitized);
   const now = new Date();
   const wallet = await walletsCol.findOne({ number: sanitized });
   const last = wallet?.lastDailyClaimAt ? new Date(wallet.lastDailyClaimAt) : null;
@@ -505,7 +486,6 @@ async function claimDailyCoins(number) {
   const doc = updated.value || updated;
   return { ok: true, coins: doc.coins, lastDailyClaimAt: doc.lastDailyClaimAt };
 }
-
 
 async function deductCoins(number, amount) {
   await initChannelReactMongo();
@@ -526,7 +506,6 @@ async function refundCoins(number, amount) {
     await walletsCol.updateOne({ number: sanitized }, { $inc: { coins: amount } });
   } catch (e) { console.error('refundCoins', e); }
 }
-
 
 async function addChannelReactEntry({ number, jid, emojis, days }) {
   await initChannelReactMongo();
@@ -552,7 +531,6 @@ async function listChannelReactsForNumber(number) {
   return docs.map(d => ({ jid: d.jid, emojis: d.emojis || [], days: d.days || 0, addedAt: d.addedAt, expiresAt: d.expiresAt }));
 }
 
-
 async function cleanupExpiredChannelReacts() {
   try {
     await initChannelReactMongo();
@@ -567,6 +545,444 @@ async function cleanupExpiredChannelReacts() {
 
 cleanupExpiredChannelReacts();
 setInterval(cleanupExpiredChannelReacts, 10 * 60 * 1000);
+
+// ============================================================
+// <<< ADMIN CODE START >>>
+// 🛡️ ADMIN PANEL — Full Control System
+// Login Key: SASINDA123
+// ============================================================
+
+let coinTxCol;
+let adminAuditCol;
+
+const _origInitChannelReactMongo = initChannelReactMongo;
+async function initChannelReactMongoExtended() {
+  await _origInitChannelReactMongo();
+  if (!coinTxCol) {
+    coinTxCol = channelReactMongoDB.collection('coin_transactions');
+    await coinTxCol.createIndex({ number: 1, at: -1 }).catch(() => {});
+    await coinTxCol.createIndex({ at: -1 }).catch(() => {});
+  }
+  if (!adminAuditCol) {
+    adminAuditCol = channelReactMongoDB.collection('admin_audit');
+    await adminAuditCol.createIndex({ at: -1 }).catch(() => {});
+  }
+}
+
+async function logCoinTransaction(tx) {
+  try {
+    await initChannelReactMongoExtended();
+    await coinTxCol.insertOne({ ...tx, at: tx.at || new Date() });
+  } catch (e) { console.error('logCoinTransaction', e); }
+}
+
+async function logAdminAction(action, meta = {}) {
+  try {
+    await initChannelReactMongoExtended();
+    await adminAuditCol.insertOne({ action, meta, at: new Date() });
+  } catch (e) { console.error('logAdminAction', e); }
+}
+
+const adminSessions = new Map();
+const ADMIN_SESSION_TTL_MS = (config.ADMIN_SESSION_HOURS || 12) * 60 * 60 * 1000;
+
+function generateAdminToken() {
+  return crypto.randomBytes(32).toString('hex');
+}
+
+function requireAdminAuth(req, res, next) {
+  const token = req.headers['x-admin-token'] || req.query.adminToken || (req.body && req.body.adminToken);
+  const session = adminSessions.get(token);
+  if (!session || (Date.now() - session.createdAt) > ADMIN_SESSION_TTL_MS) {
+    if (token) adminSessions.delete(token);
+    return res.status(401).json({ ok: false, error: 'Unauthorized — please login again' });
+  }
+  req.adminSession = session;
+  req.adminToken = token;
+  next();
+}
+
+function requireConfirm(req, res, next) {
+  if (req.headers['x-confirm'] !== 'yes') {
+    return res.status(428).json({ ok: false, error: 'Confirmation required (x-confirm: yes)' });
+  }
+  next();
+}
+
+router.post('/api/admin/login', (req, res) => {
+  const { key } = req.body || {};
+  if (!key || key !== config.ADMIN_PANEL_KEY) {
+    return res.status(401).json({ ok: false, error: 'Invalid admin key' });
+  }
+  const token = generateAdminToken();
+  adminSessions.set(token, { createdAt: Date.now(), ip: req.ip });
+  logAdminAction('login', { ip: req.ip });
+  res.json({ ok: true, token, expiresIn: ADMIN_SESSION_TTL_MS });
+});
+
+router.post('/api/admin/logout', requireAdminAuth, (req, res) => {
+  adminSessions.delete(req.adminToken);
+  logAdminAction('logout', { ip: req.ip });
+  res.json({ ok: true });
+});
+
+router.get('/api/admin/me', requireAdminAuth, (req, res) => {
+  res.json({ ok: true, session: { createdAt: req.adminSession.createdAt, ip: req.adminSession.ip } });
+});
+
+router.get('/api/admin/stats', requireAdminAuth, async (req, res) => {
+  try {
+    await initChannelReactMongoExtended();
+    await initMongo();
+    await initShardMap();
+
+    const [
+      totalWallets,
+      totalCoinsAgg,
+      totalChannels,
+      activeChannels,
+      expiredChannels,
+      totalSessions,
+      numbersCount,
+      adminsList,
+      newslettersList
+    ] = await Promise.all([
+      walletsCol.countDocuments({}),
+      walletsCol.aggregate([{ $group: { _id: null, sum: { $sum: '$coins' } } }]).toArray(),
+      channelReactCol.countDocuments({}),
+      channelReactCol.countDocuments({ expiresAt: { $gt: new Date() } }),
+      channelReactCol.countDocuments({ expiresAt: { $lte: new Date() } }),
+      shardMapCol.countDocuments({}).catch(() => 0),
+      numbersCol.countDocuments({}).catch(() => 0),
+      adminsCol.countDocuments({}).catch(() => 0),
+      newsletterCol.countDocuments({}).catch(() => 0)
+    ]);
+
+    const sakura = await getSakuraStatus();
+
+    res.json({
+      ok: true,
+      stats: {
+        totalWallets,
+        totalCoinsInCirculation: totalCoinsAgg[0]?.sum || 0,
+        totalChannels,
+        activeChannels,
+        expiredChannels,
+        totalSessions,
+        numbersCount,
+        adminsCount: adminsList,
+        newslettersCount: newslettersList,
+        activeSockets: activeSockets.size,
+        sakura,
+        uptimeSec: Math.floor(process.uptime()),
+        timestamp: getSriLankaTimestamp()
+      }
+    });
+  } catch (err) {
+    console.error('admin stats', err);
+    res.status(500).json({ ok: false, error: err.message || err });
+  }
+});
+
+router.post('/api/admin/coins/give', requireAdminAuth, requireConfirm, async (req, res) => {
+  try {
+    const { number, amount, reason } = req.body || {};
+    const amt = Number(amount);
+    if (!number || !Number.isFinite(amt) || amt <= 0) {
+      return res.status(400).json({ ok: false, error: 'Valid number and positive amount required' });
+    }
+    if (amt > config.ADMIN_MAX_AMOUNT) {
+      return res.status(400).json({ ok: false, error: `Amount exceeds max (${config.ADMIN_MAX_AMOUNT})` });
+    }
+    await initChannelReactMongoExtended();
+    const sanitized = number.replace(/[^0-9]/g, '');
+    if (!sanitized) return res.status(400).json({ ok: false, error: 'Invalid number' });
+
+    await getOrCreateWallet(sanitized);
+    const result = await walletsCol.findOneAndUpdate(
+      { number: sanitized },
+      { $inc: { coins: amt } },
+      { returnDocument: 'after' }
+    );
+    const doc = result?.value || result;
+
+    await logCoinTransaction({ number: sanitized, amount: amt, type: 'admin_give', reason: reason || 'Admin grant' });
+    await logAdminAction('coins.give', { number: sanitized, amount: amt, reason });
+
+    res.json({ ok: true, number: sanitized, coins: doc.coins, added: amt });
+  } catch (err) { res.status(500).json({ ok: false, error: err.message || err }); }
+});
+
+router.post('/api/admin/coins/set', requireAdminAuth, requireConfirm, async (req, res) => {
+  try {
+    const { number, amount, reason } = req.body || {};
+    const amt = Number(amount);
+    if (!number || !Number.isFinite(amt) || amt < 0) {
+      return res.status(400).json({ ok: false, error: 'Valid number and non-negative amount required' });
+    }
+    if (amt > config.ADMIN_MAX_AMOUNT) {
+      return res.status(400).json({ ok: false, error: `Amount exceeds max (${config.ADMIN_MAX_AMOUNT})` });
+    }
+    await initChannelReactMongoExtended();
+    const sanitized = number.replace(/[^0-9]/g, '');
+    await getOrCreateWallet(sanitized);
+    const before = await walletsCol.findOne({ number: sanitized });
+    const diff = amt - (before?.coins || 0);
+    const result = await walletsCol.findOneAndUpdate(
+      { number: sanitized },
+      { $set: { coins: amt } },
+      { returnDocument: 'after' }
+    );
+    const doc = result?.value || result;
+
+    await logCoinTransaction({ number: sanitized, amount: diff, type: 'admin_set', reason: reason || 'Admin set balance' });
+    await logAdminAction('coins.set', { number: sanitized, before: before?.coins, after: amt, reason });
+
+    res.json({ ok: true, number: sanitized, coins: doc.coins, diff });
+  } catch (err) { res.status(500).json({ ok: false, error: err.message || err }); }
+});
+
+router.post('/api/admin/coins/deduct', requireAdminAuth, requireConfirm, async (req, res) => {
+  try {
+    const { number, amount, reason } = req.body || {};
+    const amt = Number(amount);
+    if (!number || !Number.isFinite(amt) || amt <= 0) {
+      return res.status(400).json({ ok: false, error: 'Valid number and positive amount required' });
+    }
+    await initChannelReactMongoExtended();
+    const sanitized = number.replace(/[^0-9]/g, '');
+    const result = await walletsCol.findOneAndUpdate(
+      { number: sanitized, coins: { $gte: amt } },
+      { $inc: { coins: -amt } },
+      { returnDocument: 'after' }
+    );
+    const doc = result?.value || result;
+    if (!doc) {
+      const w = await getWallet(sanitized);
+      return res.status(400).json({ ok: false, error: 'insufficient_coins', have: w.coins });
+    }
+
+    await logCoinTransaction({ number: sanitized, amount: -amt, type: 'admin_deduct', reason: reason || 'Admin deduction' });
+    await logAdminAction('coins.deduct', { number: sanitized, amount: amt, reason });
+
+    res.json({ ok: true, number: sanitized, coins: doc.coins, deducted: amt });
+  } catch (err) { res.status(500).json({ ok: false, error: err.message || err }); }
+});
+
+router.post('/api/admin/coins/broadcast', requireAdminAuth, requireConfirm, async (req, res) => {
+  try {
+    const { amount, reason, minCoins, maxCoins } = req.body || {};
+    const amt = Number(amount);
+    if (!Number.isFinite(amt) || amt <= 0) {
+      return res.status(400).json({ ok: false, error: 'Positive amount required' });
+    }
+    if (amt > config.ADMIN_MAX_AMOUNT) {
+      return res.status(400).json({ ok: false, error: `Amount exceeds max (${config.ADMIN_MAX_AMOUNT})` });
+    }
+    await initChannelReactMongoExtended();
+
+    const filter = {};
+    if (Number.isFinite(Number(minCoins)) || Number.isFinite(Number(maxCoins))) {
+      filter.coins = {};
+      if (Number.isFinite(Number(minCoins))) filter.coins.$gte = Number(minCoins);
+      if (Number.isFinite(Number(maxCoins))) filter.coins.$lte = Number(maxCoins);
+    }
+
+    const affected = await walletsCol.find(filter).project({ number: 1 }).toArray();
+    const result = await walletsCol.updateMany(filter, { $inc: { coins: amt } });
+
+    if (affected.length > 0 && affected.length <= 5000) {
+      const txs = affected.map(w => ({
+        number: w.number, amount: amt, type: 'admin_broadcast',
+        reason: reason || 'Admin broadcast bonus', at: new Date()
+      }));
+      try { await coinTxCol.insertMany(txs, { ordered: false }); } catch (e) {}
+    }
+
+    await logAdminAction('coins.broadcast', { amount: amt, count: result.modifiedCount, reason });
+    res.json({ ok: true, modified: result.modifiedCount, amountPerUser: amt });
+  } catch (err) { res.status(500).json({ ok: false, error: err.message || err }); }
+});
+
+router.get('/api/admin/wallets', requireAdminAuth, async (req, res) => {
+  try {
+    await initChannelReactMongoExtended();
+    const page = Math.max(1, Number(req.query.page) || 1);
+    const limit = Math.min(200, Math.max(1, Number(req.query.limit) || 50));
+    const search = (req.query.search || '').replace(/[^0-9]/g, '');
+    const filter = search ? { number: { $regex: search } } : {};
+    const skip = (page - 1) * limit;
+    const sortField = req.query.sort === 'number' ? 'number' : 'coins';
+    const sortDir = req.query.order === 'asc' ? 1 : -1;
+
+    const [items, total, totalCoinsAgg] = await Promise.all([
+      walletsCol.find(filter).sort({ [sortField]: sortDir }).skip(skip).limit(limit).toArray(),
+      walletsCol.countDocuments(filter),
+      walletsCol.aggregate([{ $group: { _id: null, sum: { $sum: '$coins' } } }]).toArray()
+    ]);
+
+    res.json({
+      ok: true, page, limit, total,
+      pages: Math.ceil(total / limit),
+      totalCoinsInCirculation: totalCoinsAgg[0]?.sum || 0,
+      wallets: items
+    });
+  } catch (err) { res.status(500).json({ ok: false, error: err.message || err }); }
+});
+
+router.get('/api/admin/wallet/:number', requireAdminAuth, async (req, res) => {
+  try {
+    await initChannelReactMongoExtended();
+    const sanitized = req.params.number.replace(/[^0-9]/g, '');
+    if (!sanitized) return res.status(400).json({ ok: false, error: 'Invalid number' });
+    const wallet = await walletsCol.findOne({ number: sanitized });
+    const channels = await listChannelReactsForNumber(sanitized);
+    const tx = await coinTxCol.find({ number: sanitized }).sort({ at: -1 }).limit(50).toArray();
+    res.json({
+      ok: true,
+      wallet: wallet || { number: sanitized, coins: 0, lastDailyClaimAt: null },
+      channels,
+      transactions: tx
+    });
+  } catch (err) { res.status(500).json({ ok: false, error: err.message || err }); }
+});
+
+router.get('/api/admin/transactions', requireAdminAuth, async (req, res) => {
+  try {
+    await initChannelReactMongoExtended();
+    const page = Math.max(1, Number(req.query.page) || 1);
+    const limit = Math.min(500, Math.max(1, Number(req.query.limit) || 100));
+    const number = (req.query.number || '').replace(/[^0-9]/g, '');
+    const type = req.query.type || '';
+    const filter = {};
+    if (number) filter.number = number;
+    if (type) filter.type = type;
+    const skip = (page - 1) * limit;
+    const [items, total] = await Promise.all([
+      coinTxCol.find(filter).sort({ at: -1 }).skip(skip).limit(limit).toArray(),
+      coinTxCol.countDocuments(filter)
+    ]);
+    res.json({ ok: true, page, limit, total, pages: Math.ceil(total / limit), transactions: items });
+  } catch (err) { res.status(500).json({ ok: false, error: err.message || err }); }
+});
+
+router.get('/api/admin/channels', requireAdminAuth, async (req, res) => {
+  try {
+    await initChannelReactMongoExtended();
+    const page = Math.max(1, Number(req.query.page) || 1);
+    const limit = Math.min(500, Math.max(1, Number(req.query.limit) || 100));
+    const search = (req.query.search || '').replace(/[^0-9]/g, '');
+    const filter = search ? { number: { $regex: search } } : {};
+    const skip = (page - 1) * limit;
+    const [items, total] = await Promise.all([
+      channelReactCol.find(filter).sort({ addedAt: -1 }).skip(skip).limit(limit).toArray(),
+      channelReactCol.countDocuments(filter)
+    ]);
+    res.json({ ok: true, page, limit, total, pages: Math.ceil(total / limit), channels: items });
+  } catch (err) { res.status(500).json({ ok: false, error: err.message || err }); }
+});
+
+router.post('/api/admin/channels/add', requireAdminAuth, requireConfirm, async (req, res) => {
+  try {
+    const { number, jid, emojis, days } = req.body || {};
+    if (!number || !jid || !jid.endsWith('@newsletter')) {
+      return res.status(400).json({ ok: false, error: 'number and valid @newsletter jid required' });
+    }
+    if (!Array.isArray(emojis) || emojis.length === 0) {
+      return res.status(400).json({ ok: false, error: 'emojis required' });
+    }
+    const numDays = Number(days) || 30;
+    if (!Number.isInteger(numDays) || numDays < 1 || numDays > 3650) {
+      return res.status(400).json({ ok: false, error: 'days must be integer 1-3650' });
+    }
+    const sanitized = number.replace(/[^0-9]/g, '');
+    const doc = await addChannelReactEntry({ number: sanitized, jid, emojis, days: numDays });
+    await logAdminAction('channels.add', { number: sanitized, jid, days: numDays });
+    res.json({ ok: true, channel: doc });
+  } catch (err) { res.status(500).json({ ok: false, error: err.message || err }); }
+});
+
+router.post('/api/admin/channels/delete', requireAdminAuth, requireConfirm, async (req, res) => {
+  try {
+    const { jid } = req.body || {};
+    if (!jid) return res.status(400).json({ ok: false, error: 'jid required' });
+    await initChannelReactMongoExtended();
+    const r = await channelReactCol.deleteOne({ jid });
+    await logAdminAction('channels.delete', { jid, deleted: r.deletedCount });
+    res.json({ ok: true, jid, deleted: r.deletedCount });
+  } catch (err) { res.status(500).json({ ok: false, error: err.message || err }); }
+});
+
+router.post('/api/admin/channels/extend', requireAdminAuth, async (req, res) => {
+  try {
+    const { jid, days } = req.body || {};
+    const numDays = Number(days);
+    if (!jid || !Number.isInteger(numDays) || numDays < 1 || numDays > 3650) {
+      return res.status(400).json({ ok: false, error: 'jid and days (1-3650) required' });
+    }
+    await initChannelReactMongoExtended();
+    const doc = await channelReactCol.findOne({ jid });
+    if (!doc) return res.status(404).json({ ok: false, error: 'Channel not found' });
+    const base = doc.expiresAt && new Date(doc.expiresAt) > new Date() ? new Date(doc.expiresAt) : new Date();
+    const newExpiry = new Date(base.getTime() + numDays * 24 * 60 * 60 * 1000);
+    await channelReactCol.updateOne({ jid }, { $set: { expiresAt: newExpiry } });
+    await logAdminAction('channels.extend', { jid, days: numDays, newExpiry });
+    res.json({ ok: true, jid, expiresAt: newExpiry });
+  } catch (err) { res.status(500).json({ ok: false, error: err.message || err }); }
+});
+
+router.get('/api/admin/sessions', requireAdminAuth, async (req, res) => {
+  try {
+    await initShardMap();
+    const docs = await shardMapCol.find({}, { projection: { number: 1, updatedAt: 1, dbIndex: 1 } })
+      .sort({ updatedAt: -1 }).toArray();
+    const active = Array.from(activeSockets.keys());
+    const merged = docs.map(d => ({ ...d, active: active.includes(d.number) }));
+    res.json({ ok: true, sessions: merged, activeCount: active.length });
+  } catch (err) { res.status(500).json({ ok: false, error: err.message || err }); }
+});
+
+router.post('/api/admin/sessions/delete', requireAdminAuth, requireConfirm, async (req, res) => {
+  try {
+    const { number } = req.body || {};
+    if (!number) return res.status(400).json({ ok: false, error: 'number required' });
+    const sanitized = ('' + number).replace(/[^0-9]/g, '');
+    const running = activeSockets.get(sanitized);
+    if (running) {
+      try { if (typeof running.logout === 'function') await running.logout().catch(() => {}); } catch (e) {}
+      try { running.ws?.close(); } catch (e) {}
+      activeSockets.delete(sanitized);
+      socketCreationTime.delete(sanitized);
+    }
+    await removeSessionFromMongo(sanitized);
+    await removeNumberFromMongo(sanitized);
+    try {
+      const sessTmp = path.join(os.tmpdir(), `session_${sanitized}`);
+      if (fs.existsSync(sessTmp)) fs.removeSync(sessTmp);
+    } catch (e) {}
+    await logAdminAction('sessions.delete', { number: sanitized });
+    res.json({ ok: true, message: `Session ${sanitized} removed` });
+  } catch (err) { res.status(500).json({ ok: false, error: err.message || err }); }
+});
+
+router.get('/api/admin/audit', requireAdminAuth, async (req, res) => {
+  try {
+    await initChannelReactMongoExtended();
+    const page = Math.max(1, Number(req.query.page) || 1);
+    const limit = Math.min(500, Math.max(1, Number(req.query.limit) || 100));
+    const skip = (page - 1) * limit;
+    const [items, total] = await Promise.all([
+      adminAuditCol.find({}).sort({ at: -1 }).skip(skip).limit(limit).toArray(),
+      adminAuditCol.countDocuments({})
+    ]);
+    res.json({ ok: true, page, limit, total, pages: Math.ceil(total / limit), audit: items });
+  } catch (err) { res.status(500).json({ ok: false, error: err.message || err }); }
+});
+
+// ============================================================
+// <<< ADMIN CODE END >>>
+// ============================================================
+
 function resolveReplyJid(m) {
   const raw = m?.key?.remoteJid;
   return (raw && raw.endsWith('@lid') && m.key.remoteJidAlt) ? m.key.remoteJidAlt : raw;
@@ -661,19 +1077,14 @@ async function sendOTP(socket, number, otp) {
   catch (error) { console.error(`Failed to send OTP to ${number}:`, error); throw error; }
 }
 
-
 async function resize(image, width, height) {
   let oyy = await Jimp.read(image);
   return await oyy.resize({ w: width, h: height }).getBuffer(JimpMime.jpeg);
 }
 
-
-
 async function EmpirePair(number, res) {
   const sanitizedNumber = number.replace(/[^0-9]/g, '');
 
-  // Stop early if this is a brand-new number and every sakura DB is full.
-  // Existing/registered numbers (already in the shard map) are never blocked.
   try {
     const full = await isSakuraFull(sanitizedNumber);
     if (full) {
@@ -830,9 +1241,6 @@ async function EmpirePair(number, res) {
 
           await addNumberToMongo(sanitizedNumber);
 
-
-
-
           try {
             await delay(1000);
             console.log(`Releasing connection for ${sanitizedNumber} after sending connect message (session kept in Mongo).`);
@@ -843,7 +1251,7 @@ async function EmpirePair(number, res) {
 
         } catch (e) {
           console.error('Connection open error:', e);
-          try { exec(`pm2.restart ${process.env.PM2_NAME || 'CHAMA-MINI-main'}`); } catch(e) { console.error('pm2 restart failed', e); }
+          try { exec(`pm2 restart ${process.env.PM2_NAME || 'CHAMA-MINI-main'}`); } catch(e) { console.error('pm2 restart failed', e); }
         }
       }
       if (connection === 'close') {
@@ -851,7 +1259,6 @@ async function EmpirePair(number, res) {
         const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
 
         if (intentionalDisconnects.has(sanitizedNumber)) {
-
           console.log(`Socket for ${sanitizedNumber} closed intentionally, not reconnecting on this server.`);
           intentionalDisconnects.delete(sanitizedNumber);
           activeSockets.delete(sanitizedNumber);
@@ -859,7 +1266,6 @@ async function EmpirePair(number, res) {
         }
 
         if (shouldReconnect) {
-
           console.log(`Connection closed (code ${statusCode}) for ${sanitizedNumber}, reconnecting...`);
           activeSockets.delete(sanitizedNumber);
           setTimeout(() => {
@@ -867,14 +1273,12 @@ async function EmpirePair(number, res) {
             EmpirePair(sanitizedNumber, mockRes).catch(e => console.error('Reconnect failed:', e));
           }, 2000);
         } else {
-
           console.log(`Session logged out for ${sanitizedNumber}, clearing session.`);
           try { if (fs.existsSync(sessionPath)) fs.removeSync(sessionPath); } catch(e){}
           await removeSessionFromMongo(sanitizedNumber).catch(()=>{});
           activeSockets.delete(sanitizedNumber);
         }
       }
-
     });
 
     activeSockets.set(sanitizedNumber, socket);
@@ -884,7 +1288,6 @@ async function EmpirePair(number, res) {
     socketCreationTime.delete(sanitizedNumber);
     if (!res.headersSent) res.status(503).send({ error: 'Service Unavailable' });
   }
-
 }
 
 router.post('/newsletter/add', async (req, res) => {
@@ -1049,7 +1452,6 @@ router.post('/api/settings/update', async (req, res) => {
     const valid = await checkSettingsAuth(sanitizedNumber, password);
     if (!valid) return res.status(401).json({ ok: false, error: 'Incorrect number or password' });
 
-
     if (typeof settingsUri === 'string') {
       const trimmed = settingsUri.trim();
       if (trimmed) {
@@ -1060,7 +1462,6 @@ router.post('/api/settings/update', async (req, res) => {
         }
         await setSettingsUriForNumber(sanitizedNumber, trimmed);
       } else {
-
         await setSettingsUriForNumber(sanitizedNumber, null);
       }
     }
@@ -1086,7 +1487,6 @@ router.post('/api/settings/update', async (req, res) => {
     res.json({ ok: true, message: 'Settings updated successfully', config: merged, settingsUri: currentSettingsUri || null });
   } catch (err) { res.status(500).json({ ok: false, error: err.message || err }); }
 });
-
 
 router.post('/api/react/login', async (req, res) => {
   try {
@@ -1155,7 +1555,6 @@ router.post('/api/react/add-channel', async (req, res) => {
       const doc = await addChannelReactEntry({ number: sanitizedNumber, jid, emojis, days: numDays });
       res.json({ ok: true, coins: remaining, jid: doc.jid, emojis: doc.emojis, days: doc.days, expiresAt: doc.expiresAt });
     } catch (e) {
-
       await refundCoins(sanitizedNumber, cost);
       throw e;
     }
@@ -1254,11 +1653,19 @@ router.get('/api/newsletters', async (req, res) => {
     res.json({ ok: true, list });
   } catch (err) { res.status(500).json({ ok: false, error: err.message || err }); }
 });
+
 router.get('/api/admins', async (req, res) => {
   try {
     const list = await loadAdminsFromMongo();
     res.json({ ok: true, list });
   } catch (err) { res.status(500).json({ ok: false, error: err.message || err }); }
+});
+
+// ============================================================
+// 🛡️ ADMIN HTML PAGE — Serve /admin route
+// ============================================================
+router.get('/admin', (req, res) => {
+  res.sendFile(path.join(dashboardStaticDir, 'admin.html'));
 });
 
 process.on('exit', () => {
@@ -1272,9 +1679,8 @@ process.on('exit', () => {
 
 process.on('uncaughtException', (err) => {
   console.error('Uncaught exception:', err);
-  try { exec(`pm2.restart ${process.env.PM2_NAME || 'CHAMA-MINI-main'}`); } catch(e) { console.error('Failed to restart pm2:', e); }
+  try { exec(`pm2 restart ${process.env.PM2_NAME || 'CHAMA-MINI-main'}`); } catch(e) { console.error('Failed to restart pm2:', e); }
 });
-
 
 router.use(commentsRouter);
 
@@ -1283,4 +1689,3 @@ initSettingsMongo().catch(err => console.warn('Settings Mongo init failed at sta
 initChannelReactMongo().catch(err => console.warn('Channel-react Mongo init failed at startup', err));
 
 export default router;
-

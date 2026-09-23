@@ -1,552 +1,250 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>MIYORA MD — Channel React</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sakura XD — Channel React</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌸</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;800&family=Klee+One:wght@600&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --ink: #05070f;
-    --ink-2: #0a1226;
-    --ink-3: #111f3d;
-    --sakura: #b06bff;
-    --sakura-deep: #7a2bff;
-    --lantern: #d8a3ff;
-    --lantern-soft: #e9d4ff;
-    --paper: #f3ecff;
-    --muted: #9a8fbd;
-    --line: rgba(176,107,255,0.18);
-    --gold: #ffd166;
-    --success: #4ade80;
-    --danger: #ff8080;
+    --bg:#1c1220;
+    --surface:#271a2a;
+    --surface-2:#33223a;
+    --line:#4a3550;
+    --text:#f4ecf2;
+    --muted:#b39ab0;
+    --pink:#e8628f;
+    --pink-soft:#5a2f3d;
+    --gold:#e7b24a;
+    --err:#e4665f;
+    --ok:#8fbf9a;
   }
-  *{ box-sizing: border-box; }
-  html,body{ margin:0; padding:0; }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
   body{
-    background: radial-gradient(ellipse 120% 80% at 50% -10%, #2a1550 0%, var(--ink) 55%, #05070f 100%);
-    color: var(--paper);
-    font-family: 'Inter', sans-serif;
-    min-height: 100vh;
-    overflow-x: hidden;
-    position: relative;
+    min-height:100vh;
+    background:
+      radial-gradient(ellipse 60% 40% at 15% 0%, #3a2440 0%, transparent 60%),
+      radial-gradient(ellipse 50% 40% at 100% 20%, #2c1830 0%, transparent 55%),
+      var(--bg);
+    color:var(--text);
+    font-family:'Manrope',sans-serif;
+    display:flex;
+    justify-content:center;
+    padding:48px 20px 80px;
   }
-  svg.ic{ display:block; flex-shrink:0; }
-  #petals{ position: fixed; inset: 0; z-index: 0; pointer-events: none; }
-
-  .stage{
-    position: relative;
-    z-index: 1;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 6vh 20px 8vh;
-  }
-
-  .wrap{ width: 100%; max-width: 520px; }
-
-  /* ---------- Brand ---------- */
-  .brand{
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    margin-bottom: 8px;
-  }
-  .kanji-badge{
-    width: 46px;
-    height: 46px;
-    border-radius: 14px;
-    background: linear-gradient(160deg, var(--ink-3), var(--ink-2));
-    border: 1px solid var(--line);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-    flex-shrink: 0;
-    box-shadow: 0 0 18px rgba(176,107,255,0.4) inset;
-  }
-  .kanji-badge img{ width: 100%; height: 100%; object-fit: cover; }
+  .wrap{width:100%;max-width:480px;}
+  .brand{display:flex;align-items:baseline;gap:10px;margin-bottom:34px;}
+  .brand .bloom{font-size:26px;line-height:1;}
   .brand h1{
-    font-family: 'Unbounded', sans-serif;
-    font-weight: 800;
-    font-size: clamp(22px, 4vw, 28px);
-    letter-spacing: 0.02em;
-    margin: 0;
-    background: linear-gradient(100deg, var(--paper) 20%, var(--sakura) 60%, var(--lantern) 100%);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    text-shadow: 0 0 30px rgba(176,107,255,0.25);
+    font-family:'Shippori Mincho',serif;
+    font-weight:700;
+    font-size:24px;
+    margin:0;
+    letter-spacing:.2px;
   }
-  .tagline{
-    color: var(--muted);
-    font-size: 14px;
-    margin: 4px 0 36px;
-    line-height: 1.5;
-  }
+  .brand span.tag{color:var(--muted);font-size:14px;}
 
-  /* ---------- Card ---------- */
   .card{
-    background: linear-gradient(165deg, var(--ink-2), var(--ink) 130%);
-    border: 1px solid var(--line);
-    border-radius: 22px;
-    padding: 28px 26px;
-    margin-bottom: 18px;
-    position: relative;
-    overflow: hidden;
-  }
-  .card::before{
-    content: '';
-    position: absolute;
-    top: -50%; right: -30%;
-    width: 220px; height: 220px;
-    background: radial-gradient(circle, rgba(176,107,255,0.15), transparent 70%);
-    filter: blur(20px);
-    pointer-events: none;
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:18px;
+    padding:26px 24px;
+    margin-bottom:18px;
   }
   .card h2{
-    font-family: 'Unbounded', sans-serif;
-    font-weight: 700;
-    font-size: 16px;
-    margin: 0 0 6px;
-    color: var(--paper);
-    position: relative;
-    z-index: 1;
+    font-family:'Shippori Mincho',serif;
+    font-weight:500;
+    font-size:18px;
+    margin:0 0 4px;
   }
-  .card p.hint{
-    color: var(--muted);
-    font-size: 13px;
-    margin: 0 0 20px;
-    line-height: 1.55;
-    position: relative;
-    z-index: 1;
-  }
+  .card p.hint{color:var(--muted);font-size:13.5px;margin:0 0 18px;line-height:1.5;}
 
-  label{
-    display: block;
-    font-size: 11.5px;
-    color: var(--muted);
-    margin: 14px 0 8px;
-    font-weight: 600;
-    font-family: 'Space Mono', monospace;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    position: relative;
-    z-index: 1;
-  }
-  label:first-of-type{ margin-top: 0; }
-
+  label{display:block;font-size:13px;color:var(--muted);margin:14px 0 6px;}
+  label:first-of-type{margin-top:0;}
   input[type=text],input[type=password],input[type=number]{
-    width: 100%;
-    background: var(--ink-3);
-    border: 1px solid var(--line);
-    color: var(--paper);
-    border-radius: 12px;
-    padding: 13px 16px;
-    font-size: 15px;
-    font-family: 'Inter', sans-serif;
-    outline: none;
-    transition: border-color .15s, box-shadow .15s;
-    position: relative;
-    z-index: 1;
+    width:100%;
+    background:var(--surface-2);
+    border:1px solid var(--line);
+    color:var(--text);
+    border-radius:10px;
+    padding:12px 14px;
+    font-size:15px;
+    font-family:inherit;
+    outline:none;
+    transition:border-color .15s;
   }
-  input:focus{
-    border-color: var(--sakura);
-    box-shadow: 0 0 0 3px rgba(122,43,255,0.22);
-  }
-  input::placeholder{ color: #6f5f94; }
+  input:focus{border-color:var(--pink);}
+  input::placeholder{color:#7c6a7a;}
 
   button{
-    font-family: 'Inter', sans-serif;
-    font-size: 14px;
-    font-weight: 700;
-    border: none;
-    border-radius: 12px;
-    padding: 14px 20px;
-    cursor: pointer;
-    transition: transform .12s, filter .15s, opacity .15s;
-    position: relative;
-    z-index: 1;
+    font-family:inherit;
+    font-size:15px;
+    font-weight:600;
+    border:none;
+    border-radius:10px;
+    padding:13px 18px;
+    cursor:pointer;
+    transition:filter .15s, opacity .15s;
   }
-  button:hover{ transform: translateY(-1px); }
-  button:disabled{ opacity: .5; cursor: not-allowed; transform: none; }
-  .btn-primary{
-    background: linear-gradient(120deg, var(--sakura) 0%, var(--sakura-deep) 100%);
-    color: #fff;
-    width: 100%;
-    box-shadow: 0 10px 28px -10px rgba(122,43,255,0.8);
-  }
-  .btn-ghost{
-    background: transparent;
-    color: var(--lantern-soft);
-    border: 1px solid rgba(216,163,255,0.4);
-  }
-  .btn-ghost:hover{ background: rgba(216,163,255,0.1); }
-  .btn-gold{
-    background: linear-gradient(120deg, var(--lantern) 0%, var(--sakura) 100%);
-    color: #1a0f2e;
-    box-shadow: 0 10px 28px -10px rgba(216,163,255,0.6);
-  }
+  button:hover{filter:brightness(1.08);}
+  button:disabled{opacity:.5;cursor:not-allowed;filter:none;}
+  .btn-primary{background:var(--pink);color:#241019;width:100%;}
+  .btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--line);}
+  .btn-gold{background:var(--gold);color:#2a1d05;}
 
-  .row{ display: flex; gap: 10px; flex-wrap: wrap; }
-  .row > *{ flex: 1; min-width: 120px; }
+  .row{display:flex;gap:10px;}
+  .row > *{flex:1;}
 
-  .error{
-    color: var(--danger);
-    font-size: 13px;
-    margin-top: 12px;
-    line-height: 1.5;
-    display: none;
-    position: relative;
-    z-index: 1;
-  }
-  .error.show{ display: block; }
-  .notice{
-    color: var(--success);
-    font-size: 13px;
-    margin-top: 12px;
-    line-height: 1.5;
-    display: none;
-    position: relative;
-    z-index: 1;
-  }
-  .notice.show{ display: block; }
+  .error{color:var(--err);font-size:13.5px;margin-top:12px;line-height:1.5;display:none;}
+  .error.show{display:block;}
+  .notice{color:var(--ok);font-size:13.5px;margin-top:12px;line-height:1.5;display:none;}
+  .notice.show{display:block;}
 
-  #view-login{ display: block; }
-  #view-dash{ display: none; }
+  #view-login{display:block;}
+  #view-dash{display:none;}
 
-  /* ---------- Topbar ---------- */
-  .topbar{
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-    margin-bottom: 20px;
-    flex-wrap: wrap;
-  }
-  .topbar .who{
-    font-size: 13.5px;
-    color: var(--muted);
-    font-family: 'Space Mono', monospace;
-  }
-  .topbar .who b{ color: var(--paper); font-weight: 600; }
-  .topbar button{ padding: 9px 16px; font-size: 12.5px; }
+  .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;}
+  .topbar .who{font-size:14px;color:var(--muted);}
+  .topbar .who b{color:var(--text);font-weight:600;}
+  .topbar button{padding:8px 14px;font-size:13px;}
 
-  /* ---------- Wallet ---------- */
-  .wallet{
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    flex-wrap: wrap;
-  }
-  .wallet .coins{ display: flex; align-items: baseline; gap: 8px; }
-  .wallet .coins .num{
-    font-family: 'Unbounded', sans-serif;
-    font-size: 42px;
-    font-weight: 800;
-    line-height: 1;
-    background: linear-gradient(100deg, var(--paper) 10%, var(--lantern) 70%, var(--sakura) 100%);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-  }
-  .wallet .coins .lbl{ color: var(--muted); font-size: 14px; }
-  .wallet button{ white-space: nowrap; }
+  .wallet{display:flex;align-items:center;justify-content:space-between;gap:16px;}
+  .wallet .coins{display:flex;align-items:baseline;gap:8px;}
+  .wallet .coins .num{font-family:'Shippori Mincho',serif;font-size:40px;font-weight:700;color:var(--gold);}
+  .wallet .coins .lbl{color:var(--muted);font-size:14px;}
+  .wallet button{white-space:nowrap;}
 
-  /* ---------- Emoji picker ---------- */
-  .emoji-grid{
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-top: 8px;
-    position: relative;
-    z-index: 1;
-  }
+  .emoji-grid{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;}
   .emoji-pick{
-    background: var(--ink-3);
-    border: 1px solid var(--line);
-    border-radius: 10px;
-    width: 44px;
-    height: 44px;
-    font-size: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    padding: 0;
-    transition: all .15s;
-    color: inherit;
+    background:var(--surface-2);
+    border:1px solid var(--line);
+    border-radius:9px;
+    width:40px;height:40px;
+    font-size:18px;
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;
+    padding:0;
   }
-  .emoji-pick:hover{ border-color: rgba(176,107,255,0.5); }
-  .emoji-pick.on{
-    border-color: var(--sakura);
-    background: rgba(122,43,255,0.18);
-    transform: scale(1.05);
-  }
+  .emoji-pick.on{border-color:var(--pink);background:var(--pink-soft);}
   .chosen{
-    min-height: 22px;
-    margin-top: 12px;
-    font-size: 20px;
-    letter-spacing: 4px;
-    color: var(--muted);
-    position: relative;
-    z-index: 1;
+    min-height:20px;
+    margin-top:10px;
+    font-size:20px;
+    letter-spacing:4px;
+    color:var(--muted);
   }
 
-  /* ---------- Cost line ---------- */
   .cost-line{
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 18px;
-    padding-top: 16px;
-    border-top: 1px dashed var(--line);
-    font-size: 13.5px;
-    color: var(--muted);
-    position: relative;
-    z-index: 1;
+    display:flex;justify-content:space-between;align-items:center;
+    margin-top:16px;padding-top:14px;border-top:1px dashed var(--line);
+    font-size:14px;color:var(--muted);
   }
-  .cost-line b{ color: var(--lantern); font-size: 16px; }
+  .cost-line b{color:var(--gold);font-size:16px;}
 
-  /* ---------- Channels list ---------- */
-  .channels-list{ display: flex; flex-direction: column; gap: 10px; }
+  .channels-list{display:flex;flex-direction:column;gap:10px;}
   .ch-row{
-    background: var(--ink-3);
-    border: 1px solid var(--line);
-    border-radius: 14px;
-    padding: 14px 16px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 12px;
-    transition: border-color .2s;
+    background:var(--surface-2);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:12px 14px;
+    display:flex;justify-content:space-between;align-items:center;gap:10px;
   }
-  .ch-row:hover{ border-color: rgba(176,107,255,0.35); }
   .ch-row .jid{
-    font-size: 12.5px;
-    color: var(--paper);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    font-family: 'Space Mono', monospace;
+    font-size:13px;color:var(--text);
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+    font-family:ui-monospace,Menlo,Consolas,monospace;
   }
-  .ch-row .emojis{
-    font-size: 15px;
-    letter-spacing: 1px;
-    margin-top: 4px;
-    color: var(--lantern-soft);
-  }
-  .ch-row .expires{
-    font-size: 12px;
-    color: var(--muted);
-    white-space: nowrap;
-    text-align: right;
-    font-family: 'Space Mono', monospace;
-  }
-  .ch-row .expires.soon{ color: var(--danger); }
-  .empty{
-    color: var(--muted);
-    font-size: 13.5px;
-    text-align: center;
-    padding: 24px 0;
-  }
+  .ch-row .emojis{font-size:15px;letter-spacing:1px;margin-top:2px;}
+  .ch-row .expires{font-size:12.5px;color:var(--muted);white-space:nowrap;text-align:right;}
+  .ch-row .expires.soon{color:var(--err);}
+  .empty{color:var(--muted);font-size:14px;text-align:center;padding:20px 0;}
 
-  /* ---------- Spinner ---------- */
   .spinner{
-    width: 15px; height: 15px;
-    border-radius: 50%;
-    border: 2px solid rgba(255,255,255,.3);
-    border-top-color: #fff;
-    display: inline-block;
-    animation: spin .7s linear infinite;
-    vertical-align: -3px;
+    width:16px;height:16px;border-radius:50%;
+    border:2px solid rgba(255,255,255,.3);border-top-color:#fff;
+    display:inline-block;animation:spin .7s linear infinite;vertical-align:-3px;
   }
-  @keyframes spin{ to{ transform: rotate(360deg); } }
-
-  /* ---------- Badge ---------- */
-  .badge{
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    padding: 4px 11px;
-    border-radius: 999px;
-    font-family: 'Space Mono', monospace;
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.03em;
-  }
-  .badge.gold{
-    background: rgba(216,163,255,0.12);
-    border: 1px solid rgba(216,163,255,0.35);
-    color: var(--lantern);
-  }
-
-  @media (prefers-reduced-motion: reduce){
-    .petal-anim{ animation: none !important; }
-  }
+  @keyframes spin{to{transform:rotate(360deg);}}
 </style>
 </head>
 <body>
+<div class="wrap">
 
-<canvas id="petals"></canvas>
-
-<div class="stage">
-  <div class="wrap">
-
-    <div class="brand">
-      <div class="kanji-badge">
-        <img src="https://raw.githubusercontent.com/NimeshMihiranga-Neno/cartoon-web/main/18d7513834fe1dcc00b6807bb6174794.jpg" alt="MIYORA MD" />
-      </div>
-      <h1>MIYORA MD</h1>
-    </div>
-    <p class="tagline">Channel react — earn coins, add your channel, watch it react.</p>
-
-    <!-- LOGIN -->
-    <div id="view-login" class="card">
-      <h2>Unlock your wallet</h2>
-      <p class="hint">Sign in with your bot's number and its settings password to manage channel reacts.</p>
-      <label for="in-number">Bot number</label>
-      <input id="in-number" type="text" inputmode="numeric" placeholder="94771234567" autocomplete="off">
-      <label for="in-pass">Settings password</label>
-      <input id="in-pass" type="password" placeholder="6-character code" autocomplete="off">
-      <button class="btn-primary" id="btn-login" style="margin-top:22px;">Log in</button>
-      <div class="error" id="login-error"></div>
-    </div>
-
-    <!-- DASHBOARD -->
-    <div id="view-dash">
-      <div class="topbar">
-        <div class="who">Signed in as <b id="who-number">—</b></div>
-        <button class="btn-ghost" id="btn-logout">Log out</button>
-      </div>
-
-      <div class="card wallet">
-        <div class="coins">
-          <span class="num" id="coin-count">0</span>
-          <span class="lbl">coins</span>
-        </div>
-        <button class="btn-gold" id="btn-claim">Claim daily +5</button>
-      </div>
-      <div class="notice" id="claim-notice"></div>
-
-      <div class="card">
-        <h2>Add a channel</h2>
-        <p class="hint">Pick a newsletter, choose the emojis it should react with, and set how many days to run it. Each day costs 10 coins.</p>
-
-        <label for="in-jid">Channel JID</label>
-        <input id="in-jid" type="text" placeholder="12345678901234@newsletter" autocomplete="off">
-
-        <label>Reaction emojis</label>
-        <div class="emoji-grid" id="emoji-grid"></div>
-        <div class="chosen" id="chosen-emojis">No emojis selected yet</div>
-
-        <label for="in-days">Days to run</label>
-        <input id="in-days" type="number" min="1" max="365" value="7">
-
-        <div class="cost-line">
-          <span>Cost for this many days</span>
-          <b id="cost-value">70 coins</b>
-        </div>
-
-        <button class="btn-primary" id="btn-add" style="margin-top:20px;">Add channel</button>
-        <div class="error" id="add-error"></div>
-        <div class="notice" id="add-notice"></div>
-      </div>
-
-      <div class="card">
-        <h2>Active channels</h2>
-        <p class="hint">Every connected MIYORA MD session reacts to new posts in these channels.</p>
-        <div class="channels-list" id="channels-list">
-          <div class="empty">Loading…</div>
-        </div>
-      </div>
-    </div>
-
+  <div class="brand">
+    <span class="bloom">🌸</span>
+    <h1>Sakura XD</h1>
+    <span class="tag">— channel react</span>
   </div>
+
+  <!-- LOGIN -->
+  <div id="view-login" class="card">
+    <h2>Unlock your wallet</h2>
+    <p class="hint">Sign in with your bot's number and its settings password to manage channel reacts.</p>
+    <label for="in-number">Bot number</label>
+    <input id="in-number" type="text" inputmode="numeric" placeholder="94771234567" autocomplete="off">
+    <label for="in-pass">Settings password</label>
+    <input id="in-pass" type="password" placeholder="6-character code" autocomplete="off">
+    <button class="btn-primary" id="btn-login" style="margin-top:20px;">Log in</button>
+    <div class="error" id="login-error"></div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="view-dash">
+    <div class="topbar">
+      <div class="who">Signed in as <b id="who-number">—</b></div>
+      <button class="btn-ghost" id="btn-logout">Log out</button>
+    </div>
+
+    <div class="card wallet">
+      <div class="coins">
+        <span class="num" id="coin-count">0</span>
+        <span class="lbl">coins</span>
+      </div>
+      <button class="btn-gold" id="btn-claim">Claim daily +5</button>
+    </div>
+    <div class="notice" id="claim-notice"></div>
+
+    <div class="card">
+      <h2>Add a channel</h2>
+      <p class="hint">Pick a newsletter, choose the emojis it should react with, and set how many days to run it. Each day costs 10 coins.</p>
+
+      <label for="in-jid">Channel JID</label>
+      <input id="in-jid" type="text" placeholder="12345678901234@newsletter" autocomplete="off">
+
+      <label>Reaction emojis</label>
+      <div class="emoji-grid" id="emoji-grid"></div>
+      <div class="chosen" id="chosen-emojis">No emojis selected yet</div>
+
+      <label for="in-days">Days to run</label>
+      <input id="in-days" type="number" min="1" max="365" value="7">
+
+      <div class="cost-line">
+        <span>Cost for this many days</span>
+        <b id="cost-value">70 coins</b>
+      </div>
+
+      <button class="btn-primary" id="btn-add" style="margin-top:18px;">Add channel</button>
+      <div class="error" id="add-error"></div>
+      <div class="notice" id="add-notice"></div>
+    </div>
+
+    <div class="card">
+      <h2>Active channels</h2>
+      <p class="hint">Every connected Sakura XD session reacts to new posts in these channels.</p>
+      <div class="channels-list" id="channels-list">
+        <div class="empty">Loading…</div>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <script>
-// ==================== PETALS ====================
-(function(){
-  const canvas = document.getElementById('petals');
-  if(!canvas) return;
-  const ctx = canvas.getContext('2d');
-  let petals = [];
-  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-  function resize(){
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-  }
-  window.addEventListener('resize', resize);
-  resize();
-
-  function makePetal(){
-    return {
-      x: Math.random() * canvas.width,
-      y: Math.random() * -canvas.height,
-      size: 6 + Math.random() * 9,
-      speed: 0.4 + Math.random() * 0.9,
-      drift: (Math.random() - 0.5) * 0.6,
-      rot: Math.random() * Math.PI * 2,
-      rotSpeed: (Math.random() - 0.5) * 0.02,
-      opacity: 0.35 + Math.random() * 0.4,
-      gold: Math.random() < 0.25
-    };
-  }
-  const PETAL_COUNT = reduceMotion ? 0 : (window.innerWidth < 600 ? 16 : 28);
-  for(let i = 0; i < PETAL_COUNT; i++){
-    const p = makePetal();
-    p.y = Math.random() * canvas.height;
-    petals.push(p);
-  }
-
-  function drawPetal(p){
-    ctx.save();
-    ctx.translate(p.x, p.y);
-    ctx.rotate(p.rot);
-    ctx.globalAlpha = p.opacity;
-    const grad = ctx.createLinearGradient(-p.size, -p.size, p.size, p.size);
-    if (p.gold) {
-      grad.addColorStop(0, '#e9d4ff');
-      grad.addColorStop(1, '#d8a3ff');
-    } else {
-      grad.addColorStop(0, '#b06bff');
-      grad.addColorStop(1, '#7a2bff');
-    }
-    ctx.fillStyle = grad;
-    ctx.beginPath();
-    ctx.moveTo(0, -p.size);
-    ctx.quadraticCurveTo(p.size, -p.size * 0.3, 0, p.size);
-    ctx.quadraticCurveTo(-p.size, -p.size * 0.3, 0, -p.size);
-    ctx.fill();
-    ctx.restore();
-  }
-
-  function tick(){
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    for(const p of petals){
-      p.y += p.speed;
-      p.x += p.drift;
-      p.rot += p.rotSpeed;
-      if(p.y > canvas.height + 20){
-        p.y = -20;
-        p.x = Math.random() * canvas.width;
-      }
-      drawPetal(p);
-    }
-    requestAnimationFrame(tick);
-  }
-  if(!reduceMotion) requestAnimationFrame(tick);
-})();
-
-// ==================== REACT LOGIC ====================
 const API = '/code/api/react';
-const STORE_KEY = 'miyora_react_auth';
+const STORE_KEY = 'sakura_react_auth';
 
 const $ = (id) => document.getElementById(id);
 const els = {
@@ -563,9 +261,9 @@ const els = {
 
 const COST_PER_DAY = 10;
 const EMOJI_OPTIONS = ['❤️','🔥','😍','😂','👍','🎉','✨','🌸','💯','😮','🙏','💖'];
-let auth = null;
+let auth = null;           // { number, password }
 let selectedEmojis = [];
-let dailyClaimAt = null;
+let dailyClaimAt = null;   // Date or null
 let claimTimer = null;
 
 function showError(el, msg){ el.textContent = msg; el.classList.add('show'); }
@@ -594,7 +292,7 @@ async function api(path, body){
   return data;
 }
 
-// Emoji picker
+// ---------- Emoji picker ----------
 EMOJI_OPTIONS.forEach(e => {
   const b = document.createElement('button');
   b.type = 'button';
@@ -616,6 +314,7 @@ function updateCost(){
 els.days.addEventListener('input', updateCost);
 updateCost();
 
+// ---------- Auth ----------
 function persistAuth(){ localStorage.setItem(STORE_KEY, JSON.stringify(auth)); }
 function loadStoredAuth(){
   try { return JSON.parse(localStorage.getItem(STORE_KEY) || 'null'); } catch(e){ return null; }
@@ -630,7 +329,7 @@ async function doLogin(number, password){
   applyWallet(data);
   els.loginView.style.display = 'none';
   els.dashView.style.display = 'block';
-  if (data.isNewWallet) showNotice(els.claimNotice, '🌸 Welcome! +10 coins first-login bonus added.');
+  if (data.isNewWallet) showNotice(els.claimNotice, 'Welcome! +10 coins first-login bonus added.');
   await refreshChannels();
 }
 
@@ -655,6 +354,7 @@ els.logoutBtn.addEventListener('click', () => {
   els.number.value = ''; els.pass.value = '';
 });
 
+// ---------- Wallet / daily claim ----------
 function applyWallet(data){
   els.coinCount.textContent = data.coins ?? 0;
   dailyClaimAt = data.lastDailyClaimAt ? new Date(data.lastDailyClaimAt) : null;
@@ -679,13 +379,13 @@ function refreshClaimButton(){
 }
 
 els.claimBtn.addEventListener('click', async () => {
-  clearNotice(els.claimNotice);
+  clearNotice(els.claimNotice); clearError(els.loginErr);
   setBusy(els.claimBtn, true);
   try {
     const data = await api('/claim-daily', auth);
     els.coinCount.textContent = data.coins;
     dailyClaimAt = new Date(data.lastDailyClaimAt);
-    showNotice(els.claimNotice, `🌸 +${data.claimed} coins claimed.`);
+    showNotice(els.claimNotice, `+${data.claimed} coins claimed.`);
   } catch (e) {
     showNotice(els.claimNotice, e.data?.error === 'already_claimed' ? 'Already claimed today — come back later.' : (e.message || 'Could not claim right now.'));
   } finally {
@@ -694,6 +394,7 @@ els.claimBtn.addEventListener('click', async () => {
   }
 });
 
+// ---------- Add channel ----------
 els.addBtn.addEventListener('click', async () => {
   clearError(els.addErr); clearNotice(els.addNotice);
   const jid = els.jid.value.trim();
@@ -706,7 +407,7 @@ els.addBtn.addEventListener('click', async () => {
   try {
     const data = await api('/add-channel', { ...auth, jid, emojis: selectedEmojis, days });
     els.coinCount.textContent = data.coins;
-    showNotice(els.addNotice, `🌸 ${jid} added for ${data.days} day(s).`);
+    showNotice(els.addNotice, `${jid} added for ${data.days} day(s).`);
     els.jid.value = '';
     selectedEmojis = [];
     els.chosenEmojis.textContent = 'No emojis selected yet';
@@ -723,6 +424,7 @@ els.addBtn.addEventListener('click', async () => {
   }
 });
 
+// ---------- Channels list ----------
 function formatCountdown(expiresAt){
   const remaining = new Date(expiresAt).getTime() - Date.now();
   if (remaining <= 0) return { text: 'Expiring…', soon: true };
@@ -760,6 +462,7 @@ async function refreshChannels(){
   }
 }
 
+// ---------- Boot ----------
 (async function init(){
   const stored = loadStoredAuth();
   if (!stored) return;

@@ -3,302 +3,391 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Sakura XD — Super Admin</title>
+<title>Miyora MD — Channel React</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌸</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;800&family=Klee+One:wght@600&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#1c1220; --surface:#271a2a; --surface-2:#33223a; --line:#4a3550;
-    --text:#f4ecf2; --muted:#b39ab0; --pink:#e8628f; --pink-soft:#5a2f3d;
-    --gold:#e7b24a; --err:#e4665f; --ok:#8fbf9a; --blue:#7aa8d6;
+    --ink: #05070f;
+    --ink-2: #0a1226;
+    --ink-3: #111f3d;
+    --sakura: #b06bff;        /* Miyora signature purple */
+    --sakura-deep: #7a2bff;
+    --lantern: #d8a3ff;
+    --lantern-soft: #e9d4ff;
+    --paper: #f3ecff;
+    --muted: #9a8fbd;
+    --line: rgba(176,107,255,0.18);
+    --gold: #ffd166;
+    --err: #ff8080;
+    --ok: #4ee6a0;
   }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}
   body{
     min-height:100vh;
-    background:
-      radial-gradient(ellipse 60% 40% at 15% 0%, #3a2440 0%, transparent 60%),
-      radial-gradient(ellipse 50% 40% at 100% 20%, #2c1830 0%, transparent 55%),
-      var(--bg);
-    color:var(--text);
-    font-family:'Manrope',sans-serif;
+    background: radial-gradient(ellipse 120% 80% at 50% -10%, #2a1550 0%, var(--ink) 55%, #05070f 100%);
+    color: var(--paper);
+    font-family: 'Inter', sans-serif;
+    display:flex;
+    justify-content:center;
+    padding:48px 20px 80px;
+    overflow-x:hidden;
   }
-  .wrap{max-width:1100px;margin:0 auto;padding:32px 20px 80px;}
-  .brand{display:flex;align-items:baseline;gap:10px;margin-bottom:28px;}
-  .brand .bloom{font-size:26px;line-height:1;}
-  .brand h1{font-family:'Shippori Mincho',serif;font-weight:700;font-size:24px;margin:0;}
-  .brand span.tag{color:var(--muted);font-size:14px;}
+  .wrap{width:100%;max-width:480px;position:relative;z-index:1;}
 
-  .card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:22px;margin-bottom:18px;}
-  .card h2{font-family:'Shippori Mincho',serif;font-weight:500;font-size:17px;margin:0 0 14px;}
+  .brand{display:flex;align-items:center;gap:12px;margin-bottom:30px;}
+  .brand .logo{
+    width:44px;height:44px;border-radius:14px;
+    background: linear-gradient(160deg, var(--ink-3), var(--ink-2));
+    border: 1px solid var(--line);
+    display:flex;align-items:center;justify-content:center;
+    overflow:hidden;flex-shrink:0;
+    box-shadow: 0 0 18px rgba(176,107,255,0.45) inset;
+  }
+  .brand .logo img{width:100%;height:100%;object-fit:cover;}
+  .brand .name{
+    font-family:'Unbounded',sans-serif;
+    font-weight:800;
+    font-size:20px;
+    letter-spacing:.02em;
+    margin:0;
+    background: linear-gradient(100deg, var(--paper) 20%, var(--sakura) 60%, var(--lantern) 100%);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+  .brand .tag{
+    font-family:'Space Mono',monospace;
+    font-size:11px;color:var(--muted);
+    letter-spacing:.1em;text-transform:uppercase;
+    margin-top:2px;
+  }
 
-  label{display:block;font-size:12.5px;color:var(--muted);margin:10px 0 5px;}
+  .card{
+    background: linear-gradient(165deg, var(--ink-2), var(--ink) 130%);
+    border:1px solid var(--line);
+    border-radius:18px;
+    padding:24px 22px;
+    margin-bottom:16px;
+  }
+  .card h2{
+    font-family:'Unbounded',sans-serif;
+    font-weight:700;
+    font-size:16px;
+    margin:0 0 6px;
+    color:var(--paper);
+  }
+  .card p.hint{
+    color:var(--muted);
+    font-size:13px;
+    margin:0 0 18px;
+    line-height:1.55;
+  }
+
+  label{
+    display:block;
+    font-size:12.5px;
+    color:var(--lantern);
+    font-family:'Space Mono',monospace;
+    letter-spacing:.05em;
+    margin:14px 0 6px;
+    text-transform:uppercase;
+  }
+  label:first-of-type{margin-top:0;}
   input[type=text],input[type=password],input[type=number]{
-    width:100%;background:var(--surface-2);border:1px solid var(--line);color:var(--text);
-    border-radius:9px;padding:10px 12px;font-size:14px;font-family:inherit;outline:none;
+    width:100%;
+    background: var(--ink-3);
+    border:1px solid var(--line);
+    color: var(--paper);
+    border-radius:10px;
+    padding:12px 14px;
+    font-size:14.5px;
+    font-family:'Inter',sans-serif;
+    outline:none;
+    transition:border-color .15s;
   }
-  input:focus{border-color:var(--pink);}
-  input:disabled{opacity:.6;}
+  input:focus{border-color: rgba(176,107,255,0.6);}
+  input::placeholder{color:#6e6194;}
 
-  button{font-family:inherit;font-size:13.5px;font-weight:600;border:none;border-radius:8px;
-    padding:9px 15px;cursor:pointer;transition:filter .15s,opacity .15s;white-space:nowrap;}
-  button:hover{filter:brightness(1.1);}
-  button:disabled{opacity:.5;cursor:not-allowed;}
-  .btn-primary{background:var(--pink);color:#241019;}
-  .btn-gold{background:var(--gold);color:#2a1d05;}
-  .btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--line);}
-  .btn-danger{background:var(--err);color:#2a0a08;}
-  .btn-sm{padding:6px 10px;font-size:12px;}
-  .btn-full{width:100%;}
+  button{
+    font-family:'Inter',sans-serif;
+    font-size:14px;
+    font-weight:700;
+    border:none;
+    border-radius:10px;
+    padding:12px 18px;
+    cursor:pointer;
+    transition: transform .12s ease, filter .15s ease, opacity .15s ease;
+  }
+  button:hover{transform:translateY(-1px);}
+  button:active{transform:translateY(0);}
+  button:disabled{opacity:.55;cursor:not-allowed;transform:none;filter:none;}
 
-  .row{display:flex;gap:10px;flex-wrap:wrap;}
-  .row > *{flex:1;min-width:120px;}
+  .btn-primary{
+    background: linear-gradient(120deg, var(--sakura) 0%, var(--sakura-deep) 100%);
+    color:#fff;
+    width:100%;
+    box-shadow: 0 10px 28px -10px rgba(122,43,255,0.8);
+  }
+  .btn-ghost{
+    background:transparent;
+    color: var(--lantern-soft);
+    border:1px solid rgba(216,163,255,0.4);
+  }
+  .btn-ghost:hover{background: rgba(216,163,255,0.1);}
+  .btn-gold{
+    background: linear-gradient(120deg, var(--gold), #ffb84d);
+    color:#2a1d05;
+    box-shadow: 0 8px 22px -10px rgba(255,209,102,0.6);
+  }
 
-  .error{color:var(--err);font-size:13px;margin-top:10px;display:none;}
+  .row{display:flex;gap:10px;}
+  .row > *{flex:1;}
+
+  .error{
+    color:var(--err);
+    font-size:13px;
+    margin-top:12px;
+    line-height:1.5;
+    display:none;
+  }
   .error.show{display:block;}
-  .notice{color:var(--ok);font-size:13px;margin-top:10px;display:none;}
+  .notice{
+    color:var(--ok);
+    font-size:13px;
+    margin-top:12px;
+    line-height:1.5;
+    display:none;
+  }
   .notice.show{display:block;}
 
-  #view-login{display:flex;min-height:100vh;align-items:center;justify-content:center;}
-  #view-login .wrap{max-width:400px;width:100%;padding:0 20px;}
+  #view-login{display:block;}
   #view-dash{display:none;}
 
-  .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;gap:10px;flex-wrap:wrap;}
-  .topbar .sess{font-size:13px;color:var(--muted);}
+  .topbar{
+    display:flex;align-items:center;justify-content:space-between;
+    margin-bottom:18px;gap:12px;
+  }
+  .topbar .who{font-size:13px;color:var(--muted);}
+  .topbar .who b{color:var(--paper);font-weight:600;font-family:'Space Mono',monospace;}
+  .topbar button{padding:8px 14px;font-size:12.5px;}
 
-  .tabs{display:flex;gap:6px;margin-bottom:18px;flex-wrap:wrap;}
-  .tab-btn{background:var(--surface);border:1px solid var(--line);color:var(--muted);}
-  .tab-btn.on{background:var(--pink-soft);border-color:var(--pink);color:var(--text);}
-  .tab-panel{display:none;}
-  .tab-panel.on{display:block;}
+  .wallet{
+    display:flex;align-items:center;justify-content:space-between;
+    gap:16px;flex-wrap:wrap;
+    background:
+      radial-gradient(ellipse at 100% 0%, rgba(176,107,255,0.18), transparent 60%),
+      linear-gradient(165deg, var(--ink-2), var(--ink) 130%);
+  }
+  .wallet .coins{display:flex;align-items:baseline;gap:10px;}
+  .wallet .coins .num{
+    font-family:'Unbounded',sans-serif;
+    font-weight:800;
+    font-size:38px;
+    line-height:1;
+    background: linear-gradient(100deg, var(--gold) 20%, #ffb84d 100%);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+  .wallet .coins .lbl{color:var(--muted);font-size:13.5px;}
+  .wallet button{white-space:nowrap;font-size:13px;padding:10px 16px;}
 
-  .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;}
-  .stat-box{background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:14px;}
-  .stat-box .num{font-family:'Shippori Mincho',serif;font-size:24px;font-weight:700;color:var(--gold);}
-  .stat-box .lbl{color:var(--muted);font-size:12.5px;margin-top:2px;}
+  .emoji-grid{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;}
+  .emoji-pick{
+    background: var(--ink-3);
+    border:1px solid var(--line);
+    border-radius:10px;
+    width:42px;height:42px;
+    font-size:19px;
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;
+    padding:0;
+    transition: border-color .15s ease, background .15s ease, transform .12s ease;
+  }
+  .emoji-pick:hover{transform:translateY(-1px);border-color: rgba(176,107,255,0.4);}
+  .emoji-pick.on{
+    border-color: var(--sakura);
+    background: rgba(122,43,255,0.22);
+    box-shadow: 0 0 14px -3px rgba(176,107,255,0.6);
+  }
+  .chosen{
+    min-height:20px;
+    margin-top:10px;
+    font-size:19px;
+    letter-spacing:5px;
+    color:var(--muted);
+    font-family:'Space Mono',monospace;
+  }
 
-  table{width:100%;border-collapse:collapse;font-size:13px;}
-  thead th{text-align:left;color:var(--muted);font-weight:600;font-size:11.5px;
-    text-transform:uppercase;letter-spacing:.4px;padding:8px 6px;border-bottom:1px solid var(--line);}
-  tbody td{padding:9px 6px;border-bottom:1px solid var(--line);vertical-align:middle;}
-  tbody tr:last-child td{border-bottom:none;}
-  .mono{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;}
-  .table-wrap{overflow-x:auto;}
-  .empty{color:var(--muted);font-size:13.5px;text-align:center;padding:24px 0;}
-  .badge{display:inline-block;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600;}
-  .badge.active{background:rgba(143,191,154,.15);color:var(--ok);}
-  .badge.inactive{background:rgba(179,154,176,.15);color:var(--muted);}
-  .badge.expiring{background:rgba(228,102,95,.15);color:var(--err);}
+  .cost-line{
+    display:flex;justify-content:space-between;align-items:center;
+    margin-top:16px;padding-top:14px;
+    border-top:1px dashed var(--line);
+    font-size:13.5px;color:var(--muted);
+  }
+  .cost-line b{
+    color:var(--gold);
+    font-size:16px;
+    font-family:'Space Mono',monospace;
+  }
 
-  .actions-cell{display:flex;gap:6px;flex-wrap:wrap;}
-  .inline-num{width:70px;padding:6px 8px;font-size:12.5px;}
+  .channels-list{display:flex;flex-direction:column;gap:10px;}
+  .ch-row{
+    background: var(--ink-3);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:12px 14px;
+    display:flex;justify-content:space-between;align-items:center;gap:10px;
+    transition:border-color .15s ease;
+  }
+  .ch-row:hover{border-color: rgba(176,107,255,0.4);}
+  .ch-row .jid{
+    font-size:12.5px;color:var(--paper);
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+    font-family:'Space Mono',monospace;
+  }
+  .ch-row .emojis{font-size:15px;letter-spacing:1px;margin-top:3px;}
+  .ch-row .expires{
+    font-size:12px;color:var(--muted);
+    white-space:nowrap;text-align:right;
+    font-family:'Space Mono',monospace;
+  }
+  .ch-row .expires.soon{color:var(--err);}
+  .empty{
+    color:var(--muted);
+    font-size:13.5px;
+    text-align:center;
+    padding:22px 0;
+  }
 
-  .pager{display:flex;justify-content:space-between;align-items:center;margin-top:14px;font-size:13px;color:var(--muted);}
-  .pager .btns{display:flex;gap:8px;}
-
-  .search-row{display:flex;gap:8px;margin-bottom:14px;}
-  .search-row input{flex:1;}
-
-  .emoji-grid{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;}
-  .emoji-pick{background:var(--surface-2);border:1px solid var(--line);border-radius:8px;
-    width:36px;height:36px;font-size:16px;display:flex;align-items:center;justify-content:center;
-    cursor:pointer;padding:0;}
-  .emoji-pick.on{border-color:var(--pink);background:var(--pink-soft);}
-
-  .spinner{width:14px;height:14px;border-radius:50%;border:2px solid rgba(255,255,255,.3);
-    border-top-color:#fff;display:inline-block;animation:spin .7s linear infinite;vertical-align:-2px;}
+  .spinner{
+    width:14px;height:14px;border-radius:50%;
+    border:2px solid rgba(255,255,255,.3);
+    border-top-color:#fff;
+    display:inline-block;
+    animation:spin .7s linear infinite;
+    vertical-align:-3px;
+    margin-right:6px;
+  }
   @keyframes spin{to{transform:rotate(360deg);}}
 </style>
 </head>
 <body>
+<div class="wrap">
 
-<!-- LOGIN -->
-<div id="view-login">
-  <div class="wrap">
-    <div class="brand">
-      <span class="bloom">🌸</span>
-      <h1>Sakura XD</h1>
-      <span class="tag">— super admin</span>
-    </div>
-    <div class="card">
-      <h2>Admin access</h2>
-      <label>Username</label>
-      <input type="text" value="admin" disabled>
-      <label for="in-pass">Password</label>
-      <input id="in-pass" type="password" placeholder="Admin password" autocomplete="off">
-      <button class="btn-primary btn-full" id="btn-login" style="margin-top:16px;">Log in</button>
-      <div class="error" id="login-error"></div>
+  <div class="brand">
+    <div class="logo"><img src="https://raw.githubusercontent.com/NimeshMihiranga-Neno/cartoon-web/main/18d7513834fe1dcc00b6807bb6174794.jpg" alt="Miyora MD logo" /></div>
+    <div>
+      <h1 class="name">MIYORA MD</h1>
+      <div class="tag">Channel React</div>
     </div>
   </div>
-</div>
 
-<!-- DASHBOARD -->
-<div id="view-dash">
-  <div class="wrap">
+  <!-- LOGIN -->
+  <div id="view-login" class="card">
+    <h2>Unlock your wallet</h2>
+    <p class="hint">Sign in with your bot's number and its settings password to manage channel reacts.</p>
+    <label for="in-number">Bot number</label>
+    <input id="in-number" type="text" inputmode="numeric" placeholder="94771234567" autocomplete="off">
+    <label for="in-pass">Settings password</label>
+    <input id="in-pass" type="password" placeholder="6-character code" autocomplete="off">
+    <button class="btn-primary" id="btn-login" style="margin-top:20px;">Log in</button>
+    <div class="error" id="login-error"></div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="view-dash">
     <div class="topbar">
-      <div class="brand" style="margin-bottom:0;">
-        <span class="bloom">🌸</span>
-        <h1>Sakura XD</h1>
-        <span class="tag">— super admin</span>
-      </div>
-      <div style="display:flex;align-items:center;gap:12px;">
-        <span class="sess" id="sess-expiry"></span>
-        <button class="btn-ghost btn-sm" id="btn-logout">Log out</button>
-      </div>
+      <div class="who">Signed in as <b id="who-number">—</b></div>
+      <button class="btn-ghost" id="btn-logout">Log out</button>
     </div>
 
-    <div class="tabs">
-      <button class="tab-btn on" data-tab="overview">Overview</button>
-      <button class="tab-btn" data-tab="wallets">Wallets</button>
-      <button class="tab-btn" data-tab="channels">Channels</button>
-      <button class="tab-btn" data-tab="sessions">Sessions</button>
+    <div class="card wallet">
+      <div class="coins">
+        <span class="num" id="coin-count">0</span>
+        <span class="lbl">coins</span>
+      </div>
+      <button class="btn-gold" id="btn-claim">Claim daily +5</button>
+    </div>
+    <div class="notice" id="claim-notice"></div>
+
+    <div class="card">
+      <h2>Add a channel</h2>
+      <p class="hint">Pick a newsletter, choose the emojis it should react with, and set how many days to run it. Each day costs 10 coins.</p>
+
+      <label for="in-jid">Channel JID</label>
+      <input id="in-jid" type="text" placeholder="12345678901234@newsletter" autocomplete="off">
+
+      <label>Reaction emojis</label>
+      <div class="emoji-grid" id="emoji-grid"></div>
+      <div class="chosen" id="chosen-emojis">No emojis selected yet</div>
+
+      <label for="in-days">Days to run</label>
+      <input id="in-days" type="number" min="1" max="365" value="7">
+
+      <div class="cost-line">
+        <span>Cost for this many days</span>
+        <b id="cost-value">70 coins</b>
+      </div>
+
+      <button class="btn-primary" id="btn-add" style="margin-top:18px;">Add channel</button>
+      <div class="error" id="add-error"></div>
+      <div class="notice" id="add-notice"></div>
     </div>
 
-    <!-- OVERVIEW -->
-    <div class="tab-panel on" id="tab-overview">
-      <div class="card">
-        <h2>Stats</h2>
-        <div class="stats-grid" id="stats-grid">
-          <div class="empty">Loading…</div>
-        </div>
-      </div>
-      <div class="card">
-        <h2>Broadcast coins</h2>
-        <div class="row">
-          <div>
-            <label for="bc-amount">Amount per wallet</label>
-            <input id="bc-amount" type="number" min="1" value="5">
-          </div>
-          <div style="display:flex;align-items:flex-end;">
-            <button class="btn-gold btn-full" id="btn-broadcast">Give to everyone</button>
-          </div>
-        </div>
-        <div class="notice" id="bc-notice"></div>
-        <div class="error" id="bc-error"></div>
-      </div>
-    </div>
-
-    <!-- WALLETS -->
-    <div class="tab-panel" id="tab-wallets">
-      <div class="card">
-        <h2>Wallets</h2>
-        <div class="search-row">
-          <input id="wallet-search" type="text" placeholder="Search by number…">
-          <button class="btn-ghost" id="btn-wallet-search">Search</button>
-        </div>
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th>Number</th><th>Coins</th><th>Last claim</th><th>Actions</th></tr></thead>
-            <tbody id="wallets-body"><tr><td colspan="4" class="empty">Loading…</td></tr></tbody>
-          </table>
-        </div>
-        <div class="pager">
-          <span id="wallets-pageinfo"></span>
-          <div class="btns">
-            <button class="btn-ghost btn-sm" id="wallets-prev">◀ Prev</button>
-            <button class="btn-ghost btn-sm" id="wallets-next">Next ▶</button>
-          </div>
-        </div>
-        <div class="error" id="wallets-error"></div>
-      </div>
-    </div>
-
-    <!-- CHANNELS -->
-    <div class="tab-panel" id="tab-channels">
-      <div class="card">
-        <h2>Add channel (admin-granted, bypasses coins)</h2>
-        <div class="row">
-          <div>
-            <label for="ch-number">Owner number</label>
-            <input id="ch-number" type="text" placeholder="94771234567">
-          </div>
-          <div>
-            <label for="ch-jid">Channel JID</label>
-            <input id="ch-jid" type="text" placeholder="12345678901234@newsletter">
-          </div>
-          <div>
-            <label for="ch-days">Days</label>
-            <input id="ch-days" type="number" min="1" max="365" value="30">
-          </div>
-        </div>
-        <label>Emojis</label>
-        <div class="emoji-grid" id="ch-emoji-grid"></div>
-        <button class="btn-primary" id="btn-ch-add" style="margin-top:14px;">Add channel</button>
-        <div class="notice" id="ch-add-notice"></div>
-        <div class="error" id="ch-add-error"></div>
-      </div>
-
-      <div class="card">
-        <h2>All channels</h2>
-        <div class="search-row">
-          <input id="channels-search" type="text" placeholder="Search by owner number…">
-          <button class="btn-ghost" id="btn-channels-search">Search</button>
-        </div>
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th>JID</th><th>Owner</th><th>Emojis</th><th>Expires</th><th>Actions</th></tr></thead>
-            <tbody id="channels-body"><tr><td colspan="5" class="empty">Loading…</td></tr></tbody>
-          </table>
-        </div>
-        <div class="pager">
-          <span id="channels-pageinfo"></span>
-          <div class="btns">
-            <button class="btn-ghost btn-sm" id="channels-prev">◀ Prev</button>
-            <button class="btn-ghost btn-sm" id="channels-next">Next ▶</button>
-          </div>
-        </div>
-        <div class="error" id="channels-error"></div>
-      </div>
-    </div>
-
-    <!-- SESSIONS -->
-    <div class="tab-panel" id="tab-sessions">
-      <div class="card">
-        <h2>Bot sessions</h2>
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th>Number</th><th>Shard</th><th>Updated</th><th>Status</th><th>Actions</th></tr></thead>
-            <tbody id="sessions-body"><tr><td colspan="5" class="empty">Loading…</td></tr></tbody>
-          </table>
-        </div>
-        <div class="error" id="sessions-error"></div>
+    <div class="card">
+      <h2>Active channels</h2>
+      <p class="hint">Every connected Miyora MD session reacts to new posts in these channels.</p>
+      <div class="channels-list" id="channels-list">
+        <div class="empty">Loading…</div>
       </div>
     </div>
   </div>
+
 </div>
 
 <script>
-const API = '/code/api/admin';
-const STORE_KEY = 'sakura_admin_token';
+const API = '/code/api/react';
+const STORE_KEY = 'miyora_react_auth';
+
 const $ = (id) => document.getElementById(id);
+const els = {
+  loginView: $('view-login'), dashView: $('view-dash'),
+  number: $('in-number'), pass: $('in-pass'),
+  loginBtn: $('btn-login'), loginErr: $('login-error'),
+  who: $('who-number'), logoutBtn: $('btn-logout'),
+  coinCount: $('coin-count'), claimBtn: $('btn-claim'), claimNotice: $('claim-notice'),
+  jid: $('in-jid'), emojiGrid: $('emoji-grid'), chosenEmojis: $('chosen-emojis'),
+  days: $('in-days'), costValue: $('cost-value'),
+  addBtn: $('btn-add'), addErr: $('add-error'), addNotice: $('add-notice'),
+  channelsList: $('channels-list')
+};
 
-let token = null;
-let tokenExpiresAt = null;
-
+const COST_PER_DAY = 10;
 const EMOJI_OPTIONS = ['❤️','🔥','😍','😂','👍','🎉','✨','🌸','💯','😮','🙏','💖'];
-let chSelectedEmojis = [];
+let auth = null;           // { number, password }
+let selectedEmojis = [];
+let dailyClaimAt = null;   // Date or null
+let claimTimer = null;
 
 function showError(el, msg){ el.textContent = msg; el.classList.add('show'); }
-function clearError(el){ el.textContent=''; el.classList.remove('show'); }
+function clearError(el){ el.textContent = ''; el.classList.remove('show'); }
 function showNotice(el, msg){ el.textContent = msg; el.classList.add('show'); }
-function clearNotice(el){ el.textContent=''; el.classList.remove('show'); }
+function clearNotice(el){ el.textContent = ''; el.classList.remove('show'); }
 
 function setBusy(btn, busy, label){
   btn.disabled = busy;
   btn.dataset.label = btn.dataset.label || btn.textContent;
-  btn.innerHTML = busy ? '<span class="spinner"></span>' : (label || btn.dataset.label);
+  btn.innerHTML = busy ? '<span class="spinner"></span>Working…' : (label || btn.dataset.label);
 }
 
-async function api(path, { method = 'GET', body, confirm = false } = {}) {
-  const headers = { 'Content-Type': 'application/json' };
-  if (token) headers['x-admin-token'] = token;
-  if (confirm) headers['x-confirm'] = 'yes';
-  const opts = { method, headers };
-  if (body) opts.body = JSON.stringify(body);
-  const res = await fetch(API + path, opts);
+async function api(path, body){
+  const res = await fetch(API + path, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
   const data = await res.json().catch(() => ({}));
-  if (res.status === 401) { doLogout(); throw new Error('Session expired — please log in again.'); }
   if (!res.ok || data.ok === false) {
     const err = new Error(data.error || 'Request failed');
     err.data = data;
@@ -307,333 +396,193 @@ async function api(path, { method = 'GET', body, confirm = false } = {}) {
   return data;
 }
 
-function persistToken(){ localStorage.setItem(STORE_KEY, JSON.stringify({ token, tokenExpiresAt })); }
-function loadStoredToken(){
-  try { return JSON.parse(localStorage.getItem(STORE_KEY) || 'null'); } catch(e){ return null; }
-}
-function clearStoredToken(){ localStorage.removeItem(STORE_KEY); }
-
-function showDash(){
-  $('view-login').style.display = 'none';
-  $('view-dash').style.display = 'block';
-  loadOverview();
-  loadWallets();
-  loadChannels();
-  loadSessions();
-  tickExpiry();
-}
-
-function doLogout(){
-  token = null; tokenExpiresAt = null;
-  clearStoredToken();
-  $('view-dash').style.display = 'none';
-  $('view-login').style.display = 'flex';
-  $('in-pass').value = '';
-}
-
-$('btn-login').addEventListener('click', async () => {
-  clearError($('login-error'));
-  const password = $('in-pass').value.trim();
-  if (!password) return showError($('login-error'), 'Enter the admin password.');
-  setBusy($('btn-login'), true);
-  try {
-    const data = await api('/login', { method: 'POST', body: { key: password } });
-    token = data.token;
-    tokenExpiresAt = Date.now() + (data.expiresIn || 0);
-    persistToken();
-    showDash();
-  } catch (e) {
-    showError($('login-error'), e.data?.error || e.message);
-  } finally {
-    setBusy($('btn-login'), false, 'Log in');
-  }
-});
-$('in-pass').addEventListener('keydown', (ev) => { if (ev.key === 'Enter') $('btn-login').click(); });
-
-$('btn-logout').addEventListener('click', async () => {
-  try { await api('/logout', { method: 'POST' }); } catch(e){}
-  doLogout();
-});
-
-function tickExpiry(){
-  if (!tokenExpiresAt) return;
-  const remaining = tokenExpiresAt - Date.now();
-  if (remaining <= 0) { $('sess-expiry').textContent = 'Session expired'; doLogout(); return; }
-  const h = Math.floor(remaining / 3600000);
-  const m = Math.floor((remaining % 3600000) / 60000);
-  $('sess-expiry').textContent = `Session expires in ${h}h ${m}m`;
-  setTimeout(tickExpiry, 60000);
-}
-
-// ---------- Tabs ----------
-document.querySelectorAll('.tab-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('on'));
-    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('on'));
-    btn.classList.add('on');
-    $('tab-' + btn.dataset.tab).classList.add('on');
-  });
-});
-
-// ---------- Overview ----------
-async function loadOverview(){
-  try {
-    const data = await api('/stats');
-    const s = data.stats;
-    $('stats-grid').innerHTML = `
-      <div class="stat-box"><div class="num">${s.totalWallets}</div><div class="lbl">Wallets</div></div>
-      <div class="stat-box"><div class="num">${s.totalCoinsInCirculation}</div><div class="lbl">Coins in circulation</div></div>
-      <div class="stat-box"><div class="num">${s.activeChannels}</div><div class="lbl">Active channels</div></div>
-      <div class="stat-box"><div class="num">${s.expiredChannels}</div><div class="lbl">Expired channels</div></div>
-      <div class="stat-box"><div class="num">${s.totalSessions}</div><div class="lbl">Saved sessions</div></div>
-      <div class="stat-box"><div class="num">${s.activeSockets}</div><div class="lbl">Active sockets</div></div>
-      <div class="stat-box"><div class="num">${s.numbersCount}</div><div class="lbl">Numbers</div></div>
-      <div class="stat-box"><div class="num">${Math.floor(s.uptimeSec/60)}m</div><div class="lbl">Uptime</div></div>
-    `;
-  } catch (e) {
-    $('stats-grid').innerHTML = `<div class="empty">${e.message}</div>`;
-  }
-}
-
-$('btn-broadcast').addEventListener('click', async () => {
-  clearNotice($('bc-notice')); clearError($('bc-error'));
-  const amount = Number($('bc-amount').value);
-  if (!Number.isFinite(amount) || amount <= 0) return showError($('bc-error'), 'Enter a valid amount.');
-  if (!confirm(`Give ${amount} coins to EVERY wallet?`)) return;
-  setBusy($('btn-broadcast'), true);
-  try {
-    const data = await api('/coins/broadcast', { method: 'POST', body: { amount }, confirm: true });
-    showNotice($('bc-notice'), `Gave ${data.amountPerUser} coins to ${data.modified} wallet(s).`);
-    loadOverview(); loadWallets();
-  } catch (e) {
-    showError($('bc-error'), e.data?.error || e.message);
-  } finally {
-    setBusy($('btn-broadcast'), false, 'Give to everyone');
-  }
-});
-
-// ---------- Wallets ----------
-let walletsPage = 1;
-const WALLETS_LIMIT = 20;
-
-async function loadWallets(){
-  clearError($('wallets-error'));
-  $('wallets-body').innerHTML = '<tr><td colspan="4" class="empty">Loading…</td></tr>';
-  try {
-    const search = $('wallet-search').value.trim();
-    const q = new URLSearchParams({ page: walletsPage, limit: WALLETS_LIMIT, search }).toString();
-    const data = await api('/wallets?' + q);
-    if (!data.wallets.length) {
-      $('wallets-body').innerHTML = '<tr><td colspan="4" class="empty">No wallets found.</td></tr>';
-    } else {
-      $('wallets-body').innerHTML = data.wallets.map(w => `
-        <tr data-number="${w.number}">
-          <td class="mono">${w.number}</td>
-          <td>${w.coins}</td>
-          <td>${w.lastDailyClaimAt ? new Date(w.lastDailyClaimAt).toLocaleString() : '—'}</td>
-          <td>
-            <div class="actions-cell">
-              <input type="number" class="inline-num" placeholder="amt" value="10">
-              <button class="btn-gold btn-sm" data-act="give">Give</button>
-              <button class="btn-ghost btn-sm" data-act="set">Set</button>
-              <button class="btn-danger btn-sm" data-act="deduct">Deduct</button>
-            </div>
-          </td>
-        </tr>
-      `).join('');
-    }
-    $('wallets-pageinfo').textContent = `Page ${data.page} of ${data.pages || 1} · ${data.total} total`;
-  } catch (e) {
-    showError($('wallets-error'), e.message);
-  }
-}
-
-$('btn-wallet-search').addEventListener('click', () => { walletsPage = 1; loadWallets(); });
-$('wallet-search').addEventListener('keydown', (ev) => { if (ev.key === 'Enter') { walletsPage = 1; loadWallets(); } });
-$('wallets-prev').addEventListener('click', () => { if (walletsPage > 1) { walletsPage--; loadWallets(); } });
-$('wallets-next').addEventListener('click', () => { walletsPage++; loadWallets(); });
-
-$('wallets-body').addEventListener('click', async (ev) => {
-  const btn = ev.target.closest('button[data-act]');
-  if (!btn) return;
-  const row = btn.closest('tr');
-  const number = row.dataset.number;
-  const amount = Number(row.querySelector('.inline-num').value);
-  if (!Number.isFinite(amount) || amount <= 0) return alert('Enter a valid amount.');
-  const act = btn.dataset.act;
-  const endpoint = act === 'give' ? '/coins/give' : act === 'set' ? '/coins/set' : '/coins/deduct';
-  const verb = act === 'give' ? 'Give' : act === 'set' ? 'Set' : 'Deduct';
-  if (!confirm(`${verb} ${amount} coins ${act === 'set' ? 'for' : act === 'give' ? 'to' : 'from'} ${number}?`)) return;
-  setBusy(btn, true);
-  try {
-    await api(endpoint, { method: 'POST', body: { number, amount }, confirm: true });
-    loadWallets(); loadOverview();
-  } catch (e) {
-    alert(e.data?.error || e.message);
-  } finally {
-    setBusy(btn, false, verb);
-  }
-});
-
-// ---------- Channels ----------
-let channelsPage = 1;
-const CHANNELS_LIMIT = 30;
-
+// ---------- Emoji picker ----------
 EMOJI_OPTIONS.forEach(e => {
   const b = document.createElement('button');
-  b.type = 'button'; b.className = 'emoji-pick'; b.textContent = e;
+  b.type = 'button';
+  b.className = 'emoji-pick';
+  b.textContent = e;
   b.addEventListener('click', () => {
-    const i = chSelectedEmojis.indexOf(e);
-    if (i === -1) chSelectedEmojis.push(e); else chSelectedEmojis.splice(i, 1);
+    const i = selectedEmojis.indexOf(e);
+    if (i === -1) selectedEmojis.push(e); else selectedEmojis.splice(i, 1);
     b.classList.toggle('on');
+    els.chosenEmojis.textContent = selectedEmojis.length ? selectedEmojis.join(' ') : 'No emojis selected yet';
   });
-  $('ch-emoji-grid').appendChild(b);
+  els.emojiGrid.appendChild(b);
 });
 
-$('btn-ch-add').addEventListener('click', async () => {
-  clearError($('ch-add-error')); clearNotice($('ch-add-notice'));
-  const number = $('ch-number').value.trim();
-  const jid = $('ch-jid').value.trim();
-  const days = Math.max(1, Math.min(365, parseInt($('ch-days').value || '30', 10)));
-  if (!number) return showError($('ch-add-error'), 'Owner number required.');
-  if (!jid.endsWith('@newsletter')) return showError($('ch-add-error'), 'JID must end with @newsletter.');
-  if (!chSelectedEmojis.length) return showError($('ch-add-error'), 'Pick at least one emoji.');
-  setBusy($('btn-ch-add'), true);
+function updateCost(){
+  const days = Math.max(1, parseInt(els.days.value || '1', 10));
+  els.costValue.textContent = (days * COST_PER_DAY) + ' coins';
+}
+els.days.addEventListener('input', updateCost);
+updateCost();
+
+// ---------- Auth ----------
+function persistAuth(){ localStorage.setItem(STORE_KEY, JSON.stringify(auth)); }
+function loadStoredAuth(){
+  try { return JSON.parse(localStorage.getItem(STORE_KEY) || 'null'); } catch(e){ return null; }
+}
+function clearAuth(){ auth = null; localStorage.removeItem(STORE_KEY); }
+
+async function doLogin(number, password){
+  const data = await api('/login', { number, password });
+  auth = { number: data.number, password };
+  persistAuth();
+  els.who.textContent = auth.number;
+  applyWallet(data);
+  els.loginView.style.display = 'none';
+  els.dashView.style.display = 'block';
+  if (data.isNewWallet) showNotice(els.claimNotice, 'Welcome! +10 coins first-login bonus added.');
+  await refreshChannels();
+}
+
+els.loginBtn.addEventListener('click', async () => {
+  clearError(els.loginErr);
+  const number = els.number.value.trim();
+  const password = els.pass.value.trim();
+  if (!number || !password) return showError(els.loginErr, 'Enter both your number and password.');
+  setBusy(els.loginBtn, true);
+  try { await doLogin(number, password); }
+  catch (e) { showError(els.loginErr, e.data?.error || e.message); }
+  finally { setBusy(els.loginBtn, false, 'Log in'); }
+});
+
+els.pass.addEventListener('keydown', (ev) => { if (ev.key === 'Enter') els.loginBtn.click(); });
+
+els.logoutBtn.addEventListener('click', () => {
+  clearAuth();
+  clearTimeout(claimTimer);
+  els.dashView.style.display = 'none';
+  els.loginView.style.display = 'block';
+  els.number.value = ''; els.pass.value = '';
+});
+
+// ---------- Wallet / daily claim ----------
+function applyWallet(data){
+  els.coinCount.textContent = data.coins ?? 0;
+  dailyClaimAt = data.lastDailyClaimAt ? new Date(data.lastDailyClaimAt) : null;
+  refreshClaimButton();
+}
+
+function refreshClaimButton(){
+  clearTimeout(claimTimer);
+  if (!dailyClaimAt) { els.claimBtn.disabled = false; els.claimBtn.textContent = 'Claim daily +5'; return; }
+  const next = dailyClaimAt.getTime() + 24 * 60 * 60 * 1000;
+  const remaining = next - Date.now();
+  if (remaining <= 0) {
+    els.claimBtn.disabled = false;
+    els.claimBtn.textContent = 'Claim daily +5';
+    return;
+  }
+  els.claimBtn.disabled = true;
+  const h = Math.floor(remaining / 3600000);
+  const m = Math.floor((remaining % 3600000) / 60000);
+  els.claimBtn.textContent = `Next claim in ${h}h ${m}m`;
+  claimTimer = setTimeout(refreshClaimButton, 60000);
+}
+
+els.claimBtn.addEventListener('click', async () => {
+  clearNotice(els.claimNotice); clearError(els.loginErr);
+  setBusy(els.claimBtn, true);
   try {
-    await api('/channels/add', { method: 'POST', body: { number, jid, emojis: chSelectedEmojis, days }, confirm: true });
-    showNotice($('ch-add-notice'), `${jid} added for ${days} day(s).`);
-    $('ch-number').value = ''; $('ch-jid').value = '';
-    chSelectedEmojis = [];
-    document.querySelectorAll('#ch-emoji-grid .emoji-pick.on').forEach(b => b.classList.remove('on'));
-    loadChannels(); loadOverview();
+    const data = await api('/claim-daily', auth);
+    els.coinCount.textContent = data.coins;
+    dailyClaimAt = new Date(data.lastDailyClaimAt);
+    showNotice(els.claimNotice, `+${data.claimed} coins claimed.`);
   } catch (e) {
-    showError($('ch-add-error'), e.data?.error || e.message);
+    showNotice(els.claimNotice, e.data?.error === 'already_claimed' ? 'Already claimed today — come back later.' : (e.message || 'Could not claim right now.'));
   } finally {
-    setBusy($('btn-ch-add'), false, 'Add channel');
+    setBusy(els.claimBtn, false);
+    refreshClaimButton();
   }
 });
 
-function formatExpiry(expiresAt){
+// ---------- Add channel ----------
+els.addBtn.addEventListener('click', async () => {
+  clearError(els.addErr); clearNotice(els.addNotice);
+  const jid = els.jid.value.trim();
+  const days = Math.max(1, Math.min(365, parseInt(els.days.value || '1', 10)));
+
+  if (!jid.endsWith('@newsletter')) return showError(els.addErr, 'JID must end with @newsletter.');
+  if (selectedEmojis.length === 0) return showError(els.addErr, 'Pick at least one emoji.');
+
+  setBusy(els.addBtn, true);
+  try {
+    const data = await api('/add-channel', { ...auth, jid, emojis: selectedEmojis, days });
+    els.coinCount.textContent = data.coins;
+    showNotice(els.addNotice, `${jid} added for ${data.days} day(s).`);
+    els.jid.value = '';
+    selectedEmojis = [];
+    els.chosenEmojis.textContent = 'No emojis selected yet';
+    document.querySelectorAll('.emoji-pick.on').forEach(b => b.classList.remove('on'));
+    await refreshChannels();
+  } catch (e) {
+    if (e.data?.error === 'insufficient_coins') {
+      showError(els.addErr, `You need ${e.data.needed} coins for ${days} day(s), but only have ${e.data.have}.`);
+    } else {
+      showError(els.addErr, e.data?.error || e.message);
+    }
+  } finally {
+    setBusy(els.addBtn, false, 'Add channel');
+  }
+});
+
+// ---------- Channels list ----------
+function formatCountdown(expiresAt){
   const remaining = new Date(expiresAt).getTime() - Date.now();
-  if (remaining <= 0) return { text: 'Expired', cls: 'expiring' };
+  if (remaining <= 0) return { text: 'Expiring…', soon: true };
   const days = Math.floor(remaining / 86400000);
+  const hours = Math.floor((remaining % 86400000) / 3600000);
   const soon = remaining < 86400000;
-  return { text: days > 0 ? `${days}d left` : 'Expiring soon', cls: soon ? 'expiring' : 'active' };
+  return { text: days > 0 ? `${days}d ${hours}h left` : `${hours}h left`, soon };
 }
 
-async function loadChannels(){
-  clearError($('channels-error'));
-  $('channels-body').innerHTML = '<tr><td colspan="5" class="empty">Loading…</td></tr>';
+async function refreshChannels(){
+  els.channelsList.innerHTML = '<div class="empty">Loading…</div>';
   try {
-    const search = $('channels-search').value.trim();
-    const q = new URLSearchParams({ page: channelsPage, limit: CHANNELS_LIMIT, search }).toString();
-    const data = await api('/channels?' + q);
-    if (!data.channels.length) {
-      $('channels-body').innerHTML = '<tr><td colspan="5" class="empty">No channels found.</td></tr>';
-    } else {
-      $('channels-body').innerHTML = data.channels.map(c => {
-        const exp = formatExpiry(c.expiresAt);
-        return `
-        <tr data-jid="${c.jid}">
-          <td class="mono">${c.jid}</td>
-          <td class="mono">${c.number}</td>
-          <td>${(c.emojis||[]).join(' ')}</td>
-          <td><span class="badge ${exp.cls}">${exp.text}</span></td>
-          <td>
-            <div class="actions-cell">
-              <input type="number" class="inline-num" placeholder="days" value="7">
-              <button class="btn-gold btn-sm" data-act="extend">Extend</button>
-              <button class="btn-danger btn-sm" data-act="delete">Delete</button>
-            </div>
-          </td>
-        </tr>`;
-      }).join('');
+    const data = await api('/channels', auth);
+    const list = data.channels || [];
+    if (list.length === 0) {
+      els.channelsList.innerHTML = '<div class="empty">No channels yet — add one above.</div>';
+      return;
     }
-    $('channels-pageinfo').textContent = `Page ${data.page} of ${data.pages || 1} · ${data.total} total`;
+    els.channelsList.innerHTML = '';
+    list.forEach(ch => {
+      const cd = formatCountdown(ch.expiresAt);
+      const row = document.createElement('div');
+      row.className = 'ch-row';
+      row.innerHTML = `
+        <div>
+          <div class="jid">${ch.jid}</div>
+          <div class="emojis">${(ch.emojis || []).join(' ')}</div>
+        </div>
+        <div class="expires ${cd.soon ? 'soon' : ''}">${cd.text}</div>
+      `;
+      els.channelsList.appendChild(row);
+    });
   } catch (e) {
-    showError($('channels-error'), e.message);
+    els.channelsList.innerHTML = `<div class="empty">Could not load channels: ${e.message}</div>`;
   }
 }
-
-$('btn-channels-search').addEventListener('click', () => { channelsPage = 1; loadChannels(); });
-$('channels-search').addEventListener('keydown', (ev) => { if (ev.key === 'Enter') { channelsPage = 1; loadChannels(); } });
-$('channels-prev').addEventListener('click', () => { if (channelsPage > 1) { channelsPage--; loadChannels(); } });
-$('channels-next').addEventListener('click', () => { channelsPage++; loadChannels(); });
-
-$('channels-body').addEventListener('click', async (ev) => {
-  const btn = ev.target.closest('button[data-act]');
-  if (!btn) return;
-  const row = btn.closest('tr');
-  const jid = row.dataset.jid;
-  const act = btn.dataset.act;
-  if (act === 'delete') {
-    if (!confirm(`Delete channel ${jid}? This cannot be undone.`)) return;
-    setBusy(btn, true);
-    try {
-      await api('/channels/delete', { method: 'POST', body: { jid }, confirm: true });
-      loadChannels(); loadOverview();
-    } catch (e) { alert(e.data?.error || e.message); }
-    finally { setBusy(btn, false, 'Delete'); }
-  } else if (act === 'extend') {
-    const days = Number(row.querySelector('.inline-num').value);
-    if (!Number.isInteger(days) || days < 1) return alert('Enter a valid whole number of days.');
-    setBusy(btn, true);
-    try {
-      await api('/channels/extend', { method: 'POST', body: { jid, days } });
-      loadChannels();
-    } catch (e) { alert(e.data?.error || e.message); }
-    finally { setBusy(btn, false, 'Extend'); }
-  }
-});
-
-// ---------- Sessions ----------
-async function loadSessions(){
-  clearError($('sessions-error'));
-  $('sessions-body').innerHTML = '<tr><td colspan="5" class="empty">Loading…</td></tr>';
-  try {
-    const data = await api('/sessions');
-    if (!data.sessions.length) {
-      $('sessions-body').innerHTML = '<tr><td colspan="5" class="empty">No sessions found.</td></tr>';
-    } else {
-      $('sessions-body').innerHTML = data.sessions.map(s => `
-        <tr data-number="${s.number}">
-          <td class="mono">${s.number}</td>
-          <td>${typeof s.dbIndex === 'number' ? s.dbIndex + 1 : '—'}</td>
-          <td>${s.updatedAt ? new Date(s.updatedAt).toLocaleString() : '—'}</td>
-          <td><span class="badge ${s.active ? 'active' : 'inactive'}">${s.active ? 'Active' : 'Offline'}</span></td>
-          <td><button class="btn-danger btn-sm" data-act="delete">Delete</button></td>
-        </tr>
-      `).join('');
-    }
-  } catch (e) {
-    showError($('sessions-error'), e.message);
-  }
-}
-
-$('sessions-body').addEventListener('click', async (ev) => {
-  const btn = ev.target.closest('button[data-act="delete"]');
-  if (!btn) return;
-  const row = btn.closest('tr');
-  const number = row.dataset.number;
-  if (!confirm(`Delete session ${number}? This logs the bot out and removes it from Mongo.`)) return;
-  setBusy(btn, true);
-  try {
-    await api('/sessions/delete', { method: 'POST', body: { number }, confirm: true });
-    loadSessions(); loadOverview();
-  } catch (e) { alert(e.data?.error || e.message); }
-  finally { setBusy(btn, false, 'Delete'); }
-});
 
 // ---------- Boot ----------
-(function init(){
-  const stored = loadStoredToken();
-  if (stored && stored.token && stored.tokenExpiresAt > Date.now()) {
-    token = stored.token;
-    tokenExpiresAt = stored.tokenExpiresAt;
-    showDash();
+(async function init(){
+  const stored = loadStoredAuth();
+  if (!stored) return;
+  els.number.value = stored.number;
+  try {
+    const data = await api('/wallet', stored);
+    auth = stored;
+    els.who.textContent = auth.number;
+    applyWallet(data);
+    els.loginView.style.display = 'none';
+    els.dashView.style.display = 'block';
+    await refreshChannels();
+  } catch (e) {
+    clearAuth();
   }
 })();
 </script>
 </body>
 </html>
-

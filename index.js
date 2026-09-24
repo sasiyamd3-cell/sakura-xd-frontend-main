@@ -132,6 +132,9 @@ app.get(['/settings', '/settings.html'], (req, res) => {
 app.get(['/react', '/react.html'], (req, res) => {
     res.sendFile(SAKURA_DIR + '/react.html')
 });
+app.get(['/admin', '/admin.html'], (req, res) => {
+    res.sendFile(SAKURA_DIR + '/admin.html')
+});
 
 app.listen(PORT, () => {
     console.log(`

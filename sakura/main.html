@@ -1,0 +1,1576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MIYORA MD — WhatsApp Bot</title>
+<meta name="description" content="Miyora MD — a WhatsApp bot by Sasinda Denuwan." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;800&family=Klee+One:wght@600&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink: #05070f;
+    --ink-2: #0a1226;
+    --ink-3: #111f3d;
+    --sakura: #b06bff;        /* Miyora signature purple */
+    --sakura-deep: #7a2bff;
+    --lantern: #d8a3ff;
+    --lantern-soft: #e9d4ff;
+    --paper: #f3ecff;
+    --muted: #9a8fbd;
+    --line: rgba(176,107,255,0.18);
+    --gold: #ffd166;
+  }
+
+  *{ box-sizing: border-box; }
+  html,body{ margin:0; padding:0; }
+
+  body{
+    background: radial-gradient(ellipse 120% 80% at 50% -10%, #2a1550 0%, var(--ink) 55%, #05070f 100%);
+    color: var(--paper);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  svg.ic{ display:block; flex-shrink:0; }
+
+  /* ---------- Ambient miyora petals ---------- */
+  #petals{ position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+
+  /* ---------- Top bar ---------- */
+  .topbar{
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    background: rgba(12, 8, 30, 0.7);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--line);
+  }
+  .brand-mini{ display: flex; align-items: center; gap: 10px; }
+  .kanji-badge{
+    width: 34px; height: 34px;
+    border-radius: 11px;
+    background: linear-gradient(160deg, var(--ink-3), var(--ink-2));
+    border: 1px solid var(--line);
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden;
+    flex-shrink: 0;
+    box-shadow: 0 0 14px rgba(176,107,255,0.4) inset;
+  }
+  .kanji-badge img{ width: 100%; height: 100%; object-fit: cover; }
+  .brand-mini .name{
+    font-family: 'Unbounded', sans-serif;
+    font-weight: 800;
+    font-size: 16px;
+    letter-spacing: 0.04em;
+    background: linear-gradient(100deg, var(--paper) 20%, var(--sakura) 60%, var(--lantern) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .burger{
+    width: 42px; height: 42px;
+    border-radius: 12px;
+    border: 1px solid var(--line);
+    background: var(--ink-3);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .burger span{
+    display: block;
+    width: 18px; height: 2px;
+    background: var(--sakura);
+    border-radius: 2px;
+    transition: transform 0.25s ease, opacity 0.2s ease;
+  }
+  .burger.open span:nth-child(1){ transform: translateY(7px) rotate(45deg); }
+  .burger.open span:nth-child(2){ opacity: 0; }
+  .burger.open span:nth-child(3){ transform: translateY(-7px) rotate(-45deg); }
+  .burger:focus-visible{ outline: 2px solid var(--lantern); outline-offset: 2px; }
+
+  /* ---------- Nav menu ---------- */
+  .navmenu{
+    position: fixed;
+    top: 73px;
+    right: 20px;
+    z-index: 49;
+    width: min(280px, calc(100vw - 40px));
+    background: linear-gradient(165deg, var(--ink-2), var(--ink) 130%);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: 0 24px 50px -16px rgba(0,0,0,0.6);
+    padding: 10px;
+    transform: translateY(-12px) scale(0.97);
+    opacity: 0;
+    pointer-events: none;
+    transition: transform 0.18s ease, opacity 0.18s ease;
+  }
+  .navmenu.open{
+    transform: translateY(0) scale(1);
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .navmenu a{
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 13px 14px;
+    border-radius: 11px;
+    text-decoration: none;
+    color: var(--paper);
+    font-weight: 600;
+    font-size: 14.5px;
+    transition: background 0.15s ease;
+  }
+  .navmenu a:hover, .navmenu a:focus-visible{ background: var(--ink-3); }
+  .navmenu a:focus-visible{ outline: 2px solid var(--lantern); outline-offset: -2px; }
+  .navmenu .icon{
+    width: 34px; height: 34px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--ink-3);
+    flex-shrink: 0;
+  }
+  .navmenu .icon.pink{ background: rgba(122,43,255,0.18); color: var(--sakura); }
+  .navmenu .icon.gold{ background: rgba(216,163,255,0.15); color: var(--lantern); }
+  .navmenu .icon.mint{ background: rgba(78,230,160,0.16); color: #4ee6a0; }
+  .navmenu .icon.shield{ background: rgba(255,209,102,0.18); color: #ffd166; }
+  .navmenu .desc{ display: block; font-size: 12px; color: var(--muted); font-weight: 400; margin-top: 2px; }
+  .navmenu .divider{ height: 1px; background: var(--line); margin: 6px 4px; }
+
+  .overlay{
+    position: fixed; inset: 0;
+    background: rgba(6, 8, 18, 0.5);
+    z-index: 48;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.18s ease;
+  }
+  .overlay.open{ opacity: 1; pointer-events: auto; }
+
+  /* ---------- Hero ---------- */
+  .hero{
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 10vh 20px 6vh;
+    overflow: hidden;
+  }
+  .hero::before, .hero::after{
+    content: '';
+    position: absolute;
+    width: 360px; height: 360px;
+    border-radius: 50%;
+    filter: blur(90px);
+    z-index: -2;
+    pointer-events: none;
+  }
+  .hero::before{ top: -80px; left: 50%; transform: translateX(-160%); background: rgba(122,43,255,0.4); }
+  .hero::after{ top: 40px; left: 50%; transform: translateX(60%); background: rgba(176,107,255,0.25); }
+
+  .hero-crest{
+    position: absolute;
+    top: 30px;
+    width: 260px;
+    height: 260px;
+    opacity: 0.2;
+    z-index: -1;
+    animation: spin-slow 70s linear infinite;
+  }
+  @keyframes spin-slow{ from{ transform: rotate(0deg); } to{ transform: rotate(360deg); } }
+
+  .kanji-big{
+    width: 84px;
+    height: 84px;
+    border-radius: 22px;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 18px;
+    background: linear-gradient(160deg, var(--ink-3), var(--ink-2));
+    border: 1px solid var(--line);
+    box-shadow: 0 0 36px rgba(176,107,255,0.55);
+    overflow: hidden;
+  }
+  .kanji-big img{ width: 100%; height: 100%; object-fit: cover; }
+  .japanese-sub{
+    font-family: 'Klee One', cursive;
+    font-size: 13px;
+    letter-spacing: 0.14em;
+    color: var(--muted);
+    margin: 2px 0 0;
+  }
+  .pill-row{
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: 14px;
+  }
+  .team-pill{
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    color: var(--lantern-soft);
+    background: rgba(216,163,255,0.1);
+    border: 1px solid rgba(216,163,255,0.3);
+    padding: 6px 14px;
+    border-radius: 999px;
+  }
+  h1.wordmark{
+    font-family: 'Unbounded', sans-serif;
+    font-weight: 800;
+    font-size: clamp(30px, 7vw, 48px);
+    letter-spacing: 0.02em;
+    margin: 18px 0 0;
+    background: linear-gradient(100deg, var(--paper) 15%, var(--sakura) 55%, var(--lantern) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    text-shadow: 0 0 40px rgba(176,107,255,0.3);
+  }
+  .version-pill{
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    color: var(--paper);
+    background: rgba(122,43,255,0.18);
+    border: 1px solid rgba(176,107,255,0.4);
+    padding: 6px 14px;
+    border-radius: 999px;
+  }
+  .tagline{
+    color: var(--muted);
+    font-size: clamp(15px, 2.4vw, 17px);
+    max-width: 500px;
+    margin: 22px 0 30px;
+    line-height: 1.6;
+  }
+
+  .hero-actions{
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-bottom: 26px;
+  }
+  .btn{
+    border: none;
+    border-radius: 10px;
+    padding: 11px 20px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    cursor: pointer;
+    transition: transform 0.12s ease;
+  }
+  .btn:hover{ transform: translateY(-1px); }
+  .btn.primary{
+    color: #fff;
+    background: linear-gradient(120deg, var(--sakura) 0%, var(--sakura-deep) 100%);
+    box-shadow: 0 10px 28px -10px rgba(122,43,255,0.8);
+  }
+  .btn.ghost{
+    color: var(--lantern-soft);
+    background: transparent;
+    border: 1px solid rgba(216,163,255,0.4);
+  }
+  .btn.ghost:hover{ background: rgba(216,163,255,0.1); }
+
+  .spec-row{
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+    max-width: 560px;
+  }
+  .spec-chip{
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    border: 1px solid var(--line);
+    padding: 6px 12px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.02);
+  }
+
+  /* ---------- Sections ---------- */
+  .section{
+    position: relative;
+    z-index: 1;
+    max-width: 920px;
+    margin: 0 auto;
+    padding: 4vh 20px;
+  }
+  .section-eyebrow{
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--lantern);
+    text-align: center;
+    margin: 0 0 10px;
+  }
+  .section-title{
+    font-family: 'Unbounded', sans-serif;
+    font-weight: 700;
+    font-size: clamp(22px, 4vw, 30px);
+    text-align: center;
+    margin: 0 0 38px;
+    color: var(--paper);
+  }
+
+  .feature-grid{
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+  }
+  @media (max-width: 900px){ .feature-grid{ grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 520px){ .feature-grid{ grid-template-columns: 1fr; } }
+
+  .feature-card{
+    background: linear-gradient(165deg, var(--ink-2), var(--ink) 130%);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    padding: 22px 20px;
+    transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .feature-card:hover{
+    border-color: rgba(176,107,255,0.5);
+    transform: translateY(-3px);
+    box-shadow: 0 14px 30px -16px rgba(122,43,255,0.6);
+  }
+  .feature-card .ficon{
+    width: 40px; height: 40px;
+    border-radius: 12px;
+    background: var(--ink-3);
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 14px;
+    color: var(--sakura);
+    box-shadow: 0 0 0 1px var(--line) inset;
+  }
+  .feature-card h3{
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    margin: 0 0 6px;
+    color: var(--paper);
+  }
+  .feature-card p{
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.6;
+    margin: 0;
+  }
+
+  /* ---------- Live status ---------- */
+  .status-card{
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    flex-wrap: wrap;
+    background: radial-gradient(ellipse at 100% 0%, rgba(176,107,255,0.18), transparent 60%), linear-gradient(165deg, var(--ink-2), var(--ink) 130%);
+    border: 1px solid var(--line);
+    border-radius: 22px;
+    padding: 28px 30px;
+    overflow: hidden;
+  }
+  .status-card::before{
+    content: '';
+    position: absolute;
+    top: -60%; right: -20%;
+    width: 280px; height: 280px;
+    background: radial-gradient(circle, rgba(176,107,255,0.3), transparent 70%);
+    filter: blur(10px);
+    pointer-events: none;
+  }
+  .status-left{ display: flex; align-items: center; gap: 16px; position: relative; z-index: 1; }
+  .status-orb{
+    width: 58px; height: 58px;
+    border-radius: 16px;
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(160deg, var(--ink-3), var(--ink-2));
+    border: 1px solid rgba(176,107,255,0.4);
+    color: var(--sakura);
+    box-shadow: 0 0 26px rgba(176,107,255,0.4) inset;
+  }
+  .status-copy .status-label{
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--lantern);
+    margin: 0 0 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .live-dot{
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: #35ff8f;
+    box-shadow: 0 0 8px #35ff8f;
+    animation: dot-pulse 1.6s ease-in-out infinite;
+  }
+  .live-dot.offline{ background: var(--muted); box-shadow: none; animation: none; }
+  @keyframes dot-pulse{
+    0%, 100%{ opacity: 1; transform: scale(1); }
+    50%{ opacity: 0.4; transform: scale(0.75); }
+  }
+  .status-copy .status-desc{
+    font-size: 13.5px;
+    color: var(--muted);
+    margin: 0;
+  }
+  .status-right{
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    position: relative;
+    z-index: 1;
+  }
+  .status-number{
+    font-family: 'Unbounded', sans-serif;
+    font-weight: 800;
+    font-size: clamp(38px, 6vw, 52px);
+    line-height: 1;
+    background: linear-gradient(100deg, var(--paper) 10%, var(--sakura) 70%, var(--lantern) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    min-width: 1ch;
+  }
+  .status-number.skeleton{
+    color: transparent;
+    background: none;
+    -webkit-background-clip: unset;
+    background-clip: unset;
+    position: relative;
+  }
+  .status-number.skeleton::after{
+    content: '···';
+    color: var(--muted);
+    animation: dot-pulse 1.2s ease-in-out infinite;
+    -webkit-text-fill-color: var(--muted);
+  }
+  .status-unit{
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+  @media (max-width: 560px){
+    .status-card{ padding: 22px 20px; }
+    .status-right{ width: 100%; justify-content: flex-start; }
+  }
+
+  /* ---------- Owner card ---------- */
+  .owner-card{
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    background: radial-gradient(ellipse at 0% 0%, rgba(176,107,255,0.16), transparent 60%), linear-gradient(165deg, var(--ink-2), var(--ink) 130%);
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    padding: 26px 24px;
+  }
+  @media (max-width: 520px){ .owner-card{ flex-direction: column; text-align: center; } }
+  .owner-avatar{
+    width: 64px; height: 64px;
+    flex-shrink: 0;
+    border-radius: 18px;
+    background: linear-gradient(135deg, var(--sakura), var(--lantern));
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Unbounded', sans-serif;
+    font-weight: 800;
+    font-size: 22px;
+    color: #fff;
+    box-shadow: 0 0 26px rgba(176,107,255,0.55);
+  }
+  .owner-info .o-label{
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--lantern);
+    margin: 0 0 4px;
+  }
+  .owner-info .o-name{
+    font-family: 'Unbounded', sans-serif;
+    font-weight: 800;
+    font-size: 21px;
+    margin: 0 0 6px;
+    background: linear-gradient(100deg, var(--paper) 20%, var(--sakura) 70%, var(--lantern) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .owner-info .o-sub{
+    font-size: 13.5px;
+    color: var(--muted);
+    margin: 0;
+    line-height: 1.5;
+  }
+  .owner-links{
+    display: flex;
+    gap: 10px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+  }
+  @media (max-width: 520px){ .owner-links{ justify-content: center; } }
+  .owner-links a{
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--lantern-soft);
+    text-decoration: none;
+    border: 1px solid rgba(216,163,255,0.35);
+    padding: 7px 13px;
+    border-radius: 999px;
+  }
+  .owner-links a:hover{ background: rgba(216,163,255,0.1); }
+
+  /* ---------- Comments ---------- */
+  .comment-form{
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background: linear-gradient(165deg, var(--ink-2), var(--ink) 130%);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    padding: 20px;
+    margin-bottom: 26px;
+  }
+  .comment-form .row{ display: flex; gap: 10px; flex-wrap: wrap; }
+  .comment-form input,
+  .comment-form textarea{
+    flex: 1;
+    min-width: 160px;
+    background: var(--ink-3);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 10px 12px;
+    color: var(--paper);
+    font-family: 'Inter', sans-serif;
+    font-size: 13.5px;
+    outline: none;
+  }
+  .comment-form input:focus,
+  .comment-form textarea:focus{ border-color: rgba(176,107,255,0.6); }
+  .comment-form textarea{ resize: vertical; min-height: 64px; width: 100%; }
+  .comment-form .form-footer{ display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .comment-form .hint{ font-size: 12px; color: var(--muted); }
+  .comment-form .btn{ align-self: flex-end; }
+
+  .comment-list{ display: flex; flex-direction: column; gap: 16px; }
+  .comment-item{
+    display: flex;
+    gap: 12px;
+  }
+  .comment-avatar{
+    width: 38px; height: 38px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--sakura), var(--lantern));
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Unbounded', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    color: #fff;
+  }
+  .comment-body{ flex: 1; min-width: 0; }
+  .comment-head{ display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+  .comment-name{ font-weight: 700; font-size: 13.5px; color: var(--paper); }
+  .comment-time{ font-size: 11.5px; color: var(--muted); font-family: 'Space Mono', monospace; }
+  .comment-text{ font-size: 13.5px; color: var(--paper); line-height: 1.55; margin: 4px 0 8px; word-wrap: break-word; }
+
+  .reaction-row{ display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+  .reaction-btn{
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12.5px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 4px 10px;
+    color: var(--muted);
+    cursor: pointer;
+    transition: border-color 0.15s ease, color 0.15s ease, transform 0.1s ease;
+  }
+  .reaction-btn:hover{ border-color: rgba(176,107,255,0.5); color: var(--paper); }
+  .reaction-btn:active{ transform: scale(0.94); }
+  .reaction-btn .count{ font-family: 'Space Mono', monospace; }
+
+  .reply-toggle{
+    background: none; border: none; color: var(--lantern); font-size: 12px;
+    font-weight: 600; cursor: pointer; padding: 4px 2px; margin-left: 2px;
+  }
+  .reply-toggle:hover{ text-decoration: underline; }
+
+  .admin-reply-box{
+    margin-top: 10px;
+    display: none;
+    gap: 8px;
+    flex-direction: column;
+    background: var(--ink-3);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 12px;
+  }
+  .admin-reply-box.open{ display: flex; }
+  .admin-reply-box input,
+  .admin-reply-box textarea{
+    background: var(--ink);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 8px 10px;
+    color: var(--paper);
+    font-size: 12.5px;
+    font-family: 'Inter', sans-serif;
+    outline: none;
+  }
+  .admin-reply-box textarea{ resize: vertical; min-height: 48px; }
+  .admin-reply-box .row{ display: flex; gap: 8px; }
+  .admin-reply-box .row button{
+    font-size: 12px; font-weight: 700; border: none; border-radius: 8px;
+    padding: 8px 14px; cursor: pointer;
+    background: linear-gradient(120deg, var(--sakura) 0%, var(--sakura-deep) 100%);
+    color: #fff;
+  }
+  .admin-reply-box .error-msg{ font-size: 11.5px; color: #ff8080; display: none; }
+
+  .admin-reply{
+    margin-top: 10px;
+    display: flex;
+    gap: 10px;
+    background: rgba(176,107,255,0.08);
+    border: 1px solid rgba(176,107,255,0.35);
+    border-radius: 12px;
+    padding: 10px 12px;
+  }
+  .admin-reply-avatar{
+    width: 26px; height: 26px;
+    flex-shrink: 0;
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--ink-2);
+  }
+  .admin-reply-avatar img{ width: 100%; height: 100%; object-fit: cover; }
+  .admin-reply-content{ flex: 1; min-width: 0; }
+  .admin-reply-head{ display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .admin-badge{
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-family: 'Space Mono', monospace;
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: #fff;
+    background: linear-gradient(120deg, var(--sakura) 0%, var(--lantern) 100%);
+    padding: 2px 8px;
+    border-radius: 999px;
+  }
+  .admin-reply-time{ font-size: 11px; color: var(--muted); font-family: 'Space Mono', monospace; }
+  .admin-reply-text{ font-size: 13px; color: var(--paper); margin: 4px 0 0; line-height: 1.5; }
+  .creator-heart{
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11.5px;
+    color: var(--sakura);
+    margin-top: 8px;
+  }
+  .creator-heart svg{ fill: var(--sakura); }
+
+  .comments-empty{ color: var(--muted); font-size: 13px; text-align: center; padding: 20px 0; }
+
+  footer{
+    position: relative;
+    z-index: 1;
+    margin-top: 40px;
+    padding: 28px 20px 40px;
+    color: var(--muted);
+    font-size: 12.5px;
+    text-align: center;
+  }
+  footer .mark{ color: var(--sakura); display: inline-flex; vertical-align: -3px; margin-right: 4px; }
+
+  @media (prefers-reduced-motion: reduce){
+    .petal{ animation: none !important; opacity: 0.15 !important; }
+    .hero-crest{ animation: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="petals"></canvas>
+
+<!-- ===================== TOP BAR ===================== -->
+<div class="topbar">
+  <div class="brand-mini">
+    <div class="kanji-badge" aria-hidden="true"><img src="https://raw.githubusercontent.com/NimeshMihiranga-Neno/cartoon-web/main/18d7513834fe1dcc00b6807bb6174794.jpg" alt="Miyora MD logo" /></div>
+    <span class="name">MIYORA MD</span>
+  </div>
+  <button id="burgerBtn" class="burger" aria-label="Open menu" aria-expanded="false" aria-controls="navMenu">
+    <span></span><span></span><span></span>
+  </button>
+</div>
+
+<div id="overlay" class="overlay"></div>
+
+<nav id="navMenu" class="navmenu" aria-label="Main menu">
+  <a href="/pair.html">
+    <span class="icon pink">
+      <svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 14a3.5 3.5 0 0 0 5 0l3-3a3.5 3.5 0 0 0-5-5l-1 1"/><path d="M14 10a3.5 3.5 0 0 0-5 0l-3 3a3.5 3.5 0 0 0 5 5l1-1"/></svg>
+    </span>
+    <span>
+      Connect Bot
+      <span class="desc">Pair your WhatsApp number</span>
+    </span>
+  </a>
+  <div class="divider"></div>
+  <a href="/settings.html">
+    <span class="icon gold">
+      <svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 13a7.97 7.97 0 0 0 0-2l2-1.5-2-3.4-2.4 1a8 8 0 0 0-1.7-1L14.9 3h-3.8l-.4 2.9a8 8 0 0 0-1.7 1l-2.4-1-2 3.4L6.6 11a7.97 7.97 0 0 0 0 2l-2 1.5 2 3.4 2.4-1c.5.4 1.1.8 1.7 1l.4 2.9h3.8l.4-2.9c.6-.2 1.2-.6 1.7-1l2.4 1 2-3.4L19.4 13z"/></svg>
+    </span>
+    <span>
+      Settings
+      <span class="desc">Edit your bot's settings</span>
+    </span>
+  </a>
+  <div class="divider"></div>
+  <a href="/react.html">
+    <span class="icon mint">
+      <svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6c1.6 1.6 1.6 4.1 0 5.7L12 19l-8.8-8.7c-1.6-1.6-1.6-4.1 0-5.7 1.6-1.6 4.2-1.6 5.8 0L12 7.7l3-3.1c1.6-1.6 4.2-1.6 5.8 0z"/></svg>
+    </span>
+    <span>
+      Channel React
+      <span class="desc">Add your channel to auto-react</span>
+    </span>
+  </a>
+  <div class="divider"></div>
+  <a href="/admin">
+    <span class="icon shield">
+      <svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 2l7 3v6c0 5-3.4 8-7 9-3.6-1-7-4-7-9V5z"/>
+        <path d="M9 12l2 2 4-4"/>
+      </svg>
+    </span>
+    <span>
+      Admin Panel
+      <span class="desc">Manage bot &amp; coin system</span>
+    </span>
+  </a>
+</nav>
+
+<!-- ===================== HERO ===================== -->
+<section class="hero">
+  <svg class="hero-crest" viewBox="0 0 200 200" aria-hidden="true">
+    <g fill="none" stroke="url(#crestGrad)" stroke-width="1.4">
+      <defs>
+        <linearGradient id="crestGrad" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#b06bff" />
+          <stop offset="100%" stop-color="#d8a3ff" />
+        </linearGradient>
+      </defs>
+      <g transform="translate(100,100)">
+        <g id="petal-a"><path d="M0,-10 C22,-30 22,-70 0,-92 C-22,-70 -22,-30 0,-10 Z"/></g>
+        <use href="#petal-a" transform="rotate(72)"/>
+        <use href="#petal-a" transform="rotate(144)"/>
+        <use href="#petal-a" transform="rotate(216)"/>
+        <use href="#petal-a" transform="rotate(288)"/>
+        <circle r="9"/>
+      </g>
+    </g>
+  </svg>
+  <div class="kanji-big" aria-hidden="true"><img src="https://raw.githubusercontent.com/NimeshMihiranga-Neno/cartoon-web/main/18d7513834fe1dcc00b6807bb6174794.jpg" alt="Miyora MD logo" /></div>
+  <span class="japanese-sub">ミヨラ・エックスディー</span>
+  <h1 class="wordmark">MIYORA MD</h1>
+  <div class="pill-row">
+    <span class="version-pill">
+      <svg class="ic" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 2l8 4.6v10.8L12 22l-8-4.6V6.6z"/></svg>
+      MIYORA MD V5 · ONLINE
+    </span>
+    <span class="team-pill">
+      <svg class="ic" width="13" height="13" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 2l2.9 6.3 6.9.6-5.2 4.6 1.6 6.8L12 16.9 5.8 20.3l1.6-6.8L2.2 8.9l6.9-.6z"/></svg>
+      SASINDA DENUWAN
+    </span>
+  </div>
+  <p class="tagline">A WhatsApp bot that automates your chats, statuses, and groups — pair your number and it's online in seconds, no server of your own required.</p>
+  <div class="hero-actions">
+    <a class="btn primary" href="/pair.html">
+      <svg class="ic" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 14a3.5 3.5 0 0 0 5 0l3-3a3.5 3.5 0 0 0-5-5l-1 1"/><path d="M14 10a3.5 3.5 0 0 0-5 0l-3 3a3.5 3.5 0 0 0 5 5l1-1"/></svg>
+      Connect Bot
+    </a>
+    <a class="btn ghost" href="/settings.html">
+      <svg class="ic" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 13a7.97 7.97 0 0 0 0-2l2-1.5-2-3.4-2.4 1a8 8 0 0 0-1.7-1L14.9 3h-3.8l-.4 2.9a8 8 0 0 0-1.7 1l-2.4-1-2 3.4L6.6 11a7.97 7.97 0 0 0 0 2l-2 1.5 2 3.4 2.4-1c.5.4 1.1.8 1.7 1l.4 2.9h3.8l.4-2.9c.6-.2 1.2-.6 1.7-1l2.4 1 2-3.4L19.4 13z"/></svg>
+      Manage settings
+    </a>
+  </div>
+  <div class="spec-row">
+    <span class="spec-chip">
+      <svg class="ic" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="12" height="12" rx="2"/><path d="M9 2v2M15 2v2M9 20v2M15 20v2M2 9h2M2 15h2M20 9h2M20 15h2"/></svg>
+      Modular V5 core
+    </span>
+    <span class="spec-chip">
+      <svg class="ic" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 6 9 12 4 18"/><line x1="12" y1="18" x2="20" y2="18"/></svg>
+      Baileys engine
+    </span>
+    <span class="spec-chip">
+      <svg class="ic" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v6c0 1.7 3.6 3 8 3s8-1.3 8-3V5"/><path d="M4 11v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/></svg>
+      MongoDB synced
+    </span>
+    <span class="spec-chip">
+      <svg class="ic" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 0 0-14.9-4M4 12a8 8 0 0 0 14.9 4"/><polyline points="5 4 5 8 9 8"/><polyline points="19 20 19 16 15 16"/></svg>
+      24/7 auto-reconnect
+    </span>
+  </div>
+</section>
+
+<!-- ===================== LIVE STATUS ===================== -->
+<section class="section" style="padding-top: 0;">
+  <div class="status-card">
+    <div class="status-left">
+      <div class="status-orb" aria-hidden="true">
+        <svg class="ic" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4"/><line x1="8" y1="16" x2="8" y2="16"/><line x1="16" y1="16" x2="16" y2="16"/></svg>
+      </div>
+      <div class="status-copy">
+        <p class="status-label"><span id="liveDot" class="live-dot"></span>Network total</p>
+        <p class="status-desc">Numbers currently paired with Miyora MD, synced from the database</p>
+      </div>
+    </div>
+    <div class="status-right">
+      <span id="botCount" class="status-number skeleton"></span>
+      <span class="status-unit">bots connected</span>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== ABOUT THE BOT ===================== -->
+<section class="section">
+  <p class="section-eyebrow">About the bot</p>
+  <h2 class="section-title">What Miyora MD does</h2>
+  <div class="feature-grid">
+    <div class="feature-card">
+      <div class="ficon">
+        <svg class="ic" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+      </div>
+      <h3>Auto status view</h3>
+      <p>Quietly views your contacts' status updates the moment they're posted, so you never miss one.</p>
+    </div>
+    <div class="feature-card">
+      <div class="ficon">
+        <svg class="ic" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-4.35-9.5-8.5C.9 9 2.7 5.5 6.2 5.2c1.9-.2 3.6.8 4.6 2.3.9-1.5 2.6-2.5 4.6-2.3 3.5.3 5.3 3.8 3.7 7.3C19 16.65 12 21 12 21z"/></svg>
+      </div>
+      <h3>Auto status react</h3>
+      <p>Reacts to statuses with a set of emojis you choose, so you're never left on "seen" only.</p>
+    </div>
+    <div class="feature-card">
+      <div class="ficon">
+        <svg class="ic" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="10" r="1.6"/><path d="M21 16.5l-5.5-5.5-3 3L9 10.5l-6 6"/></svg>
+      </div>
+      <h3>View-once unlock</h3>
+      <p>Automatically reveals view-once photos and videos sent to you, saved right back into the chat.</p>
+    </div>
+    <div class="feature-card">
+      <div class="ficon">
+        <svg class="ic" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v6c0 5-3.4 8-7 9-3.6-1-7-4-7-9V6z"/></svg>
+      </div>
+      <h3>Flexible reply modes</h3>
+      <p>Switch between public, private, inbox-only, or groups-only — your bot, your rules.</p>
+    </div>
+    <div class="feature-card">
+      <div class="ficon">
+        <svg class="ic" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 0 0-14.9-4M4 12a8 8 0 0 0 14.9 4"/><polyline points="5 4 5 8 9 8"/><polyline points="19 20 19 16 15 16"/></svg>
+      </div>
+      <h3>Stays online</h3>
+      <p>Auto-reconnects if your session drops, with a duplicate-session guard so it never fights itself across hosts.</p>
+    </div>
+    <div class="feature-card">
+      <div class="ficon">
+        <svg class="ic" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+      </div>
+      <h3>Private by number</h3>
+      <p>Each WhatsApp number gets its own settings, locked behind a password only you receive.</p>
+    </div>
+    <div class="feature-card">
+      <div class="ficon">
+        <svg class="ic" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11a9 9 0 0 1 9 9"/><path d="M4 4a16 16 0 0 1 16 16"/><circle cx="5" cy="19" r="1.4"/></svg>
+      </div>
+      <h3>Newsletter tools</h3>
+      <p>Follows and reacts to channels automatically, keeping your presence active across WhatsApp.</p>
+    </div>
+    <div class="feature-card">
+      <div class="ficon">
+        <svg class="ic" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+      </div>
+      <h3>Modular commands</h3>
+      <p>Every command lives in its own file, so new features drop in without touching the core.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== OWNER ===================== -->
+<section class="section">
+  <p class="section-eyebrow">Built by</p>
+  <h2 class="section-title">The person behind Miyora MD</h2>
+  <div class="owner-card">
+    <div class="owner-avatar" aria-hidden="true">SD</div>
+    <div class="owner-info">
+      <p class="o-label">Owner & Developer — Miyora Labs</p>
+      <p class="o-name">Sasinda Denuwan</p>
+      <p class="o-sub">Builds and maintains Miyora MD — from the pairing flow to every command the bot runs. Passionate about pushing WhatsApp automation to the next level.</p>
+      <div class="owner-links">
+        <a href="#" target="_blank" rel="noopener">
+          <svg class="ic" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10v4a1 1 0 0 0 1 1h2l5 4V5L6 9H4a1 1 0 0 0-1 1z"/><path d="M17 8a4 4 0 0 1 0 8"/><path d="M20 5a8 8 0 0 1 0 14"/></svg>
+          WhatsApp Channel
+        </a>
+        <a href="#" target="_blank" rel="noopener">
+          <svg class="ic" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M2 20c0-3.3 3-6 7-6s7 2.7 7 6"/><circle cx="17" cy="9" r="2.4"/><path d="M23 20c0-2.6-2.1-4.8-5-5.6"/></svg>
+          Support Group
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== COMMENTS ===================== -->
+<section class="section" id="commentsSection">
+  <p class="section-eyebrow">Community</p>
+  <h2 class="section-title">Comments</h2>
+
+  <form class="comment-form" id="commentForm">
+    <div class="row">
+      <input type="text" id="commentName" maxlength="40" placeholder="Your name" required />
+    </div>
+    <textarea id="commentText" maxlength="800" placeholder="Say something about Miyora MD..." required></textarea>
+    <div class="form-footer">
+      <span class="hint">Be nice — comments are public.</span>
+      <button type="submit" class="btn primary">
+        <svg class="ic" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        Post comment
+      </button>
+    </div>
+  </form>
+
+  <div class="comment-list" id="commentList"></div>
+  <p class="comments-empty" id="commentsEmpty" style="display:none;">No comments yet — be the first to say hi 🌸</p>
+</section>
+
+<footer>
+  <span class="mark">
+    <svg class="ic" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="7" r="3"/><circle cx="17" cy="10.5" r="3"/><circle cx="15" cy="16" r="3"/><circle cx="9" cy="16" r="3"/><circle cx="7" cy="10.5" r="3"/></svg>
+  </span>
+  Miyora MD — your number stays linked until you log out from WhatsApp.
+</footer>
+
+<!-- ============ Live Helper Chat Widget ============ -->
+<style>
+  #lh-fab{
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    z-index: 90;
+    width: 58px; height: 58px;
+    border-radius: 50%;
+    background: linear-gradient(160deg, var(--sakura-deep), var(--sakura));
+    border: 1px solid rgba(216,163,255,0.5);
+    box-shadow: 0 10px 30px -8px rgba(122,43,255,0.7);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    color: #fff;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  #lh-fab:hover{ transform: translateY(-2px) scale(1.04); }
+  #lh-fab .lh-dot{
+    position: absolute;
+    top: 3px; right: 3px;
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    background: #4ade80;
+    border: 2px solid var(--ink);
+  }
+  #lh-fab svg{ width: 26px; height: 26px; }
+  #lh-fab .lh-close-ic{ display:none; }
+  #lh-fab.lh-open .lh-chat-ic{ display:none; }
+  #lh-fab.lh-open .lh-close-ic{ display:block; }
+
+  #lh-panel{
+    position: fixed;
+    right: 20px;
+    bottom: 90px;
+    z-index: 90;
+    width: min(340px, calc(100vw - 40px));
+    height: min(460px, calc(100vh - 140px));
+    background: linear-gradient(165deg, var(--ink-2), var(--ink) 130%);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    box-shadow: 0 24px 60px -16px rgba(0,0,0,0.65);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transform: translateY(14px) scale(0.97);
+    opacity: 0;
+    pointer-events: none;
+    transition: transform 0.18s ease, opacity 0.18s ease;
+  }
+  #lh-panel.lh-open{
+    transform: translateY(0) scale(1);
+    opacity: 1;
+    pointer-events: auto;
+  }
+  #lh-head{
+    display: flex; align-items: center; gap: 10px;
+    padding: 14px 16px;
+    background: rgba(122,43,255,0.16);
+    border-bottom: 1px solid var(--line);
+    flex-shrink: 0;
+  }
+  #lh-head .lh-avatar{
+    width: 32px; height: 32px;
+    border-radius: 10px;
+    background: linear-gradient(160deg, var(--ink-3), var(--ink-2));
+    border: 1px solid var(--line);
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+  #lh-head .lh-avatar img{ width: 100%; height: 100%; object-fit: cover; }
+  #lh-head .lh-title{ font-family: 'Unbounded', sans-serif; font-weight: 700; font-size: 11.5px; color: var(--paper); }
+  #lh-head .lh-sub{ font-family: 'Space Mono', monospace; font-size: 9px; color: var(--lantern-soft); display:flex; align-items:center; gap:5px; margin-top: 2px; }
+  #lh-head .lh-sub .dot{ width:5px; height:5px; border-radius:50%; background:#4ade80; }
+
+  #lh-body{
+    flex: 1;
+    overflow-y: auto;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .lh-msg{
+    max-width: 82%;
+    padding: 8px 11px;
+    border-radius: 13px;
+    font-size: 11.5px;
+    line-height: 1.45;
+    word-wrap: break-word;
+    white-space: pre-wrap;
+  }
+  .lh-msg.bot{
+    align-self: flex-start;
+    background: var(--ink-3);
+    border: 1px solid var(--line);
+    color: var(--paper);
+    border-bottom-left-radius: 3px;
+  }
+  .lh-msg.user{
+    align-self: flex-end;
+    background: linear-gradient(160deg, var(--sakura-deep), var(--sakura));
+    color: #fff;
+    border-bottom-right-radius: 3px;
+  }
+  .lh-msg.typing{ display:flex; gap:4px; align-items:center; padding: 11px 14px; }
+  .lh-msg.typing span{
+    width:6px; height:6px; border-radius:50%;
+    background: var(--muted);
+    animation: lh-bounce 1.2s infinite ease-in-out;
+  }
+  .lh-msg.typing span:nth-child(2){ animation-delay: 0.15s; }
+  .lh-msg.typing span:nth-child(3){ animation-delay: 0.3s; }
+  @keyframes lh-bounce{ 0%,60%,100%{ transform: translateY(0); opacity:0.5; } 30%{ transform: translateY(-4px); opacity:1; } }
+
+  #lh-form{
+    display: flex;
+    gap: 8px;
+    padding: 12px;
+    border-top: 1px solid var(--line);
+    flex-shrink: 0;
+  }
+  #lh-input{
+    flex: 1;
+    background: var(--ink-3);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 9px 11px;
+    color: var(--paper);
+    font-family: 'Inter', sans-serif;
+    font-size: 11.5px;
+    outline: none;
+    resize: none;
+  }
+  #lh-input:focus{ border-color: var(--sakura); }
+  #lh-send{
+    width: 40px; height: 40px;
+    border-radius: 12px;
+    border: none;
+    background: linear-gradient(160deg, var(--sakura-deep), var(--sakura));
+    color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  #lh-send:disabled{ opacity: 0.5; cursor: default; }
+
+  @media (max-width: 420px){
+    #lh-panel{ right: 12px; bottom: 84px; }
+    #lh-fab{ right: 14px; bottom: 14px; }
+  }
+</style>
+
+<button id="lh-fab" aria-label="Open live helper chat" aria-expanded="false">
+  <span class="lh-dot"></span>
+  <svg class="ic lh-chat-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+  <svg class="ic lh-close-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+</button>
+
+<div id="lh-panel" role="dialog" aria-label="Live helper chat">
+  <div id="lh-head">
+    <span class="lh-avatar"><img src="https://raw.githubusercontent.com/NimeshMihiranga-Neno/cartoon-web/main/18d7513834fe1dcc00b6807bb6174794.jpg" alt="" /></span>
+    <div>
+      <div class="lh-title">Miyora Live Helper</div>
+      <div class="lh-sub"><span class="dot"></span> Online now</div>
+    </div>
+  </div>
+  <div id="lh-body"></div>
+  <form id="lh-form">
+    <textarea id="lh-input" rows="1" placeholder="Ask me anything about Miyora MD..." autocomplete="off"></textarea>
+    <button id="lh-send" type="submit" aria-label="Send">
+      <svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 3 18 9-18 9V3z"/></svg>
+    </button>
+  </form>
+</div>
+
+<script>
+(function(){
+  const fab = document.getElementById('lh-fab');
+  const panel = document.getElementById('lh-panel');
+  const body = document.getElementById('lh-body');
+  const form = document.getElementById('lh-form');
+  const input = document.getElementById('lh-input');
+  const sendBtn = document.getElementById('lh-send');
+
+  let history = [];
+  let opened = false;
+
+  function addMsg(role, text){
+    const div = document.createElement('div');
+    div.className = 'lh-msg ' + (role === 'user' ? 'user' : 'bot');
+    div.textContent = text;
+    body.appendChild(div);
+    body.scrollTop = body.scrollHeight;
+    return div;
+  }
+
+  function showTyping(){
+    const div = document.createElement('div');
+    div.className = 'lh-msg bot typing';
+    div.innerHTML = '<span></span><span></span><span></span>';
+    body.appendChild(div);
+    body.scrollTop = body.scrollHeight;
+    return div;
+  }
+
+  function toggle(){
+    opened = !opened;
+    fab.classList.toggle('lh-open', opened);
+    fab.setAttribute('aria-expanded', String(opened));
+    panel.classList.toggle('lh-open', opened);
+    if(opened && body.children.length === 0){
+      addMsg('bot', "Hey! I'm Miyora's live helper 🌸 Ask me anything about the bot, commands, setup, or anything else on this site.");
+    }
+    if(opened) input.focus();
+  }
+
+  fab.addEventListener('click', toggle);
+
+  input.addEventListener('input', () => {
+    input.style.height = 'auto';
+    input.style.height = Math.min(input.scrollHeight, 90) + 'px';
+  });
+  input.addEventListener('keydown', (e) => {
+    if(e.key === 'Enter' && !e.shiftKey){
+      e.preventDefault();
+      form.requestSubmit();
+    }
+  });
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const text = input.value.trim();
+    if(!text) return;
+
+    addMsg('user', text);
+    history.push({ role: 'user', content: text });
+    input.value = '';
+    input.style.height = 'auto';
+    sendBtn.disabled = true;
+
+    const typingEl = showTyping();
+
+    try {
+      const res = await fetch('/code/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ history })
+      });
+      const data = await res.json();
+      typingEl.remove();
+
+      if(data && data.ok && data.reply){
+        addMsg('bot', data.reply);
+        history.push({ role: 'assistant', content: data.reply });
+        if(history.length > 10) history = history.slice(-10);
+      } else {
+        addMsg('bot', "Sorry, couldn't reach the helper right now. Try again in a bit.");
+      }
+    } catch(err){
+      typingEl.remove();
+      addMsg('bot', "Connection issue — please try again.");
+    }
+
+    sendBtn.disabled = false;
+  });
+})();
+</script>
+<!-- ============ /Live Helper Chat Widget ============ -->
+
+<script>
+(function(){
+  // ---------- Ambient falling petals ----------
+  const canvas = document.getElementById('petals');
+  const ctx = canvas.getContext('2d');
+  let petals = [];
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function resize(){
+    canvas.width = window.innerWidth;
+    canvas.height = document.documentElement.scrollHeight;
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  function makePetal(){
+    return {
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      size: 6 + Math.random() * 9,
+      speed: 0.35 + Math.random() * 0.8,
+      drift: (Math.random() - 0.5) * 0.5,
+      rot: Math.random() * Math.PI * 2,
+      rotSpeed: (Math.random() - 0.5) * 0.018,
+      opacity: 0.3 + Math.random() * 0.35,
+      gold: Math.random() < 0.22
+    };
+  }
+
+  const PETAL_COUNT = reduceMotion ? 0 : (window.innerWidth < 600 ? 14 : 24);
+  for(let i = 0; i < PETAL_COUNT; i++) petals.push(makePetal());
+
+  function drawPetal(p){
+    ctx.save();
+    ctx.translate(p.x, p.y);
+    ctx.rotate(p.rot);
+    ctx.globalAlpha = p.opacity;
+    const grad = ctx.createLinearGradient(-p.size, -p.size, p.size, p.size);
+    if(p.gold){
+      grad.addColorStop(0, '#e9d4ff');
+      grad.addColorStop(1, '#d8a3ff');
+    } else {
+      grad.addColorStop(0, '#b06bff');
+      grad.addColorStop(1, '#7a2bff');
+    }
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.moveTo(0, -p.size);
+    ctx.quadraticCurveTo(p.size, -p.size * 0.3, 0, p.size);
+    ctx.quadraticCurveTo(-p.size, -p.size * 0.3, 0, -p.size);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function tick(){
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    for(const p of petals){
+      p.y += p.speed;
+      p.x += p.drift;
+      p.rot += p.rotSpeed;
+      if(p.y > canvas.height + 20){
+        p.y = -20;
+        p.x = Math.random() * canvas.width;
+      }
+      drawPetal(p);
+    }
+    requestAnimationFrame(tick);
+  }
+  if(!reduceMotion) requestAnimationFrame(tick);
+
+  // ---------- Hamburger nav menu ----------
+  const burgerBtn = document.getElementById('burgerBtn');
+  const navMenu = document.getElementById('navMenu');
+  const overlay = document.getElementById('overlay');
+
+  function openMenu(){
+    burgerBtn.classList.add('open');
+    burgerBtn.setAttribute('aria-expanded', 'true');
+    navMenu.classList.add('open');
+    overlay.classList.add('open');
+  }
+  function closeMenu(){
+    burgerBtn.classList.remove('open');
+    burgerBtn.setAttribute('aria-expanded', 'false');
+    navMenu.classList.remove('open');
+    overlay.classList.remove('open');
+  }
+  function toggleMenu(){
+    navMenu.classList.contains('open') ? closeMenu() : openMenu();
+  }
+
+  burgerBtn.addEventListener('click', toggleMenu);
+  overlay.addEventListener('click', closeMenu);
+  document.addEventListener('keydown', (e) => {
+    if(e.key === 'Escape') closeMenu();
+  });
+
+  // ---------- Live connected-bots counter ----------
+  const botCountEl = document.getElementById('botCount');
+  const liveDotEl = document.getElementById('liveDot');
+
+  async function refreshBotCount(){
+    try{
+      const res = await fetch('/code/api/sessions', { cache: 'no-store' });
+      const data = await res.json();
+      if(!data || data.ok === false) throw new Error('bad response');
+      const count = Array.isArray(data.sessions) ? data.sessions.length : 0;
+      botCountEl.classList.remove('skeleton');
+      botCountEl.textContent = count;
+      liveDotEl.classList.remove('offline');
+    } catch(err){
+      botCountEl.classList.remove('skeleton');
+      botCountEl.textContent = '—';
+      liveDotEl.classList.add('offline');
+    }
+  }
+
+  refreshBotCount();
+  setInterval(refreshBotCount, 15000);
+
+  // ---------- Comment system ----------
+  const REACTION_EMOJIS = ['😂', '❤️', '👍', '✊', '👎'];
+  const commentForm = document.getElementById('commentForm');
+  const commentNameInput = document.getElementById('commentName');
+  const commentTextInput = document.getElementById('commentText');
+  const commentList = document.getElementById('commentList');
+  const commentsEmpty = document.getElementById('commentsEmpty');
+
+  function escapeHtml(str){
+    return String(str || '').replace(/[&<>"']/g, (c) => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[c]));
+  }
+
+  function timeAgo(dateStr){
+    const then = new Date(dateStr).getTime();
+    const diffSec = Math.max(0, Math.floor((Date.now() - then) / 1000));
+    if(diffSec < 60) return 'just now';
+    const mins = Math.floor(diffSec / 60);
+    if(mins < 60) return `${mins}m ago`;
+    const hrs = Math.floor(mins / 60);
+    if(hrs < 24) return `${hrs}h ago`;
+    const days = Math.floor(hrs / 24);
+    if(days < 30) return `${days}d ago`;
+    const months = Math.floor(days / 30);
+    if(months < 12) return `${months}mo ago`;
+    return `${Math.floor(months / 12)}y ago`;
+  }
+
+  function initials(name){
+    return (name || '?').trim().charAt(0).toUpperCase();
+  }
+
+  function renderComment(c){
+    const wrap = document.createElement('div');
+    wrap.className = 'comment-item';
+    wrap.dataset.id = c.id;
+
+    const reactionBtns = REACTION_EMOJIS.map(emo => `
+      <button type="button" class="reaction-btn" data-emoji="${emo}">
+        <span>${emo}</span><span class="count">${(c.reactions && c.reactions[emo]) || 0}</span>
+      </button>
+    `).join('');
+
+    const adminReplyHtml = c.adminReply ? `
+      <div class="admin-reply">
+        <div class="admin-reply-avatar"><img src="https://raw.githubusercontent.com/NimeshMihiranga-Neno/cartoon-web/main/18d7513834fe1dcc00b6807bb6174794.jpg" alt="" /></div>
+        <div class="admin-reply-content">
+          <div class="admin-reply-head">
+            <span class="admin-badge">@MIYORA MD · Creator</span>
+            <span class="admin-reply-time">${timeAgo(c.adminReply.createdAt)}</span>
+          </div>
+          <p class="admin-reply-text">${escapeHtml(c.adminReply.text)}</p>
+          ${c.heartedByAdmin ? `
+            <span class="creator-heart">
+              <svg width="13" height="13" viewBox="0 0 24 24"><path d="M12 21s-7-4.35-9.5-8.5C.9 9 2.7 5.5 6.2 5.2c1.9-.2 3.6.8 4.6 2.3.9-1.5 2.6-2.5 4.6-2.3 3.5.3 5.3 3.8 3.7 7.3C19 16.65 12 21 12 21z"/></svg>
+              Hearted by creator
+            </span>` : ''}
+        </div>
+      </div>` : `
+      <button type="button" class="reply-toggle">Reply as admin</button>
+      <div class="admin-reply-box">
+        <input type="password" class="reply-password" placeholder="Admin password" />
+        <textarea class="reply-text" placeholder="Write the official reply..."></textarea>
+        <div class="row">
+          <button type="button" class="reply-submit">Post reply</button>
+        </div>
+        <span class="error-msg">Incorrect password.</span>
+      </div>`;
+
+    wrap.innerHTML = `
+      <div class="comment-avatar">${initials(c.name)}</div>
+      <div class="comment-body">
+        <div class="comment-head">
+          <span class="comment-name">${escapeHtml(c.name)}</span>
+          <span class="comment-time">${timeAgo(c.createdAt)}</span>
+        </div>
+        <p class="comment-text">${escapeHtml(c.text)}</p>
+        <div class="reaction-row">${reactionBtns}</div>
+        ${adminReplyHtml}
+      </div>
+    `;
+
+    wrap.querySelectorAll('.reaction-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const emoji = btn.dataset.emoji;
+        const countEl = btn.querySelector('.count');
+        countEl.textContent = (parseInt(countEl.textContent, 10) || 0) + 1;
+        btn.disabled = true;
+        try {
+          await fetch(`/code/api/comments/${c.id}/react`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ emoji })
+          });
+        } catch(e) {}
+        btn.disabled = false;
+      });
+    });
+
+    const replyToggle = wrap.querySelector('.reply-toggle');
+    const replyBox = wrap.querySelector('.admin-reply-box');
+    if(replyToggle && replyBox){
+      replyToggle.addEventListener('click', () => replyBox.classList.toggle('open'));
+      const submitBtn = replyBox.querySelector('.reply-submit');
+      const pwInput = replyBox.querySelector('.reply-password');
+      const textInput = replyBox.querySelector('.reply-text');
+      const errorMsg = replyBox.querySelector('.error-msg');
+      submitBtn.addEventListener('click', async () => {
+        const password = pwInput.value;
+        const text = textInput.value.trim();
+        errorMsg.style.display = 'none';
+        if(!text) return;
+        submitBtn.disabled = true;
+        try {
+          const res = await fetch(`/code/api/comments/${c.id}/reply`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ password, text })
+          });
+          const data = await res.json();
+          if(data && data.ok && data.comment){
+            const fresh = renderComment(data.comment);
+            wrap.replaceWith(fresh);
+          } else {
+            errorMsg.style.display = 'block';
+          }
+        } catch(e){
+          errorMsg.style.display = 'block';
+        }
+        submitBtn.disabled = false;
+      });
+    }
+
+    return wrap;
+  }
+
+  async function loadComments(){
+    try {
+      const res = await fetch('/code/api/comments', { cache: 'no-store' });
+      const data = await res.json();
+      if(!data || !data.ok) throw new Error('bad response');
+      commentList.innerHTML = '';
+      if(!data.comments.length){
+        commentsEmpty.style.display = 'block';
+      } else {
+        commentsEmpty.style.display = 'none';
+        data.comments.forEach(c => commentList.appendChild(renderComment(c)));
+      }
+    } catch(err){
+      commentsEmpty.textContent = 'Could not load comments right now.';
+      commentsEmpty.style.display = 'block';
+    }
+  }
+
+  if(commentForm){
+    commentForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const name = commentNameInput.value.trim();
+      const text = commentTextInput.value.trim();
+      if(!name || !text) return;
+      const submitBtn = commentForm.querySelector('button[type="submit"]');
+      submitBtn.disabled = true;
+      try {
+        const res = await fetch('/code/api/comments', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, text })
+        });
+        const data = await res.json();
+        if(data && data.ok && data.comment){
+          commentsEmpty.style.display = 'none';
+          commentList.insertBefore(renderComment(data.comment), commentList.firstChild);
+          commentTextInput.value = '';
+        }
+      } catch(e) {}
+      submitBtn.disabled = false;
+    });
+  }
+
+  loadComments();
+})();
+</script>
+
+</body>
+</html>

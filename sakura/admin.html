@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sakura XD — Super Admin</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌸</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#1c1220; --surface:#271a2a; --surface-2:#33223a; --line:#4a3550;
+    --text:#f4ecf2; --muted:#b39ab0; --pink:#e8628f; --pink-soft:#5a2f3d;
+    --gold:#e7b24a; --err:#e4665f; --ok:#8fbf9a; --blue:#7aa8d6;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    min-height:100vh;
+    background:
+      radial-gradient(ellipse 60% 40% at 15% 0%, #3a2440 0%, transparent 60%),
+      radial-gradient(ellipse 50% 40% at 100% 20%, #2c1830 0%, transparent 55%),
+      var(--bg);
+    color:var(--text);
+    font-family:'Manrope',sans-serif;
+  }
+  .wrap{max-width:1100px;margin:0 auto;padding:32px 20px 80px;}
+  .brand{display:flex;align-items:baseline;gap:10px;margin-bottom:28px;}
+  .brand .bloom{font-size:26px;line-height:1;}
+  .brand h1{font-family:'Shippori Mincho',serif;font-weight:700;font-size:24px;margin:0;}
+  .brand span.tag{color:var(--muted);font-size:14px;}
+
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:22px;margin-bottom:18px;}
+  .card h2{font-family:'Shippori Mincho',serif;font-weight:500;font-size:17px;margin:0 0 14px;}
+
+  label{display:block;font-size:12.5px;color:var(--muted);margin:10px 0 5px;}
+  input[type=text],input[type=password],input[type=number]{
+    width:100%;background:var(--surface-2);border:1px solid var(--line);color:var(--text);
+    border-radius:9px;padding:10px 12px;font-size:14px;font-family:inherit;outline:none;
+  }
+  input:focus{border-color:var(--pink);}
+  input:disabled{opacity:.6;}
+
+  button{font-family:inherit;font-size:13.5px;font-weight:600;border:none;border-radius:8px;
+    padding:9px 15px;cursor:pointer;transition:filter .15s,opacity .15s;white-space:nowrap;}
+  button:hover{filter:brightness(1.1);}
+  button:disabled{opacity:.5;cursor:not-allowed;}
+  .btn-primary{background:var(--pink);color:#241019;}
+  .btn-gold{background:var(--gold);color:#2a1d05;}
+  .btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--line);}
+  .btn-danger{background:var(--err);color:#2a0a08;}
+  .btn-sm{padding:6px 10px;font-size:12px;}
+  .btn-full{width:100%;}
+
+  .row{display:flex;gap:10px;flex-wrap:wrap;}
+  .row > *{flex:1;min-width:120px;}
+
+  .error{color:var(--err);font-size:13px;margin-top:10px;display:none;}
+  .error.show{display:block;}
+  .notice{color:var(--ok);font-size:13px;margin-top:10px;display:none;}
+  .notice.show{display:block;}
+
+  #view-login{display:flex;min-height:100vh;align-items:center;justify-content:center;}
+  #view-login .wrap{max-width:400px;width:100%;padding:0 20px;}
+  #view-dash{display:none;}
+
+  .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;gap:10px;flex-wrap:wrap;}
+  .topbar .sess{font-size:13px;color:var(--muted);}
+
+  .tabs{display:flex;gap:6px;margin-bottom:18px;flex-wrap:wrap;}
+  .tab-btn{background:var(--surface);border:1px solid var(--line);color:var(--muted);}
+  .tab-btn.on{background:var(--pink-soft);border-color:var(--pink);color:var(--text);}
+  .tab-panel{display:none;}
+  .tab-panel.on{display:block;}
+
+  .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;}
+  .stat-box{background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:14px;}
+  .stat-box .num{font-family:'Shippori Mincho',serif;font-size:24px;font-weight:700;color:var(--gold);}
+  .stat-box .lbl{color:var(--muted);font-size:12.5px;margin-top:2px;}
+
+  table{width:100%;border-collapse:collapse;font-size:13px;}
+  thead th{text-align:left;color:var(--muted);font-weight:600;font-size:11.5px;
+    text-transform:uppercase;letter-spacing:.4px;padding:8px 6px;border-bottom:1px solid var(--line);}
+  tbody td{padding:9px 6px;border-bottom:1px solid var(--line);vertical-align:middle;}
+  tbody tr:last-child td{border-bottom:none;}
+  .mono{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;}
+  .table-wrap{overflow-x:auto;}
+  .empty{color:var(--muted);font-size:13.5px;text-align:center;padding:24px 0;}
+  .badge{display:inline-block;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600;}
+  .badge.active{background:rgba(143,191,154,.15);color:var(--ok);}
+  .badge.inactive{background:rgba(179,154,176,.15);color:var(--muted);}
+  .badge.expiring{background:rgba(228,102,95,.15);color:var(--err);}
+
+  .actions-cell{display:flex;gap:6px;flex-wrap:wrap;}
+  .inline-num{width:70px;padding:6px 8px;font-size:12.5px;}
+
+  .pager{display:flex;justify-content:space-between;align-items:center;margin-top:14px;font-size:13px;color:var(--muted);}
+  .pager .btns{display:flex;gap:8px;}
+
+  .search-row{display:flex;gap:8px;margin-bottom:14px;}
+  .search-row input{flex:1;}
+
+  .emoji-grid{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;}
+  .emoji-pick{background:var(--surface-2);border:1px solid var(--line);border-radius:8px;
+    width:36px;height:36px;font-size:16px;display:flex;align-items:center;justify-content:center;
+    cursor:pointer;padding:0;}
+  .emoji-pick.on{border-color:var(--pink);background:var(--pink-soft);}
+
+  .spinner{width:14px;height:14px;border-radius:50%;border:2px solid rgba(255,255,255,.3);
+    border-top-color:#fff;display:inline-block;animation:spin .7s linear infinite;vertical-align:-2px;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="view-login">
+  <div class="wrap">
+    <div class="brand">
+      <span class="bloom">🌸</span>
+      <h1>Sakura XD</h1>
+      <span class="tag">— super admin</span>
+    </div>
+    <div class="card">
+      <h2>Admin access</h2>
+      <label>Username</label>
+      <input type="text" value="admin" disabled>
+      <label for="in-pass">Password</label>
+      <input id="in-pass" type="password" placeholder="Admin password" autocomplete="off">
+      <button class="btn-primary btn-full" id="btn-login" style="margin-top:16px;">Log in</button>
+      <div class="error" id="login-error"></div>
+    </div>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="view-dash">
+  <div class="wrap">
+    <div class="topbar">
+      <div class="brand" style="margin-bottom:0;">
+        <span class="bloom">🌸</span>
+        <h1>Sakura XD</h1>
+        <span class="tag">— super admin</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <span class="sess" id="sess-expiry"></span>
+        <button class="btn-ghost btn-sm" id="btn-logout">Log out</button>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab-btn on" data-tab="overview">Overview</button>
+      <button class="tab-btn" data-tab="wallets">Wallets</button>
+      <button class="tab-btn" data-tab="channels">Channels</button>
+      <button class="tab-btn" data-tab="sessions">Sessions</button>
+    </div>
+
+    <!-- OVERVIEW -->
+    <div class="tab-panel on" id="tab-overview">
+      <div class="card">
+        <h2>Stats</h2>
+        <div class="stats-grid" id="stats-grid">
+          <div class="empty">Loading…</div>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Broadcast coins</h2>
+        <div class="row">
+          <div>
+            <label for="bc-amount">Amount per wallet</label>
+            <input id="bc-amount" type="number" min="1" value="5">
+          </div>
+          <div style="display:flex;align-items:flex-end;">
+            <button class="btn-gold btn-full" id="btn-broadcast">Give to everyone</button>
+          </div>
+        </div>
+        <div class="notice" id="bc-notice"></div>
+        <div class="error" id="bc-error"></div>
+      </div>
+    </div>
+
+    <!-- WALLETS -->
+    <div class="tab-panel" id="tab-wallets">
+      <div class="card">
+        <h2>Wallets</h2>
+        <div class="search-row">
+          <input id="wallet-search" type="text" placeholder="Search by number…">
+          <button class="btn-ghost" id="btn-wallet-search">Search</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Number</th><th>Coins</th><th>Last claim</th><th>Actions</th></tr></thead>
+            <tbody id="wallets-body"><tr><td colspan="4" class="empty">Loading…</td></tr></tbody>
+          </table>
+        </div>
+        <div class="pager">
+          <span id="wallets-pageinfo"></span>
+          <div class="btns">
+            <button class="btn-ghost btn-sm" id="wallets-prev">◀ Prev</button>
+            <button class="btn-ghost btn-sm" id="wallets-next">Next ▶</button>
+          </div>
+        </div>
+        <div class="error" id="wallets-error"></div>
+      </div>
+    </div>
+
+    <!-- CHANNELS -->
+    <div class="tab-panel" id="tab-channels">
+      <div class="card">
+        <h2>Add channel (admin-granted, bypasses coins)</h2>
+        <div class="row">
+          <div>
+            <label for="ch-number">Owner number</label>
+            <input id="ch-number" type="text" placeholder="94771234567">
+          </div>
+          <div>
+            <label for="ch-jid">Channel JID</label>
+            <input id="ch-jid" type="text" placeholder="12345678901234@newsletter">
+          </div>
+          <div>
+            <label for="ch-days">Days</label>
+            <input id="ch-days" type="number" min="1" max="365" value="30">
+          </div>
+        </div>
+        <label>Emojis</label>
+        <div class="emoji-grid" id="ch-emoji-grid"></div>
+        <button class="btn-primary" id="btn-ch-add" style="margin-top:14px;">Add channel</button>
+        <div class="notice" id="ch-add-notice"></div>
+        <div class="error" id="ch-add-error"></div>
+      </div>
+
+      <div class="card">
+        <h2>All channels</h2>
+        <div class="search-row">
+          <input id="channels-search" type="text" placeholder="Search by owner number…">
+          <button class="btn-ghost" id="btn-channels-search">Search</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>JID</th><th>Owner</th><th>Emojis</th><th>Expires</th><th>Actions</th></tr></thead>
+            <tbody id="channels-body"><tr><td colspan="5" class="empty">Loading…</td></tr></tbody>
+          </table>
+        </div>
+        <div class="pager">
+          <span id="channels-pageinfo"></span>
+          <div class="btns">
+            <button class="btn-ghost btn-sm" id="channels-prev">◀ Prev</button>
+            <button class="btn-ghost btn-sm" id="channels-next">Next ▶</button>
+          </div>
+        </div>
+        <div class="error" id="channels-error"></div>
+      </div>
+    </div>
+
+    <!-- SESSIONS -->
+    <div class="tab-panel" id="tab-sessions">
+      <div class="card">
+        <h2>Bot sessions</h2>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Number</th><th>Shard</th><th>Updated</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="sessions-body"><tr><td colspan="5" class="empty">Loading…</td></tr></tbody>
+          </table>
+        </div>
+        <div class="error" id="sessions-error"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = '/code/api/admin';
+const STORE_KEY = 'sakura_admin_token';
+const $ = (id) => document.getElementById(id);
+
+let token = null;
+let tokenExpiresAt = null;
+
+const EMOJI_OPTIONS = ['❤️','🔥','😍','😂','👍','🎉','✨','🌸','💯','😮','🙏','💖'];
+let chSelectedEmojis = [];
+
+function showError(el, msg){ el.textContent = msg; el.classList.add('show'); }
+function clearError(el){ el.textContent=''; el.classList.remove('show'); }
+function showNotice(el, msg){ el.textContent = msg; el.classList.add('show'); }
+function clearNotice(el){ el.textContent=''; el.classList.remove('show'); }
+
+function setBusy(btn, busy, label){
+  btn.disabled = busy;
+  btn.dataset.label = btn.dataset.label || btn.textContent;
+  btn.innerHTML = busy ? '<span class="spinner"></span>' : (label || btn.dataset.label);
+}
+
+async function api(path, { method = 'GET', body, confirm = false } = {}) {
+  const headers = { 'Content-Type': 'application/json' };
+  if (token) headers['x-admin-token'] = token;
+  if (confirm) headers['x-confirm'] = 'yes';
+  const opts = { method, headers };
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch(API + path, opts);
+  const data = await res.json().catch(() => ({}));
+  if (res.status === 401) { doLogout(); throw new Error('Session expired — please log in again.'); }
+  if (!res.ok || data.ok === false) {
+    const err = new Error(data.error || 'Request failed');
+    err.data = data;
+    throw err;
+  }
+  return data;
+}
+
+function persistToken(){ localStorage.setItem(STORE_KEY, JSON.stringify({ token, tokenExpiresAt })); }
+function loadStoredToken(){
+  try { return JSON.parse(localStorage.getItem(STORE_KEY) || 'null'); } catch(e){ return null; }
+}
+function clearStoredToken(){ localStorage.removeItem(STORE_KEY); }
+
+function showDash(){
+  $('view-login').style.display = 'none';
+  $('view-dash').style.display = 'block';
+  loadOverview();
+  loadWallets();
+  loadChannels();
+  loadSessions();
+  tickExpiry();
+}
+
+function doLogout(){
+  token = null; tokenExpiresAt = null;
+  clearStoredToken();
+  $('view-dash').style.display = 'none';
+  $('view-login').style.display = 'flex';
+  $('in-pass').value = '';
+}
+
+$('btn-login').addEventListener('click', async () => {
+  clearError($('login-error'));
+  const password = $('in-pass').value.trim();
+  if (!password) return showError($('login-error'), 'Enter the admin password.');
+  setBusy($('btn-login'), true);
+  try {
+    const data = await api('/login', { method: 'POST', body: { key: password } });
+    token = data.token;
+    tokenExpiresAt = Date.now() + (data.expiresIn || 0);
+    persistToken();
+    showDash();
+  } catch (e) {
+    showError($('login-error'), e.data?.error || e.message);
+  } finally {
+    setBusy($('btn-login'), false, 'Log in');
+  }
+});
+$('in-pass').addEventListener('keydown', (ev) => { if (ev.key === 'Enter') $('btn-login').click(); });
+
+$('btn-logout').addEventListener('click', async () => {
+  try { await api('/logout', { method: 'POST' }); } catch(e){}
+  doLogout();
+});
+
+function tickExpiry(){
+  if (!tokenExpiresAt) return;
+  const remaining = tokenExpiresAt - Date.now();
+  if (remaining <= 0) { $('sess-expiry').textContent = 'Session expired'; doLogout(); return; }
+  const h = Math.floor(remaining / 3600000);
+  const m = Math.floor((remaining % 3600000) / 60000);
+  $('sess-expiry').textContent = `Session expires in ${h}h ${m}m`;
+  setTimeout(tickExpiry, 60000);
+}
+
+// ---------- Tabs ----------
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('on'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('on'));
+    btn.classList.add('on');
+    $('tab-' + btn.dataset.tab).classList.add('on');
+  });
+});
+
+// ---------- Overview ----------
+async function loadOverview(){
+  try {
+    const data = await api('/stats');
+    const s = data.stats;
+    $('stats-grid').innerHTML = `
+      <div class="stat-box"><div class="num">${s.totalWallets}</div><div class="lbl">Wallets</div></div>
+      <div class="stat-box"><div class="num">${s.totalCoinsInCirculation}</div><div class="lbl">Coins in circulation</div></div>
+      <div class="stat-box"><div class="num">${s.activeChannels}</div><div class="lbl">Active channels</div></div>
+      <div class="stat-box"><div class="num">${s.expiredChannels}</div><div class="lbl">Expired channels</div></div>
+      <div class="stat-box"><div class="num">${s.totalSessions}</div><div class="lbl">Saved sessions</div></div>
+      <div class="stat-box"><div class="num">${s.activeSockets}</div><div class="lbl">Active sockets</div></div>
+      <div class="stat-box"><div class="num">${s.numbersCount}</div><div class="lbl">Numbers</div></div>
+      <div class="stat-box"><div class="num">${Math.floor(s.uptimeSec/60)}m</div><div class="lbl">Uptime</div></div>
+    `;
+  } catch (e) {
+    $('stats-grid').innerHTML = `<div class="empty">${e.message}</div>`;
+  }
+}
+
+$('btn-broadcast').addEventListener('click', async () => {
+  clearNotice($('bc-notice')); clearError($('bc-error'));
+  const amount = Number($('bc-amount').value);
+  if (!Number.isFinite(amount) || amount <= 0) return showError($('bc-error'), 'Enter a valid amount.');
+  if (!confirm(`Give ${amount} coins to EVERY wallet?`)) return;
+  setBusy($('btn-broadcast'), true);
+  try {
+    const data = await api('/coins/broadcast', { method: 'POST', body: { amount }, confirm: true });
+    showNotice($('bc-notice'), `Gave ${data.amountPerUser} coins to ${data.modified} wallet(s).`);
+    loadOverview(); loadWallets();
+  } catch (e) {
+    showError($('bc-error'), e.data?.error || e.message);
+  } finally {
+    setBusy($('btn-broadcast'), false, 'Give to everyone');
+  }
+});
+
+// ---------- Wallets ----------
+let walletsPage = 1;
+const WALLETS_LIMIT = 20;
+
+async function loadWallets(){
+  clearError($('wallets-error'));
+  $('wallets-body').innerHTML = '<tr><td colspan="4" class="empty">Loading…</td></tr>';
+  try {
+    const search = $('wallet-search').value.trim();
+    const q = new URLSearchParams({ page: walletsPage, limit: WALLETS_LIMIT, search }).toString();
+    const data = await api('/wallets?' + q);
+    if (!data.wallets.length) {
+      $('wallets-body').innerHTML = '<tr><td colspan="4" class="empty">No wallets found.</td></tr>';
+    } else {
+      $('wallets-body').innerHTML = data.wallets.map(w => `
+        <tr data-number="${w.number}">
+          <td class="mono">${w.number}</td>
+          <td>${w.coins}</td>
+          <td>${w.lastDailyClaimAt ? new Date(w.lastDailyClaimAt).toLocaleString() : '—'}</td>
+          <td>
+            <div class="actions-cell">
+              <input type="number" class="inline-num" placeholder="amt" value="10">
+              <button class="btn-gold btn-sm" data-act="give">Give</button>
+              <button class="btn-ghost btn-sm" data-act="set">Set</button>
+              <button class="btn-danger btn-sm" data-act="deduct">Deduct</button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+    }
+    $('wallets-pageinfo').textContent = `Page ${data.page} of ${data.pages || 1} · ${data.total} total`;
+  } catch (e) {
+    showError($('wallets-error'), e.message);
+  }
+}
+
+$('btn-wallet-search').addEventListener('click', () => { walletsPage = 1; loadWallets(); });
+$('wallet-search').addEventListener('keydown', (ev) => { if (ev.key === 'Enter') { walletsPage = 1; loadWallets(); } });
+$('wallets-prev').addEventListener('click', () => { if (walletsPage > 1) { walletsPage--; loadWallets(); } });
+$('wallets-next').addEventListener('click', () => { walletsPage++; loadWallets(); });
+
+$('wallets-body').addEventListener('click', async (ev) => {
+  const btn = ev.target.closest('button[data-act]');
+  if (!btn) return;
+  const row = btn.closest('tr');
+  const number = row.dataset.number;
+  const amount = Number(row.querySelector('.inline-num').value);
+  if (!Number.isFinite(amount) || amount <= 0) return alert('Enter a valid amount.');
+  const act = btn.dataset.act;
+  const endpoint = act === 'give' ? '/coins/give' : act === 'set' ? '/coins/set' : '/coins/deduct';
+  const verb = act === 'give' ? 'Give' : act === 'set' ? 'Set' : 'Deduct';
+  if (!confirm(`${verb} ${amount} coins ${act === 'set' ? 'for' : act === 'give' ? 'to' : 'from'} ${number}?`)) return;
+  setBusy(btn, true);
+  try {
+    await api(endpoint, { method: 'POST', body: { number, amount }, confirm: true });
+    loadWallets(); loadOverview();
+  } catch (e) {
+    alert(e.data?.error || e.message);
+  } finally {
+    setBusy(btn, false, verb);
+  }
+});
+
+// ---------- Channels ----------
+let channelsPage = 1;
+const CHANNELS_LIMIT = 30;
+
+EMOJI_OPTIONS.forEach(e => {
+  const b = document.createElement('button');
+  b.type = 'button'; b.className = 'emoji-pick'; b.textContent = e;
+  b.addEventListener('click', () => {
+    const i = chSelectedEmojis.indexOf(e);
+    if (i === -1) chSelectedEmojis.push(e); else chSelectedEmojis.splice(i, 1);
+    b.classList.toggle('on');
+  });
+  $('ch-emoji-grid').appendChild(b);
+});
+
+$('btn-ch-add').addEventListener('click', async () => {
+  clearError($('ch-add-error')); clearNotice($('ch-add-notice'));
+  const number = $('ch-number').value.trim();
+  const jid = $('ch-jid').value.trim();
+  const days = Math.max(1, Math.min(365, parseInt($('ch-days').value || '30', 10)));
+  if (!number) return showError($('ch-add-error'), 'Owner number required.');
+  if (!jid.endsWith('@newsletter')) return showError($('ch-add-error'), 'JID must end with @newsletter.');
+  if (!chSelectedEmojis.length) return showError($('ch-add-error'), 'Pick at least one emoji.');
+  setBusy($('btn-ch-add'), true);
+  try {
+    await api('/channels/add', { method: 'POST', body: { number, jid, emojis: chSelectedEmojis, days }, confirm: true });
+    showNotice($('ch-add-notice'), `${jid} added for ${days} day(s).`);
+    $('ch-number').value = ''; $('ch-jid').value = '';
+    chSelectedEmojis = [];
+    document.querySelectorAll('#ch-emoji-grid .emoji-pick.on').forEach(b => b.classList.remove('on'));
+    loadChannels(); loadOverview();
+  } catch (e) {
+    showError($('ch-add-error'), e.data?.error || e.message);
+  } finally {
+    setBusy($('btn-ch-add'), false, 'Add channel');
+  }
+});
+
+function formatExpiry(expiresAt){
+  const remaining = new Date(expiresAt).getTime() - Date.now();
+  if (remaining <= 0) return { text: 'Expired', cls: 'expiring' };
+  const days = Math.floor(remaining / 86400000);
+  const soon = remaining < 86400000;
+  return { text: days > 0 ? `${days}d left` : 'Expiring soon', cls: soon ? 'expiring' : 'active' };
+}
+
+async function loadChannels(){
+  clearError($('channels-error'));
+  $('channels-body').innerHTML = '<tr><td colspan="5" class="empty">Loading…</td></tr>';
+  try {
+    const search = $('channels-search').value.trim();
+    const q = new URLSearchParams({ page: channelsPage, limit: CHANNELS_LIMIT, search }).toString();
+    const data = await api('/channels?' + q);
+    if (!data.channels.length) {
+      $('channels-body').innerHTML = '<tr><td colspan="5" class="empty">No channels found.</td></tr>';
+    } else {
+      $('channels-body').innerHTML = data.channels.map(c => {
+        const exp = formatExpiry(c.expiresAt);
+        return `
+        <tr data-jid="${c.jid}">
+          <td class="mono">${c.jid}</td>
+          <td class="mono">${c.number}</td>
+          <td>${(c.emojis||[]).join(' ')}</td>
+          <td><span class="badge ${exp.cls}">${exp.text}</span></td>
+          <td>
+            <div class="actions-cell">
+              <input type="number" class="inline-num" placeholder="days" value="7">
+              <button class="btn-gold btn-sm" data-act="extend">Extend</button>
+              <button class="btn-danger btn-sm" data-act="delete">Delete</button>
+            </div>
+          </td>
+        </tr>`;
+      }).join('');
+    }
+    $('channels-pageinfo').textContent = `Page ${data.page} of ${data.pages || 1} · ${data.total} total`;
+  } catch (e) {
+    showError($('channels-error'), e.message);
+  }
+}
+
+$('btn-channels-search').addEventListener('click', () => { channelsPage = 1; loadChannels(); });
+$('channels-search').addEventListener('keydown', (ev) => { if (ev.key === 'Enter') { channelsPage = 1; loadChannels(); } });
+$('channels-prev').addEventListener('click', () => { if (channelsPage > 1) { channelsPage--; loadChannels(); } });
+$('channels-next').addEventListener('click', () => { channelsPage++; loadChannels(); });
+
+$('channels-body').addEventListener('click', async (ev) => {
+  const btn = ev.target.closest('button[data-act]');
+  if (!btn) return;
+  const row = btn.closest('tr');
+  const jid = row.dataset.jid;
+  const act = btn.dataset.act;
+  if (act === 'delete') {
+    if (!confirm(`Delete channel ${jid}? This cannot be undone.`)) return;
+    setBusy(btn, true);
+    try {
+      await api('/channels/delete', { method: 'POST', body: { jid }, confirm: true });
+      loadChannels(); loadOverview();
+    } catch (e) { alert(e.data?.error || e.message); }
+    finally { setBusy(btn, false, 'Delete'); }
+  } else if (act === 'extend') {
+    const days = Number(row.querySelector('.inline-num').value);
+    if (!Number.isInteger(days) || days < 1) return alert('Enter a valid whole number of days.');
+    setBusy(btn, true);
+    try {
+      await api('/channels/extend', { method: 'POST', body: { jid, days } });
+      loadChannels();
+    } catch (e) { alert(e.data?.error || e.message); }
+    finally { setBusy(btn, false, 'Extend'); }
+  }
+});
+
+// ---------- Sessions ----------
+async function loadSessions(){
+  clearError($('sessions-error'));
+  $('sessions-body').innerHTML = '<tr><td colspan="5" class="empty">Loading…</td></tr>';
+  try {
+    const data = await api('/sessions');
+    if (!data.sessions.length) {
+      $('sessions-body').innerHTML = '<tr><td colspan="5" class="empty">No sessions found.</td></tr>';
+    } else {
+      $('sessions-body').innerHTML = data.sessions.map(s => `
+        <tr data-number="${s.number}">
+          <td class="mono">${s.number}</td>
+          <td>${typeof s.dbIndex === 'number' ? s.dbIndex + 1 : '—'}</td>
+          <td>${s.updatedAt ? new Date(s.updatedAt).toLocaleString() : '—'}</td>
+          <td><span class="badge ${s.active ? 'active' : 'inactive'}">${s.active ? 'Active' : 'Offline'}</span></td>
+          <td><button class="btn-danger btn-sm" data-act="delete">Delete</button></td>
+        </tr>
+      `).join('');
+    }
+  } catch (e) {
+    showError($('sessions-error'), e.message);
+  }
+}
+
+$('sessions-body').addEventListener('click', async (ev) => {
+  const btn = ev.target.closest('button[data-act="delete"]');
+  if (!btn) return;
+  const row = btn.closest('tr');
+  const number = row.dataset.number;
+  if (!confirm(`Delete session ${number}? This logs the bot out and removes it from Mongo.`)) return;
+  setBusy(btn, true);
+  try {
+    await api('/sessions/delete', { method: 'POST', body: { number }, confirm: true });
+    loadSessions(); loadOverview();
+  } catch (e) { alert(e.data?.error || e.message); }
+  finally { setBusy(btn, false, 'Delete'); }
+});
+
+// ---------- Boot ----------
+(function init(){
+  const stored = loadStoredToken();
+  if (stored && stored.token && stored.tokenExpiresAt > Date.now()) {
+    token = stored.token;
+    tokenExpiresAt = stored.tokenExpiresAt;
+    showDash();
+  }
+})();
+</script>
+</body>
+</html>
+

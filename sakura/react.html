@@ -3,169 +3,271 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Sakura XD — Channel React</title>
+<title>Miyora MD — Channel React</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌸</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;800&family=Klee+One:wght@600&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#1c1220;
-    --surface:#271a2a;
-    --surface-2:#33223a;
-    --line:#4a3550;
-    --text:#f4ecf2;
-    --muted:#b39ab0;
-    --pink:#e8628f;
-    --pink-soft:#5a2f3d;
-    --gold:#e7b24a;
-    --err:#e4665f;
-    --ok:#8fbf9a;
+    --ink: #05070f;
+    --ink-2: #0a1226;
+    --ink-3: #111f3d;
+    --sakura: #b06bff;        /* Miyora signature purple */
+    --sakura-deep: #7a2bff;
+    --lantern: #d8a3ff;
+    --lantern-soft: #e9d4ff;
+    --paper: #f3ecff;
+    --muted: #9a8fbd;
+    --line: rgba(176,107,255,0.18);
+    --gold: #ffd166;
+    --err: #ff8080;
+    --ok: #4ee6a0;
   }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}
   body{
     min-height:100vh;
-    background:
-      radial-gradient(ellipse 60% 40% at 15% 0%, #3a2440 0%, transparent 60%),
-      radial-gradient(ellipse 50% 40% at 100% 20%, #2c1830 0%, transparent 55%),
-      var(--bg);
-    color:var(--text);
-    font-family:'Manrope',sans-serif;
+    background: radial-gradient(ellipse 120% 80% at 50% -10%, #2a1550 0%, var(--ink) 55%, #05070f 100%);
+    color: var(--paper);
+    font-family: 'Inter', sans-serif;
     display:flex;
     justify-content:center;
     padding:48px 20px 80px;
+    overflow-x:hidden;
   }
-  .wrap{width:100%;max-width:480px;}
-  .brand{display:flex;align-items:baseline;gap:10px;margin-bottom:34px;}
-  .brand .bloom{font-size:26px;line-height:1;}
-  .brand h1{
-    font-family:'Shippori Mincho',serif;
-    font-weight:700;
-    font-size:24px;
+  .wrap{width:100%;max-width:480px;position:relative;z-index:1;}
+
+  .brand{display:flex;align-items:center;gap:12px;margin-bottom:30px;}
+  .brand .logo{
+    width:44px;height:44px;border-radius:14px;
+    background: linear-gradient(160deg, var(--ink-3), var(--ink-2));
+    border: 1px solid var(--line);
+    display:flex;align-items:center;justify-content:center;
+    overflow:hidden;flex-shrink:0;
+    box-shadow: 0 0 18px rgba(176,107,255,0.45) inset;
+  }
+  .brand .logo img{width:100%;height:100%;object-fit:cover;}
+  .brand .name{
+    font-family:'Unbounded',sans-serif;
+    font-weight:800;
+    font-size:20px;
+    letter-spacing:.02em;
     margin:0;
-    letter-spacing:.2px;
+    background: linear-gradient(100deg, var(--paper) 20%, var(--sakura) 60%, var(--lantern) 100%);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
   }
-  .brand span.tag{color:var(--muted);font-size:14px;}
+  .brand .tag{
+    font-family:'Space Mono',monospace;
+    font-size:11px;color:var(--muted);
+    letter-spacing:.1em;text-transform:uppercase;
+    margin-top:2px;
+  }
 
   .card{
-    background:var(--surface);
+    background: linear-gradient(165deg, var(--ink-2), var(--ink) 130%);
     border:1px solid var(--line);
     border-radius:18px;
-    padding:26px 24px;
-    margin-bottom:18px;
+    padding:24px 22px;
+    margin-bottom:16px;
   }
   .card h2{
-    font-family:'Shippori Mincho',serif;
-    font-weight:500;
-    font-size:18px;
-    margin:0 0 4px;
+    font-family:'Unbounded',sans-serif;
+    font-weight:700;
+    font-size:16px;
+    margin:0 0 6px;
+    color:var(--paper);
   }
-  .card p.hint{color:var(--muted);font-size:13.5px;margin:0 0 18px;line-height:1.5;}
+  .card p.hint{
+    color:var(--muted);
+    font-size:13px;
+    margin:0 0 18px;
+    line-height:1.55;
+  }
 
-  label{display:block;font-size:13px;color:var(--muted);margin:14px 0 6px;}
+  label{
+    display:block;
+    font-size:12.5px;
+    color:var(--lantern);
+    font-family:'Space Mono',monospace;
+    letter-spacing:.05em;
+    margin:14px 0 6px;
+    text-transform:uppercase;
+  }
   label:first-of-type{margin-top:0;}
   input[type=text],input[type=password],input[type=number]{
     width:100%;
-    background:var(--surface-2);
+    background: var(--ink-3);
     border:1px solid var(--line);
-    color:var(--text);
+    color: var(--paper);
     border-radius:10px;
     padding:12px 14px;
-    font-size:15px;
-    font-family:inherit;
+    font-size:14.5px;
+    font-family:'Inter',sans-serif;
     outline:none;
     transition:border-color .15s;
   }
-  input:focus{border-color:var(--pink);}
-  input::placeholder{color:#7c6a7a;}
+  input:focus{border-color: rgba(176,107,255,0.6);}
+  input::placeholder{color:#6e6194;}
 
   button{
-    font-family:inherit;
-    font-size:15px;
-    font-weight:600;
+    font-family:'Inter',sans-serif;
+    font-size:14px;
+    font-weight:700;
     border:none;
     border-radius:10px;
-    padding:13px 18px;
+    padding:12px 18px;
     cursor:pointer;
-    transition:filter .15s, opacity .15s;
+    transition: transform .12s ease, filter .15s ease, opacity .15s ease;
   }
-  button:hover{filter:brightness(1.08);}
-  button:disabled{opacity:.5;cursor:not-allowed;filter:none;}
-  .btn-primary{background:var(--pink);color:#241019;width:100%;}
-  .btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--line);}
-  .btn-gold{background:var(--gold);color:#2a1d05;}
+  button:hover{transform:translateY(-1px);}
+  button:active{transform:translateY(0);}
+  button:disabled{opacity:.55;cursor:not-allowed;transform:none;filter:none;}
+
+  .btn-primary{
+    background: linear-gradient(120deg, var(--sakura) 0%, var(--sakura-deep) 100%);
+    color:#fff;
+    width:100%;
+    box-shadow: 0 10px 28px -10px rgba(122,43,255,0.8);
+  }
+  .btn-ghost{
+    background:transparent;
+    color: var(--lantern-soft);
+    border:1px solid rgba(216,163,255,0.4);
+  }
+  .btn-ghost:hover{background: rgba(216,163,255,0.1);}
+  .btn-gold{
+    background: linear-gradient(120deg, var(--gold), #ffb84d);
+    color:#2a1d05;
+    box-shadow: 0 8px 22px -10px rgba(255,209,102,0.6);
+  }
 
   .row{display:flex;gap:10px;}
   .row > *{flex:1;}
 
-  .error{color:var(--err);font-size:13.5px;margin-top:12px;line-height:1.5;display:none;}
+  .error{
+    color:var(--err);
+    font-size:13px;
+    margin-top:12px;
+    line-height:1.5;
+    display:none;
+  }
   .error.show{display:block;}
-  .notice{color:var(--ok);font-size:13.5px;margin-top:12px;line-height:1.5;display:none;}
+  .notice{
+    color:var(--ok);
+    font-size:13px;
+    margin-top:12px;
+    line-height:1.5;
+    display:none;
+  }
   .notice.show{display:block;}
 
   #view-login{display:block;}
   #view-dash{display:none;}
 
-  .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;}
-  .topbar .who{font-size:14px;color:var(--muted);}
-  .topbar .who b{color:var(--text);font-weight:600;}
-  .topbar button{padding:8px 14px;font-size:13px;}
+  .topbar{
+    display:flex;align-items:center;justify-content:space-between;
+    margin-bottom:18px;gap:12px;
+  }
+  .topbar .who{font-size:13px;color:var(--muted);}
+  .topbar .who b{color:var(--paper);font-weight:600;font-family:'Space Mono',monospace;}
+  .topbar button{padding:8px 14px;font-size:12.5px;}
 
-  .wallet{display:flex;align-items:center;justify-content:space-between;gap:16px;}
-  .wallet .coins{display:flex;align-items:baseline;gap:8px;}
-  .wallet .coins .num{font-family:'Shippori Mincho',serif;font-size:40px;font-weight:700;color:var(--gold);}
-  .wallet .coins .lbl{color:var(--muted);font-size:14px;}
-  .wallet button{white-space:nowrap;}
+  .wallet{
+    display:flex;align-items:center;justify-content:space-between;
+    gap:16px;flex-wrap:wrap;
+    background:
+      radial-gradient(ellipse at 100% 0%, rgba(176,107,255,0.18), transparent 60%),
+      linear-gradient(165deg, var(--ink-2), var(--ink) 130%);
+  }
+  .wallet .coins{display:flex;align-items:baseline;gap:10px;}
+  .wallet .coins .num{
+    font-family:'Unbounded',sans-serif;
+    font-weight:800;
+    font-size:38px;
+    line-height:1;
+    background: linear-gradient(100deg, var(--gold) 20%, #ffb84d 100%);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+  .wallet .coins .lbl{color:var(--muted);font-size:13.5px;}
+  .wallet button{white-space:nowrap;font-size:13px;padding:10px 16px;}
 
   .emoji-grid{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;}
   .emoji-pick{
-    background:var(--surface-2);
+    background: var(--ink-3);
     border:1px solid var(--line);
-    border-radius:9px;
-    width:40px;height:40px;
-    font-size:18px;
+    border-radius:10px;
+    width:42px;height:42px;
+    font-size:19px;
     display:flex;align-items:center;justify-content:center;
     cursor:pointer;
     padding:0;
+    transition: border-color .15s ease, background .15s ease, transform .12s ease;
   }
-  .emoji-pick.on{border-color:var(--pink);background:var(--pink-soft);}
+  .emoji-pick:hover{transform:translateY(-1px);border-color: rgba(176,107,255,0.4);}
+  .emoji-pick.on{
+    border-color: var(--sakura);
+    background: rgba(122,43,255,0.22);
+    box-shadow: 0 0 14px -3px rgba(176,107,255,0.6);
+  }
   .chosen{
     min-height:20px;
     margin-top:10px;
-    font-size:20px;
-    letter-spacing:4px;
+    font-size:19px;
+    letter-spacing:5px;
     color:var(--muted);
+    font-family:'Space Mono',monospace;
   }
 
   .cost-line{
     display:flex;justify-content:space-between;align-items:center;
-    margin-top:16px;padding-top:14px;border-top:1px dashed var(--line);
-    font-size:14px;color:var(--muted);
+    margin-top:16px;padding-top:14px;
+    border-top:1px dashed var(--line);
+    font-size:13.5px;color:var(--muted);
   }
-  .cost-line b{color:var(--gold);font-size:16px;}
+  .cost-line b{
+    color:var(--gold);
+    font-size:16px;
+    font-family:'Space Mono',monospace;
+  }
 
   .channels-list{display:flex;flex-direction:column;gap:10px;}
   .ch-row{
-    background:var(--surface-2);
+    background: var(--ink-3);
     border:1px solid var(--line);
     border-radius:12px;
     padding:12px 14px;
     display:flex;justify-content:space-between;align-items:center;gap:10px;
+    transition:border-color .15s ease;
   }
+  .ch-row:hover{border-color: rgba(176,107,255,0.4);}
   .ch-row .jid{
-    font-size:13px;color:var(--text);
+    font-size:12.5px;color:var(--paper);
     overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
-    font-family:ui-monospace,Menlo,Consolas,monospace;
+    font-family:'Space Mono',monospace;
   }
-  .ch-row .emojis{font-size:15px;letter-spacing:1px;margin-top:2px;}
-  .ch-row .expires{font-size:12.5px;color:var(--muted);white-space:nowrap;text-align:right;}
+  .ch-row .emojis{font-size:15px;letter-spacing:1px;margin-top:3px;}
+  .ch-row .expires{
+    font-size:12px;color:var(--muted);
+    white-space:nowrap;text-align:right;
+    font-family:'Space Mono',monospace;
+  }
   .ch-row .expires.soon{color:var(--err);}
-  .empty{color:var(--muted);font-size:14px;text-align:center;padding:20px 0;}
+  .empty{
+    color:var(--muted);
+    font-size:13.5px;
+    text-align:center;
+    padding:22px 0;
+  }
 
   .spinner{
-    width:16px;height:16px;border-radius:50%;
-    border:2px solid rgba(255,255,255,.3);border-top-color:#fff;
-    display:inline-block;animation:spin .7s linear infinite;vertical-align:-3px;
+    width:14px;height:14px;border-radius:50%;
+    border:2px solid rgba(255,255,255,.3);
+    border-top-color:#fff;
+    display:inline-block;
+    animation:spin .7s linear infinite;
+    vertical-align:-3px;
+    margin-right:6px;
   }
   @keyframes spin{to{transform:rotate(360deg);}}
 </style>
@@ -174,9 +276,11 @@
 <div class="wrap">
 
   <div class="brand">
-    <span class="bloom">🌸</span>
-    <h1>Sakura XD</h1>
-    <span class="tag">— channel react</span>
+    <div class="logo"><img src="https://raw.githubusercontent.com/NimeshMihiranga-Neno/cartoon-web/main/18d7513834fe1dcc00b6807bb6174794.jpg" alt="Miyora MD logo" /></div>
+    <div>
+      <h1 class="name">MIYORA MD</h1>
+      <div class="tag">Channel React</div>
+    </div>
   </div>
 
   <!-- LOGIN -->
@@ -233,7 +337,7 @@
 
     <div class="card">
       <h2>Active channels</h2>
-      <p class="hint">Every connected Sakura XD session reacts to new posts in these channels.</p>
+      <p class="hint">Every connected Miyora MD session reacts to new posts in these channels.</p>
       <div class="channels-list" id="channels-list">
         <div class="empty">Loading…</div>
       </div>
@@ -244,7 +348,7 @@
 
 <script>
 const API = '/code/api/react';
-const STORE_KEY = 'sakura_react_auth';
+const STORE_KEY = 'miyora_react_auth';
 
 const $ = (id) => document.getElementById(id);
 const els = {
@@ -274,7 +378,7 @@ function clearNotice(el){ el.textContent = ''; el.classList.remove('show'); }
 function setBusy(btn, busy, label){
   btn.disabled = busy;
   btn.dataset.label = btn.dataset.label || btn.textContent;
-  btn.innerHTML = busy ? '<span class="spinner"></span> Working…' : (label || btn.dataset.label);
+  btn.innerHTML = busy ? '<span class="spinner"></span>Working…' : (label || btn.dataset.label);
 }
 
 async function api(path, body){

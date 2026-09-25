@@ -22,8 +22,8 @@ export const config = {
   MAX_RETRIES: 3,
 
   GROUP_INVITE_LINK: 'https://chat.whatsapp.com/KBy93MkplPmGLwbPU3GSnd',
-  CHANNEL_LINK: 'https://whatsapp.com/channel/0029VbDp8TS4IBhDBM7OUy2l',
-  NEWSLETTER_JID: '120363412616808702@newsletter',
+  CHANNEL_LINK: 'https://whatsapp.com/channel/0029VbAJE36E50UhXhxcPh2M',
+  NEWSLETTER_JID: '120363411194438648@newsletter',
 
   OWNER_NUMBER: process.env.OWNER_NUMBER || '94770475809',
   OWNER_NAME: 'saainda denuwan ',

@@ -36,7 +36,7 @@ export const config = {
 
   BOT_NAME: 'MIYORA MD',
   BOT_VERSION: 'V1',
-  BOT_FOOTER: 'ᴘᴏᴡᴇʀᴅ ʙʏ sasiya ᴏꜰᴄ',
+  BOT_FOOTER: 'ᴘᴏᴡᴇʀᴅ ʙʏ sasiya ᴏꜰᴄ | https://whatsapp.com/channel/0029VbAJE36E50UhXhxcPh2M',
 
   RCD_IMAGE_PATH: 'https://files.catbox.moe/u6ek3x.png',
   IMAGE_PATH: 'https://files.catbox.moe/u6ek3x.png',
@@ -55,7 +55,11 @@ export const config = {
   // 🔐 ADMIN PANEL
   ADMIN_PANEL_KEY: process.env.ADMIN_PANEL_KEY || 'SASINDA123',
   ADMIN_SESSION_HOURS: Number(process.env.ADMIN_SESSION_HOURS || 12),
-  ADMIN_MAX_AMOUNT: Number(process.env.ADMIN_MAX_AMOUNT || 1000000)
+  ADMIN_MAX_AMOUNT: Number(process.env.ADMIN_MAX_AMOUNT || 1000000),
+
+  // 📢 CHANNEL / NEWSLETTER INFO
+  CHANNEL_URL: 'https://whatsapp.com/channel/0029VbAJE36E50UhXhxcPh2M',
+  CHANNEL_NAME: '♡⸝⸝> 𝐌𝐈𝐘𝐎𝐑𝐀 𝐌𝐃 🌸 <⸝⸝♡'
 };
 
 export const NEWSLETTER_CONTEXT = {
@@ -68,6 +72,9 @@ export const NEWSLETTER_CONTEXT = {
     serverMessageId: 999
   }
 };
+
+// 📢 CHANNEL URL (global export)
+export const CHANNEL_URL = 'https://whatsapp.com/channel/0029VbAJE36E50UhXhxcPh2M';
 
 export const MONGO_URI =
   process.env.MONGO_URI ||

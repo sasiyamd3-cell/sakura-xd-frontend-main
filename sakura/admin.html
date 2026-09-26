@@ -1,0 +1,3534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MIYORA MINI BOT — Admin Panel</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --bg:#050713;
+  --bg2:#080b19;
+  --card:rgba(13,18,40,.88);
+  --card2:rgba(18,24,52,.9);
+  --line:rgba(255,255,255,.09);
+  --pink:#ff63c7;
+  --purple:#a86cff;
+  --blue:#55d8ff;
+  --green:#32e6bd;
+  --gold:#ffc86b;
+  --red:#ff667d;
+  --text:#f8f5ff;
+  --muted:#9299b8;
+  --shadow:0 20px 70px rgba(0,0,0,.4);
+}
+
+*{box-sizing:border-box}
+
+html,body{
+  margin:0;
+  min-height:100%;
+  background:#050713;
+  color:var(--text);
+  font-family:Manrope,Arial,sans-serif;
+}
+
+body{
+  overflow-x:hidden;
+  background:
+    radial-gradient(circle at 10% 0%,rgba(170,75,255,.2),transparent 28%),
+    radial-gradient(circle at 95% 10%,rgba(60,200,255,.13),transparent 25%),
+    radial-gradient(circle at 55% 100%,rgba(255,80,190,.09),transparent 30%),
+    linear-gradient(145deg,#040611,#090c1c 55%,#050611);
+}
+
+button,input{
+  font:inherit;
+}
+
+button{
+  cursor:pointer;
+}
+
+button:disabled{
+  opacity:.5;
+  cursor:not-allowed;
+}
+
+input{
+  width:100%;
+  background:rgba(3,6,17,.7);
+  border:1px solid var(--line);
+  color:white;
+  border-radius:12px;
+  padding:12px 14px;
+  outline:none;
+}
+
+input:focus{
+  border-color:var(--pink);
+  box-shadow:0 0 0 3px rgba(255,99,199,.08);
+}
+
+/* LOGIN */
+
+#view-login{
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+}
+
+#view-login .wrap{
+  width:100%;
+  max-width:430px;
+}
+
+.login{
+  position:relative;
+  overflow:hidden;
+  padding:32px;
+  border:1px solid rgba(210,100,255,.25);
+  border-radius:28px;
+  background:
+    linear-gradient(145deg,rgba(28,21,58,.95),rgba(7,11,27,.95));
+  box-shadow:var(--shadow);
+}
+
+.login:after{
+  content:"🌸";
+  position:absolute;
+  right:25px;
+  top:20px;
+  font-size:50px;
+  opacity:.12;
+}
+
+.logo{
+  display:flex;
+  align-items:center;
+  gap:13px;
+  margin-bottom:28px;
+}
+
+.logo-icon{
+  width:56px;
+  height:56px;
+  border-radius:17px;
+  display:grid;
+  place-items:center;
+  font-size:28px;
+  background:linear-gradient(135deg,#a45cff,#ff62c6);
+  box-shadow:0 0 35px rgba(190,80,255,.3);
+}
+
+.logo h1{
+  margin:0;
+  font-size:22px;
+  font-weight:800;
+}
+
+.logo p{
+  margin:3px 0 0;
+  color:var(--muted);
+  font-size:11px;
+}
+
+.login h2{
+  margin:0 0 20px;
+  font-family:"Playfair Display",serif;
+  font-size:27px;
+}
+
+label{
+  display:block;
+  color:#aeb5d0;
+  font-size:11px;
+  margin:13px 0 7px;
+}
+
+.btn{
+  border:0;
+  border-radius:11px;
+  padding:10px 15px;
+  color:white;
+  transition:.2s;
+}
+
+.btn:hover{
+  transform:translateY(-1px);
+  filter:brightness(1.08);
+}
+
+.primary{
+  background:linear-gradient(135deg,#ae5cff,#ff58bd);
+  box-shadow:0 8px 25px rgba(210,78,255,.2);
+}
+
+.gold{
+  background:linear-gradient(135deg,#ffc86b,#ff9d62);
+  color:#281a08;
+}
+
+.ghost{
+  background:rgba(255,255,255,.035);
+  border:1px solid var(--line);
+  color:#c4c9dd;
+}
+
+.danger{
+  background:rgba(255,80,105,.12);
+  border:1px solid rgba(255,80,105,.25);
+  color:#ff9aaa;
+}
+
+.full{
+  width:100%;
+}
+
+.error,
+.notice{
+  display:none;
+  margin-top:10px;
+  font-size:12px;
+}
+
+.error{color:#ff8b9d}
+.notice{color:#50e2bd}
+
+.show{
+  display:block!important;
+}
+
+/* APP */
+
+#view-dash{
+  display:none;
+}
+
+.app{
+  min-height:100vh;
+  display:grid;
+  grid-template-columns:245px 1fr;
+}
+
+/* SIDEBAR */
+
+.sidebar{
+  position:fixed;
+  inset:0 auto 0 0;
+  width:245px;
+  padding:20px 13px;
+  background:rgba(3,6,17,.85);
+  backdrop-filter:blur(25px);
+  border-right:1px solid var(--line);
+  z-index:10;
+}
+
+.brand{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:7px 10px 25px;
+}
+
+.brand-icon{
+  width:43px;
+  height:43px;
+  border-radius:14px;
+  display:grid;
+  place-items:center;
+  background:linear-gradient(135deg,#a55cff,#ff62c7);
+  box-shadow:0 0 25px rgba(190,80,255,.3);
+  font-size:21px;
+}
+
+.brand h1{
+  margin:0;
+  font-size:15px;
+}
+
+.brand span{
+  color:#858eae;
+  font-size:9px;
+}
+
+.nav-title{
+  margin:15px 10px 7px;
+  color:#626b8a;
+  font-size:9px;
+  letter-spacing:1.5px;
+  text-transform:uppercase;
+}
+
+.nav{
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+}
+
+.nav button{
+  width:100%;
+  display:flex;
+  align-items:center;
+  gap:11px;
+  padding:11px 12px;
+  border-radius:11px;
+  border:1px solid transparent;
+  background:transparent;
+  color:#929ab8;
+  text-align:left;
+}
+
+.nav button:hover,
+.nav button.active{
+  color:white;
+  border-color:rgba(180,90,255,.2);
+  background:linear-gradient(
+    90deg,
+    rgba(170,85,255,.2),
+    rgba(255,90,195,.04)
+  );
+}
+
+.nav-icon{
+  width:20px;
+  text-align:center;
+}
+
+.sidebar-status{
+  position:absolute;
+  left:13px;
+  right:13px;
+  bottom:18px;
+  padding:13px;
+  border:1px solid var(--line);
+  border-radius:15px;
+  background:rgba(255,255,255,.025);
+}
+
+.dot{
+  display:inline-block;
+  width:8px;
+  height:8px;
+  border-radius:50%;
+  background:var(--green);
+  box-shadow:0 0 12px var(--green);
+}
+
+.sidebar-status small{
+  display:block;
+  margin-top:6px;
+  color:#6e7695;
+}
+
+/* MAIN */
+
+.main{
+  grid-column:2;
+  padding:22px 28px 45px;
+  min-width:0;
+}
+
+.topbar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:15px;
+  margin-bottom:22px;
+}
+
+.topbar h2{
+  margin:0;
+  font-size:21px;
+}
+
+.topbar p{
+  margin:4px 0 0;
+  color:var(--muted);
+  font-size:11px;
+}
+
+.top-right{
+  display:flex;
+  align-items:center;
+  gap:9px;
+}
+
+.online{
+  padding:8px 12px;
+  border-radius:99px;
+  background:rgba(50,230,189,.07);
+  border:1px solid rgba(50,230,189,.18);
+  color:#6af0d0;
+  font-size:10px;
+}
+
+.owner{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:5px 9px;
+  border-radius:13px;
+  border:1px solid var(--line);
+  background:rgba(255,255,255,.025);
+}
+
+.avatar{
+  width:32px;
+  height:32px;
+  display:grid;
+  place-items:center;
+  border-radius:50%;
+  background:linear-gradient(135deg,#ff69c9,#765fff);
+}
+
+.owner strong{
+  display:block;
+  font-size:10px;
+}
+
+.owner span{
+  color:#858daa;
+  font-size:8px;
+}
+
+/* TABS */
+
+.tabs{
+  display:none;
+}
+
+.tab-panel{
+  display:none;
+}
+
+.tab-panel.on{
+  display:block;
+}
+
+/* STATS */
+
+.stats-grid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:12px;
+}
+
+.stat-box{
+  position:relative;
+  overflow:hidden;
+  min-height:125px;
+  padding:17px;
+  border-radius:18px;
+  border:1px solid var(--line);
+  background:
+    linear-gradient(145deg,
+    rgba(18,24,51,.92),
+    rgba(8,12,29,.9));
+  box-shadow:0 10px 35px rgba(0,0,0,.18);
+}
+
+.stat-box:after{
+  content:"";
+  position:absolute;
+  width:90px;
+  height:90px;
+  right:-30px;
+  top:-35px;
+  border-radius:50%;
+  background:rgba(255,90,200,.12);
+}
+
+.stat-box:nth-child(2):after{
+  background:rgba(80,210,255,.12);
+}
+
+.stat-box:nth-child(3):after{
+  background:rgba(170,100,255,.12);
+}
+
+.stat-box:nth-child(4):after{
+  background:rgba(50,230,190,.12);
+}
+
+.stat-box .icon{
+  font-size:20px;
+  margin-bottom:9px;
+}
+
+.stat-box .num{
+  font-size:25px;
+  font-weight:800;
+}
+
+.stat-box .lbl{
+  color:#8d96b5;
+  font-size:10px;
+  margin-top:3px;
+}
+
+/* HERO */
+
+.hero{
+  position:relative;
+  min-height:230px;
+  margin:15px 0;
+  overflow:hidden;
+  border-radius:22px;
+  border:1px solid rgba(255,100,200,.22);
+  background:
+    radial-gradient(
+      circle at 12% 50%,
+      rgba(255,90,200,.3),
+      transparent 32%
+    ),
+    radial-gradient(
+      circle at 88% 30%,
+      rgba(80,205,255,.2),
+      transparent 28%
+    ),
+    linear-gradient(120deg,#121329,#181532 48%,#0b1b2b);
+}
+
+.hero:before{
+  content:"🌸  🪽  ✦  🌸  🪽  ✦";
+  position:absolute;
+  top:15px;
+  left:25px;
+  color:rgba(255,255,255,.13);
+  font-size:20px;
+  letter-spacing:12px;
+}
+
+.hero-content{
+  position:relative;
+  z-index:2;
+  padding:42px 38px;
+}
+
+.hero-small{
+  color:#d3a0ff;
+  font-size:9px;
+  letter-spacing:2px;
+  text-transform:uppercase;
+}
+
+.hero h1{
+  margin:8px 0;
+  font-family:"Playfair Display",serif;
+  font-size:48px;
+  line-height:.98;
+  background:linear-gradient(
+    90deg,
+    #ff7bd2,
+    #a987ff,
+    #70dfff
+  );
+  -webkit-background-clip:text;
+  color:transparent;
+}
+
+.hero p{
+  margin:7px 0;
+  color:#b8c0da;
+  font-size:11px;
+}
+
+.hero strong{
+  color:white;
+  font-size:13px;
+}
+
+.hero-badge{
+  display:inline-block;
+  margin-top:14px;
+  padding:8px 13px;
+  border-radius:99px;
+  border:1px solid var(--line);
+  background:rgba(255,255,255,.05);
+  color:#ffc4e9;
+  font-size:9px;
+}
+
+.hero-art{
+  position:absolute;
+  right:5%;
+  bottom:-12px;
+  font-size:115px;
+  filter:drop-shadow(0 15px 35px rgba(255,75,192,.25));
+}
+
+/* CARDS */
+
+.content-grid{
+  display:grid;
+  grid-template-columns:1.45fr .8fr;
+  gap:14px;
+}
+
+.card{
+  padding:18px;
+  border-radius:19px;
+  border:1px solid var(--line);
+  background:
+    linear-gradient(
+      145deg,
+      rgba(15,20,43,.92),
+      rgba(8,12,27,.91)
+    );
+}
+
+.section-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:14px;
+}
+
+.section-head h2{
+  margin:0;
+  font-size:13px;
+}
+
+.section-head span{
+  color:#717a9a;
+  font-size:9px;
+}
+
+/* ACTIVITY */
+
+.activity-bars{
+  height:155px;
+  display:flex;
+  align-items:flex-end;
+  gap:9px;
+}
+
+.bar{
+  flex:1;
+  border-radius:7px 7px 2px 2px;
+  background:linear-gradient(
+    to top,
+    #754cff,
+    #ff63c5
+  );
+  box-shadow:0 0 18px rgba(185,83,255,.16);
+}
+
+.bar:nth-child(2n){
+  background:linear-gradient(
+    to top,
+    #315cff,
+    #62dfff
+  );
+}
+
+.bar:nth-child(3n){
+  background:linear-gradient(
+    to top,
+    #8a56ff,
+    #ff80bc
+  );
+}
+
+.chart-labels{
+  display:flex;
+  justify-content:space-between;
+  color:#656d8c;
+  font-size:8px;
+  margin-top:8px;
+}
+
+/* QUICK */
+
+.quick-list{
+  display:grid;
+  gap:8px;
+}
+
+.quick-row{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:11px 12px;
+  border-radius:11px;
+  border:1px solid var(--line);
+  background:rgba(255,255,255,.025);
+}
+
+.quick-row .left{
+  color:#aeb5cf;
+  font-size:10px;
+}
+
+.quick-row .right{
+  font-size:12px;
+  font-weight:800;
+}
+
+/* FORM */
+
+.row{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+}
+
+.row>*{
+  flex:1;
+  min-width:120px;
+}
+
+.search-row{
+  display:flex;
+  gap:8px;
+  margin-bottom:14px;
+}
+
+.search-row input{
+  flex:1;
+}
+
+.emoji-grid{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+  margin-top:7px;
+}
+
+.emoji-pick{
+  width:36px;
+  height:36px;
+  padding:0;
+  border-radius:9px;
+  border:1px solid var(--line);
+  background:rgba(255,255,255,.03);
+}
+
+.emoji-pick.on{
+  border-color:var(--pink);
+  background:rgba(255,99,199,.13);
+}
+
+/* TABLE */
+
+.table-wrap{
+  overflow-x:auto;
+}
+
+table{
+  width:100%;
+  border-collapse:collapse;
+  font-size:11px;
+}
+
+thead th{
+  padding:9px 7px;
+  text-align:left;
+  color:#707995;
+  font-size:9px;
+  text-transform:uppercase;
+  letter-spacing:.6px;
+  border-bottom:1px solid var(--line);
+}
+
+tbody td{
+  padding:10px 7px;
+  border-bottom:1px solid rgba(255,255,255,.05);
+}
+
+tbody tr:last-child td{
+  border-bottom:0;
+}
+
+.mono{
+  font-family:monospace;
+  font-size:10px;
+}
+
+.actions-cell{
+  display:flex;
+  gap:5px;
+  flex-wrap:wrap;
+}
+
+.inline-num{
+  width:60px!important;
+  padding:6px 7px!important;
+  font-size:10px!important;
+}
+
+.badge{
+  display:inline-block;
+  padding:4px 8px;
+  border-radius:99px;
+  font-size:9px;
+  font-weight:700;
+}
+
+.badge.active{
+  color:#55e4bd;
+  background:rgba(50,230,189,.1);
+}
+
+.badge.inactive{
+  color:#9299b8;
+  background:rgba(150,160,190,.1);
+}
+
+.badge.expiring{
+  color:#ff8c9d;
+  background:rgba(255,102,125,.1);
+}
+
+.pager{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-top:13px;
+  color:#747d9c;
+  font-size:10px;
+}
+
+.pager .btns{
+  display:flex;
+  gap:6px;
+}
+
+.empty{
+  text-align:center;
+  color:#737b9a;
+  padding:25px 0;
+}
+
+/* FOOTER */
+
+.footer{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  margin-top:14px;
+  padding:12px 14px;
+  border:1px solid var(--line);
+  border-radius:15px;
+  background:rgba(255,255,255,.025);
+  color:#777f9d;
+  font-size:9px;
+}
+
+.footer strong{
+  color:#cbd0e2;
+}
+
+.footer-status{
+  display:flex;
+  gap:12px;
+}
+
+/* MOBILE */
+
+@media(max-width:1050px){
+  .stats-grid{
+    grid-template-columns:repeat(2,1fr);
+  }
+
+  .content-grid{
+    grid-template-columns:1fr;
+  }
+}
+
+@media(max-width:760px){
+
+  .app{
+    display:block;
+  }
+
+  .sidebar{
+    position:relative;
+    width:100%;
+    height:auto;
+    padding:10px;
+    border-right:0;
+    border-bottom:1px solid var(--line);
+  }
+
+  .brand{
+    padding:4px 5px 12px;
+  }
+
+  .nav-title,
+  .sidebar-status{
+    display:none;
+  }
+
+  .nav{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+  }
+
+  .nav button{
+    justify-content:center;
+    padding:8px 4px;
+    font-size:9px;
+  }
+
+  .main{
+    padding:15px 11px 30px;
+  }
+
+  .topbar{
+    align-items:flex-start;
+  }
+
+  .top-right .owner{
+    display:none;
+  }
+
+  .topbar h2{
+    font-size:18px;
+  }
+
+  .stats-grid{
+    gap:8px;
+  }
+
+  .stat-box{
+    min-height:105px;
+    padding:13px;
+  }
+
+  .stat-box .num{
+    font-size:21px;
+  }
+
+  .hero{
+    min-height:210px;
+  }
+
+  .hero-content{
+    padding:34px 20px;
+  }
+
+  .hero h1{
+    font-size:36px;
+  }
+
+  .hero-art{
+    font-size:75px;
+    opacity:.55;
+  }
+
+  .footer-status{
+    display:none;
+  }
+}
+
+@media(max-width:430px){
+
+  .stats-grid{
+    grid-template-columns:1fr 1fr;
+  }
+
+  .hero h1{
+    font-size:31px;
+  }
+
+  .hero-art{
+    right:0;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<!-- ================= LOGIN ================= -->
+
+<div id="view-login">
+
+  <div class="wrap">
+
+    <div class="login">
+
+      <div class="logo">
+
+        <div class="logo-icon">
+          🌸
+        </div>
+
+        <div>
+          <h1>MIYORA MINI BOT</h1>
+          <p>Premium Super Admin Panel</p>
+        </div>
+
+      </div>
+
+      <h2>Welcome back, Admin ✦</h2>
+
+      <label>Username</label>
+      <input type="text" value="admin" disabled>
+
+      <label for="in-pass">
+        Admin Password
+      </label>
+
+      <input
+        id="in-pass"
+        type="password"
+        placeholder="Enter admin password"
+        autocomplete="off"
+      >
+
+      <button
+        id="btn-login"
+        class="btn primary full"
+        style="margin-top:16px"
+      >
+        Enter Dashboard ✨
+      </button>
+
+      <div id="login-error" class="error"></div>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<!-- ================= DASHBOARD ================= -->
+
+<div id="view-dash">
+
+<div class="app">
+
+<!-- SIDEBAR -->
+
+<aside class="sidebar">
+
+  <div class="brand">
+
+    <div class="brand-icon">
+      🪽
+    </div>
+
+    <div>
+      <h1>MIYORA MINI</h1>
+      <span>WhatsApp Bot Control</span>
+    </div>
+
+  </div>
+
+
+  <div class="nav-title">
+    Main
+  </div>
+
+  <div class="nav">
+
+    <button
+      class="active"
+      data-tab="overview"
+    >
+      <span class="nav-icon">⌂</span>
+      Dashboard
+    </button>
+
+    <button data-tab="wallets">
+      <span class="nav-icon">◉</span>
+      Wallets
+    </button>
+
+    <button data-tab="channels">
+      <span class="nav-icon">✦</span>
+      Channels
+    </button>
+
+    <button data-tab="sessions">
+      <span class="nav-icon">◈</span>
+      Sessions
+    </button>
+
+  </div>
+
+
+  <div class="nav-title">
+    System
+  </div>
+
+  <div class="nav">
+
+    <button data-tab="overview">
+      <span class="nav-icon">⌁</span>
+      Live Stats
+    </button>
+
+    <button data-tab="sessions">
+      <span class="nav-icon">♧</span>
+      Bot Sessions
+    </button>
+
+    <button data-tab="channels">
+      <span class="nav-icon">⚙</span>
+      API / Webhook
+    </button>
+
+  </div>
+
+
+  <div class="sidebar-status">
+
+    <span class="dot"></span>
+    <strong style="font-size:10px">
+      System Online
+    </strong>
+
+    <small>
+      MIYORA MD • v1.0.0
+    </small>
+
+  </div>
+
+</aside>
+
+
+<!-- MAIN -->
+
+<main class="main">
+
+<header class="topbar">
+
+  <div>
+
+    <h2>
+      Admin Dashboard ✦
+    </h2>
+
+    <p>
+      Manage your MIYORA MINI BOT ecosystem
+    </p>
+
+  </div>
+
+
+  <div class="top-right">
+
+    <div class="online">
+      <span class="dot"></span>
+      &nbsp; Bot Online
+    </div>
+
+
+    <div class="owner">
+
+      <div class="avatar">
+        👑
+      </div>
+
+      <div>
+        <strong>
+          Sasinda Denuwan
+        </strong>
+
+        <span>
+          Owner
+        </span>
+      </div>
+
+    </div>
+
+
+    <button
+      id="btn-logout"
+      class="btn ghost"
+    >
+      Logout
+    </button>
+
+  </div>
+
+</header>
+
+
+<!-- ================= OVERVIEW ================= -->
+
+<div
+  id="tab-overview"
+  class="tab-panel on"
+>
+
+  <div
+    id="stats-grid"
+    class="stats-grid"
+  >
+
+    <div class="empty">
+      Loading…
+    </div>
+
+  </div>
+
+
+  <!-- FIRST 20 -->
+
+  <section class="hero">
+
+    <div class="hero-content">
+
+      <div class="hero-small">
+        🌸 MIYORA MINI BOT • Community Milestone
+      </div>
+
+      <h1>
+        First 20<br>
+        Thank You ♡
+      </h1>
+
+      <p>
+        <strong>
+          A special thank you to everyone who joined MIYORA MINI BOT from the beginning.
+        </strong>
+      </p>
+
+      <p>
+        You are part of the story — small bot, big dreams. 🪽
+      </p>
+
+      <div class="hero-badge">
+        ✦ Together We Grow • MIYORA FAMILY ✦
+      </div>
+
+    </div>
+
+    <div class="hero-art">
+      🐦🌸
+    </div>
+
+  </section>
+
+
+  <!-- ACTIVITY + QUICK STATS -->
+
+  <div class="content-grid">
+
+
+    <div class="card">
+
+      <div class="section-head">
+
+        <h2>
+          System Activity
+        </h2>
+
+        <span>
+          Live snapshot
+        </span>
+
+      </div>
+
+
+      <div class="activity-bars">
+
+        <div class="bar" style="height:34%"></div>
+        <div class="bar" style="height:48%"></div>
+        <div class="bar" style="height:42%"></div>
+        <div class="bar" style="height:67%"></div>
+        <div class="bar" style="height:55%"></div>
+        <div class="bar" style="height:76%"></div>
+        <div class="bar" style="height:64%"></div>
+        <div class="bar" style="height:88%"></div>
+        <div class="bar" style="height:72%"></div>
+        <div class="bar" style="height:95%"></div>
+        <div class="bar" style="height:81%"></div>
+        <div class="bar" style="height:100%"></div>
+
+      </div>
+
+
+      <div class="chart-labels">
+
+        <span>START</span>
+        <span>USERS</span>
+        <span>CHANNELS</span>
+        <span>LIVE</span>
+
+      </div>
+
+    </div>
+
+
+    <div class="card">
+
+      <div class="section-head">
+
+        <h2>
+          Quick Stats
+        </h2>
+
+        <span>
+          Realtime
+        </span>
+
+      </div>
+
+
+      <div class="quick-list">
+
+        <div class="quick-row">
+          <div class="left">
+            👤 Total Wallets
+          </div>
+
+          <div
+            id="quick-wallets"
+            class="right"
+          >
+            —
+          </div>
+        </div>
+
+
+        <div class="quick-row">
+          <div class="left">
+            🪙 Coins
+          </div>
+
+          <div
+            id="quick-coins"
+            class="right"
+          >
+            —
+          </div>
+        </div>
+
+
+        <div class="quick-row">
+          <div class="left">
+            📡 Channels
+          </div>
+
+          <div
+            id="quick-channels"
+            class="right"
+          >
+            —
+          </div>
+        </div>
+
+
+        <div class="quick-row">
+          <div class="left">
+            ⚡ Sockets
+          </div>
+
+          <div
+            id="quick-sockets"
+            class="right"
+          >
+            —
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- BROADCAST -->
+
+  <div
+    class="card"
+    style="margin-top:14px"
+  >
+
+    <div class="section-head">
+
+      <h2>
+        Broadcast Coins
+      </h2>
+
+      <span>
+        Admin Control
+      </span>
+
+    </div>
+
+
+    <div class="row">
+
+      <div>
+
+        <label for="bc-amount">
+          Amount per wallet
+        </label>
+
+        <input
+          id="bc-amount"
+          type="number"
+          min="1"
+          value="5"
+        >
+
+      </div>
+
+
+      <div style="display:flex;align-items:flex-end">
+
+        <button
+          id="btn-broadcast"
+          class="btn gold full"
+        >
+          Give to everyone
+        </button>
+
+      </div>
+
+    </div>
+
+
+    <div
+      id="bc-notice"
+      class="notice"
+    ></div>
+
+    <div
+      id="bc-error"
+      class="error"
+    ></div>
+
+  </div>
+
+</div>
+
+
+<!-- ================= WALLETS ================= -->
+
+<div
+  id="tab-wallets"
+  class="tab-panel"
+>
+
+  <div class="card">
+
+    <div class="section-head">
+
+      <h2>
+        Wallet Management
+      </h2>
+
+      <span>
+        Coins & Users
+      </span>
+
+    </div>
+
+
+    <div class="search-row">
+
+      <input
+        id="wallet-search"
+        type="text"
+        placeholder="Search by number…"
+      >
+
+      <button
+        id="btn-wallet-search"
+        class="btn ghost"
+      >
+        Search
+      </button>
+
+    </div>
+
+
+    <div class="table-wrap">
+
+      <table>
+
+        <thead>
+
+          <tr>
+            <th>Number</th>
+            <th>Coins</th>
+            <th>Last Claim</th>
+            <th>Actions</th>
+          </tr>
+
+        </thead>
+
+        <tbody id="wallets-body">
+
+          <tr>
+            <td
+              colspan="4"
+              class="empty"
+            >
+              Loading…
+            </td>
+          </tr>
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+
+    <div class="pager">
+
+      <span id="wallets-pageinfo"></span>
+
+      <div class="btns">
+
+        <button
+          id="wallets-prev"
+          class="btn ghost"
+        >
+          ◀ Prev
+        </button>
+
+        <button
+          id="wallets-next"
+          class="btn ghost"
+        >
+          Next ▶
+        </button>
+
+      </div>
+
+    </div>
+
+
+    <div
+      id="wallets-error"
+      class="error"
+    ></div>
+
+  </div>
+
+</div>
+
+
+<!-- ================= CHANNELS ================= -->
+
+<div
+  id="tab-channels"
+  class="tab-panel"
+>
+
+
+  <div class="card">
+
+    <div class="section-head">
+
+      <h2>
+        Add Channel
+      </h2>
+
+      <span>
+        Admin Granted
+      </span>
+
+    </div>
+
+
+    <div class="row">
+
+      <div>
+
+        <label>
+          Owner Number
+        </label>
+
+        <input
+          id="ch-number"
+          type="text"
+          placeholder="94771234567"
+        >
+
+      </div>
+
+
+      <div>
+
+        <label>
+          Channel JID
+        </label>
+
+        <input
+          id="ch-jid"
+          type="text"
+          placeholder="12345678901234@newsletter"
+        >
+
+      </div>
+
+
+      <div>
+
+        <label>
+          Days
+        </label>
+
+        <input
+          id="ch-days"
+          type="number"
+          min="1"
+          max="365"
+          value="30"
+        >
+
+      </div>
+
+    </div>
+
+
+    <label>
+      Reaction Emojis
+    </label>
+
+    <div
+      id="ch-emoji-grid"
+      class="emoji-grid"
+    ></div>
+
+
+    <button
+      id="btn-ch-add"
+      class="btn primary"
+      style="margin-top:14px"
+    >
+      Add Channel ✦
+    </button>
+
+
+    <div
+      id="ch-add-notice"
+      class="notice"
+    ></div>
+
+    <div
+      id="ch-add-error"
+      class="error"
+    ></div>
+
+  </div>
+
+
+  <div
+    class="card"
+    style="margin-top:14px"
+  >
+
+    <div class="section-head">
+
+      <h2>
+        All Channels
+      </h2>
+
+      <span>
+        Active / Expired
+      </span>
+
+    </div>
+
+
+    <div class="search-row">
+
+      <input
+        id="channels-search"
+        type="text"
+        placeholder="Search by owner number…"
+      >
+
+      <button
+        id="btn-channels-search"
+        class="btn ghost"
+      >
+        Search
+      </button>
+
+    </div>
+
+
+    <div class="table-wrap">
+
+      <table>
+
+        <thead>
+
+          <tr>
+            <th>JID</th>
+            <th>Owner</th>
+            <th>Emojis</th>
+            <th>Expires</th>
+            <th>Actions</th>
+          </tr>
+
+        </thead>
+
+        <tbody id="channels-body">
+
+          <tr>
+            <td
+              colspan="5"
+              class="empty"
+            >
+              Loading…
+            </td>
+          </tr>
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+
+    <div class="pager">
+
+      <span id="channels-pageinfo"></span>
+
+      <div class="btns">
+
+        <button
+          id="channels-prev"
+          class="btn ghost"
+        >
+          ◀ Prev
+        </button>
+
+        <button
+          id="channels-next"
+          class="btn ghost"
+        >
+          Next ▶
+        </button>
+
+      </div>
+
+    </div>
+
+
+    <div
+      id="channels-error"
+      class="error"
+    ></div>
+
+  </div>
+
+</div>
+
+
+<!-- ================= SESSIONS ================= -->
+
+<div
+  id="tab-sessions"
+  class="tab-panel"
+>
+
+  <div class="card">
+
+    <div class="section-head">
+
+      <h2>
+        Bot Sessions
+      </h2>
+
+      <span>
+        Live Connections
+      </span>
+
+    </div>
+
+
+    <div class="table-wrap">
+
+      <table>
+
+        <thead>
+
+          <tr>
+            <th>Number</th>
+            <th>Shard</th>
+            <th>Updated</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+
+        </thead>
+
+        <tbody id="sessions-body">
+
+          <tr>
+            <td
+              colspan="5"
+              class="empty"
+            >
+              Loading…
+            </td>
+          </tr>
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+
+    <div
+      id="sessions-error"
+      class="error"
+    ></div>
+
+  </div>
+
+</div>
+
+
+<footer class="footer">
+
+  <strong>
+    🪽 MIYORA MINI BOT
+  </strong>
+
+  <div class="footer-status">
+
+    <span>
+      <i class="dot"></i>
+      Online
+    </span>
+
+    <span>
+      WhatsApp Connected
+    </span>
+
+    <span>
+      Database Active
+    </span>
+
+  </div>
+
+  <span>
+    Premium Admin UI • v1.0.0
+  </span>
+
+</footer>
+
+
+</main>
+
+</div>
+
+</div>
+
+
+<script>
+
+/* =========================================================
+   MIYORA MINI BOT ADMIN SYSTEM
+   ========================================================= */
+
+const API = '/code/api/admin';
+
+const STORE_KEY = 'sakura_admin_token';
+
+const $ = id => document.getElementById(id);
+
+let token = null;
+let tokenExpiresAt = null;
+
+const EMOJI_OPTIONS = [
+  '❤️','🔥','😍','😂',
+  '👍','🎉','✨','🌸',
+  '💯','😮','🙏','💖'
+];
+
+let chSelectedEmojis = [];
+
+
+/* ================= HELPERS ================= */
+
+function showError(el,msg){
+
+  el.textContent = msg;
+  el.classList.add('show');
+
+}
+
+function clearError(el){
+
+  el.textContent = '';
+  el.classList.remove('show');
+
+}
+
+function showNotice(el,msg){
+
+  el.textContent = msg;
+  el.classList.add('show');
+
+}
+
+function clearNotice(el){
+
+  el.textContent = '';
+  el.classList.remove('show');
+
+}
+
+
+function setBusy(btn,busy,label){
+
+  btn.disabled = busy;
+
+  btn.dataset.label =
+    btn.dataset.label ||
+    btn.textContent;
+
+  btn.innerHTML =
+    busy
+      ? '<span class="dot"></span>'
+      : (label || btn.dataset.label);
+
+}
+
+
+/* ================= API ================= */
+
+async function api(
+  path,
+  {
+    method='GET',
+    body,
+    confirm=false
+  }={}
+){
+
+  const headers={
+    'Content-Type':'application/json'
+  };
+
+  if(token){
+
+    headers['x-admin-token']=token;
+
+  }
+
+  if(confirm){
+
+    headers['x-confirm']='yes';
+
+  }
+
+  const opts={
+    method,
+    headers
+  };
+
+  if(body){
+
+    opts.body=JSON.stringify(body);
+
+  }
+
+  const res =
+    await fetch(API+path,opts);
+
+  const data =
+    await res
+      .json()
+      .catch(()=>({}));
+
+  if(res.status===401){
+
+    doLogout();
+
+    throw new Error(
+      'Session expired — please log in again.'
+    );
+
+  }
+
+  if(!res.ok || data.ok===false){
+
+    const err =
+      new Error(
+        data.error ||
+        'Request failed'
+      );
+
+    err.data=data;
+
+    throw err;
+
+  }
+
+  return data;
+
+}
+
+
+/* ================= TOKEN ================= */
+
+function persistToken(){
+
+  localStorage.setItem(
+    STORE_KEY,
+    JSON.stringify({
+      token,
+      tokenExpiresAt
+    })
+  );
+
+}
+
+
+function loadStoredToken(){
+
+  try{
+
+    return JSON.parse(
+      localStorage.getItem(
+        STORE_KEY
+      ) || 'null'
+    );
+
+  }catch(e){
+
+    return null;
+
+  }
+
+}
+
+
+function clearStoredToken(){
+
+  localStorage.removeItem(
+    STORE_KEY
+  );
+
+}
+
+
+/* ================= DASHBOARD ================= */
+
+function showDash(){
+
+  $('view-login').style.display='none';
+
+  $('view-dash').style.display='block';
+
+  loadOverview();
+  loadWallets();
+  loadChannels();
+  loadSessions();
+
+  tickExpiry();
+
+}
+
+
+function doLogout(){
+
+  token=null;
+  tokenExpiresAt=null;
+
+  clearStoredToken();
+
+  $('view-dash').style.display='none';
+
+  $('view-login').style.display='flex';
+
+  $('in-pass').value='';
+
+}
+
+
+/* ================= LOGIN ================= */
+
+$('btn-login')
+.addEventListener(
+  'click',
+  async()=>{
+
+    clearError(
+      $('login-error')
+    );
+
+    const password =
+      $('in-pass')
+      .value
+      .trim();
+
+    if(!password){
+
+      return showError(
+        $('login-error'),
+        'Enter the admin password.'
+      );
+
+    }
+
+    setBusy(
+      $('btn-login'),
+      true
+    );
+
+    try{
+
+      const data =
+        await api(
+          '/login',
+          {
+            method:'POST',
+            body:{
+              key:password
+            }
+          }
+        );
+
+      token=data.token;
+
+      tokenExpiresAt =
+        Date.now() +
+        (data.expiresIn || 0);
+
+      persistToken();
+
+      showDash();
+
+    }catch(e){
+
+      showError(
+        $('login-error'),
+        e.data?.error ||
+        e.message
+      );
+
+    }finally{
+
+      setBusy(
+        $('btn-login'),
+        false,
+        'Enter Dashboard ✨'
+      );
+
+    }
+
+  }
+);
+
+
+$('in-pass')
+.addEventListener(
+  'keydown',
+  ev=>{
+
+    if(ev.key==='Enter'){
+
+      $('btn-login').click();
+
+    }
+
+  }
+);
+
+
+/* ================= LOGOUT ================= */
+
+$('btn-logout')
+.addEventListener(
+  'click',
+  async()=>{
+
+    try{
+
+      await api(
+        '/logout',
+        {
+          method:'POST'
+        }
+      );
+
+    }catch(e){}
+
+    doLogout();
+
+  }
+);
+
+
+/* ================= SESSION TIMER ================= */
+
+function tickExpiry(){
+
+  if(!tokenExpiresAt)
+    return;
+
+  const remaining =
+    tokenExpiresAt -
+    Date.now();
+
+  if(remaining<=0){
+
+    doLogout();
+
+    return;
+
+  }
+
+  setTimeout(
+    tickExpiry,
+    60000
+  );
+
+}
+
+
+/* ================= TABS ================= */
+
+function activateTab(tab){
+
+  document
+    .querySelectorAll('.tab-panel')
+    .forEach(p=>{
+      p.classList.remove('on');
+    });
+
+  const target =
+    $('tab-'+tab);
+
+  if(target)
+    target.classList.add('on');
+
+  document
+    .querySelectorAll(
+      '.nav button'
+    )
+    .forEach(btn=>{
+
+      btn.classList.toggle(
+        'active',
+        btn.dataset.tab===tab
+      );
+
+    });
+
+}
+
+
+document
+  .querySelectorAll(
+    '.nav button[data-tab]'
+  )
+  .forEach(btn=>{
+
+    btn.addEventListener(
+      'click',
+      ()=>{
+        activateTab(
+          btn.dataset.tab
+        );
+      }
+    );
+
+  });
+
+
+/* ================= OVERVIEW ================= */
+
+async function loadOverview(){
+
+  try{
+
+    const data =
+      await api('/stats');
+
+    const s =
+      data.stats;
+
+    $('stats-grid')
+      .innerHTML=`
+
+      <div class="stat-box">
+        <div class="icon">👥</div>
+        <div class="num">
+          ${s.totalWallets}
+        </div>
+        <div class="lbl">
+          Total Wallets
+        </div>
+      </div>
+
+      <div class="stat-box">
+        <div class="icon">🪙</div>
+        <div class="num">
+          ${s.totalCoinsInCirculation}
+        </div>
+        <div class="lbl">
+          Coins In Circulation
+        </div>
+      </div>
+
+      <div class="stat-box">
+        <div class="icon">📡</div>
+        <div class="num">
+          ${s.activeChannels}
+        </div>
+        <div class="lbl">
+          Active Channels
+        </div>
+      </div>
+
+      <div class="stat-box">
+        <div class="icon">⏱️</div>
+        <div class="num">
+          ${Math.floor(
+            s.uptimeSec/60
+          )}m
+        </div>
+        <div class="lbl">
+          Bot Uptime
+        </div>
+      </div>
+
+      <div class="stat-box">
+        <div class="icon">⚠️</div>
+        <div class="num">
+          ${s.expiredChannels}
+        </div>
+        <div class="lbl">
+          Expired Channels
+        </div>
+      </div>
+
+      <div class="stat-box">
+        <div class="icon">🤖</div>
+        <div class="num">
+          ${s.totalSessions}
+        </div>
+        <div class="lbl">
+          Saved Sessions
+        </div>
+      </div>
+
+      <div class="stat-box">
+        <div class="icon">⚡</div>
+        <div class="num">
+          ${s.activeSockets}
+        </div>
+        <div class="lbl">
+          Active Sockets
+        </div>
+      </div>
+
+      <div class="stat-box">
+        <div class="icon">📱</div>
+        <div class="num">
+          ${s.numbersCount}
+        </div>
+        <div class="lbl">
+          Numbers
+        </div>
+      </div>
+
+    `;
+
+    $('quick-wallets')
+      .textContent=
+      s.totalWallets;
+
+    $('quick-coins')
+      .textContent=
+      s.totalCoinsInCirculation;
+
+    $('quick-channels')
+      .textContent=
+      s.activeChannels;
+
+    $('quick-sockets')
+      .textContent=
+      s.activeSockets;
+
+  }catch(e){
+
+    $('stats-grid')
+      .innerHTML=`
+        <div class="empty">
+          ${e.message}
+        </div>
+      `;
+
+  }
+
+}
+
+
+/* ================= BROADCAST ================= */
+
+$('btn-broadcast')
+.addEventListener(
+  'click',
+  async()=>{
+
+    clearNotice(
+      $('bc-notice')
+    );
+
+    clearError(
+      $('bc-error')
+    );
+
+    const amount =
+      Number(
+        $('bc-amount').value
+      );
+
+    if(
+      !Number.isFinite(amount) ||
+      amount<=0
+    ){
+
+      return showError(
+        $('bc-error'),
+        'Enter a valid amount.'
+      );
+
+    }
+
+    if(
+      !confirm(
+        `Give ${amount} coins to EVERY wallet?`
+      )
+    )
+      return;
+
+    setBusy(
+      $('btn-broadcast'),
+      true
+    );
+
+    try{
+
+      const data =
+        await api(
+          '/coins/broadcast',
+          {
+            method:'POST',
+            body:{amount},
+            confirm:true
+          }
+        );
+
+      showNotice(
+        $('bc-notice'),
+        `Gave ${data.amountPerUser} coins to ${data.modified} wallet(s).`
+      );
+
+      loadOverview();
+      loadWallets();
+
+    }catch(e){
+
+      showError(
+        $('bc-error'),
+        e.data?.error ||
+        e.message
+      );
+
+    }finally{
+
+      setBusy(
+        $('btn-broadcast'),
+        false,
+        'Give to everyone'
+      );
+
+    }
+
+  }
+);
+
+
+/* ================= WALLETS ================= */
+
+let walletsPage=1;
+
+const WALLETS_LIMIT=20;
+
+
+async function loadWallets(){
+
+  clearError(
+    $('wallets-error')
+  );
+
+  $('wallets-body')
+    .innerHTML=`
+      <tr>
+        <td colspan="4"
+            class="empty">
+          Loading…
+        </td>
+      </tr>
+    `;
+
+  try{
+
+    const search =
+      $('wallet-search')
+      .value
+      .trim();
+
+    const q =
+      new URLSearchParams({
+        page:walletsPage,
+        limit:WALLETS_LIMIT,
+        search
+      }).toString();
+
+    const data =
+      await api(
+        '/wallets?'+q
+      );
+
+    if(!data.wallets.length){
+
+      $('wallets-body')
+        .innerHTML=`
+          <tr>
+            <td colspan="4"
+                class="empty">
+              No wallets found.
+            </td>
+          </tr>
+        `;
+
+    }else{
+
+      $('wallets-body')
+        .innerHTML=
+        data.wallets
+        .map(w=>`
+
+          <tr
+            data-number="${w.number}"
+          >
+
+            <td class="mono">
+              ${w.number}
+            </td>
+
+            <td>
+              🪙 ${w.coins}
+            </td>
+
+            <td>
+              ${
+                w.lastDailyClaimAt
+                ? new Date(
+                    w.lastDailyClaimAt
+                  ).toLocaleString()
+                : '—'
+              }
+            </td>
+
+            <td>
+
+              <div class="actions-cell">
+
+                <input
+                  type="number"
+                  class="inline-num"
+                  value="10"
+                >
+
+                <button
+                  class="btn gold"
+                  data-act="give"
+                >
+                  Give
+                </button>
+
+                <button
+                  class="btn ghost"
+                  data-act="set"
+                >
+                  Set
+                </button>
+
+                <button
+                  class="btn danger"
+                  data-act="deduct"
+                >
+                  Deduct
+                </button>
+
+              </div>
+
+            </td>
+
+          </tr>
+
+        `)
+        .join('');
+
+    }
+
+    $('wallets-pageinfo')
+      .textContent=
+      `Page ${data.page} of ${data.pages || 1} · ${data.total} total`;
+
+  }catch(e){
+
+    showError(
+      $('wallets-error'),
+      e.message
+    );
+
+  }
+
+}
+
+
+$('btn-wallet-search')
+.addEventListener(
+  'click',
+  ()=>{
+    walletsPage=1;
+    loadWallets();
+  }
+);
+
+
+$('wallet-search')
+.addEventListener(
+  'keydown',
+  ev=>{
+
+    if(ev.key==='Enter'){
+
+      walletsPage=1;
+      loadWallets();
+
+    }
+
+  }
+);
+
+
+$('wallets-prev')
+.addEventListener(
+  'click',
+  ()=>{
+
+    if(walletsPage>1){
+
+      walletsPage--;
+      loadWallets();
+
+    }
+
+  }
+);
+
+
+$('wallets-next')
+.addEventListener(
+  'click',
+  ()=>{
+
+    walletsPage++;
+    loadWallets();
+
+  }
+);
+
+
+$('wallets-body')
+.addEventListener(
+  'click',
+  async ev=>{
+
+    const btn =
+      ev.target.closest(
+        'button[data-act]'
+      );
+
+    if(!btn)
+      return;
+
+    const row =
+      btn.closest('tr');
+
+    const number =
+      row.dataset.number;
+
+    const amount =
+      Number(
+        row.querySelector(
+          '.inline-num'
+        ).value
+      );
+
+    if(
+      !Number.isFinite(amount) ||
+      amount<=0
+    )
+      return alert(
+        'Enter a valid amount.'
+      );
+
+    const act =
+      btn.dataset.act;
+
+    const endpoint =
+      act==='give'
+      ? '/coins/give'
+      : act==='set'
+      ? '/coins/set'
+      : '/coins/deduct';
+
+    const verb =
+      act==='give'
+      ? 'Give'
+      : act==='set'
+      ? 'Set'
+      : 'Deduct';
+
+    if(
+      !confirm(
+        `${verb} ${amount} coins for ${number}?`
+      )
+    )
+      return;
+
+    setBusy(btn,true);
+
+    try{
+
+      await api(
+        endpoint,
+        {
+          method:'POST',
+          body:{
+            number,
+            amount
+          },
+          confirm:true
+        }
+      );
+
+      loadWallets();
+      loadOverview();
+
+    }catch(e){
+
+      alert(
+        e.data?.error ||
+        e.message
+      );
+
+    }finally{
+
+      setBusy(
+        btn,
+        false,
+        verb
+      );
+
+    }
+
+  }
+);
+
+
+/* ================= CHANNELS ================= */
+
+let channelsPage=1;
+
+const CHANNELS_LIMIT=30;
+
+
+EMOJI_OPTIONS.forEach(
+  emoji=>{
+
+    const btn =
+      document.createElement(
+        'button'
+      );
+
+    btn.type='button';
+
+    btn.className=
+      'emoji-pick';
+
+    btn.textContent=emoji;
+
+    btn.addEventListener(
+      'click',
+      ()=>{
+
+        const index =
+          chSelectedEmojis
+          .indexOf(emoji);
+
+        if(index===-1){
+
+          chSelectedEmojis
+            .push(emoji);
+
+        }else{
+
+          chSelectedEmojis
+            .splice(index,1);
+
+        }
+
+        btn.classList.toggle(
+          'on'
+        );
+
+      }
+    );
+
+    $('ch-emoji-grid')
+      .appendChild(btn);
+
+  }
+);
+
+
+$('btn-ch-add')
+.addEventListener(
+  'click',
+  async()=>{
+
+    clearError(
+      $('ch-add-error')
+    );
+
+    clearNotice(
+      $('ch-add-notice')
+    );
+
+    const number =
+      $('ch-number')
+      .value
+      .trim();
+
+    const jid =
+      $('ch-jid')
+      .value
+      .trim();
+
+    const days =
+      Math.max(
+        1,
+        Math.min(
+          365,
+          parseInt(
+            $('ch-days').value ||
+            '30',
+            10
+          )
+        )
+      );
+
+    if(!number){
+
+      return showError(
+        $('ch-add-error'),
+        'Owner number required.'
+      );
+
+    }
+
+    if(
+      !jid.endsWith(
+        '@newsletter'
+      )
+    ){
+
+      return showError(
+        $('ch-add-error'),
+        'JID must end with @newsletter.'
+      );
+
+    }
+
+    if(
+      !chSelectedEmojis.length
+    ){
+
+      return showError(
+        $('ch-add-error'),
+        'Pick at least one emoji.'
+      );
+
+    }
+
+    setBusy(
+      $('btn-ch-add'),
+      true
+    );
+
+    try{
+
+      await api(
+        '/channels/add',
+        {
+          method:'POST',
+          body:{
+            number,
+            jid,
+            emojis:
+              chSelectedEmojis,
+            days
+          },
+          confirm:true
+        }
+      );
+
+      showNotice(
+        $('ch-add-notice'),
+        `${jid} added for ${days} day(s).`
+      );
+
+      $('ch-number').value='';
+      $('ch-jid').value='';
+
+      chSelectedEmojis=[];
+
+      document
+        .querySelectorAll(
+          '#ch-emoji-grid .on'
+        )
+        .forEach(
+          b=>b.classList.remove(
+            'on'
+          )
+        );
+
+      loadChannels();
+      loadOverview();
+
+    }catch(e){
+
+      showError(
+        $('ch-add-error'),
+        e.data?.error ||
+        e.message
+      );
+
+    }finally{
+
+      setBusy(
+        $('btn-ch-add'),
+        false,
+        'Add Channel ✦'
+      );
+
+    }
+
+  }
+);
+
+
+function formatExpiry(
+  expiresAt
+){
+
+  const remaining =
+    new Date(
+      expiresAt
+    ).getTime() -
+    Date.now();
+
+  if(remaining<=0){
+
+    return{
+      text:'Expired',
+      cls:'expiring'
+    };
+
+  }
+
+  const days =
+    Math.floor(
+      remaining /
+      86400000
+    );
+
+  return{
+    text:
+      days>0
+      ? `${days}d left`
+      : 'Expiring soon',
+
+    cls:
+      days>0
+      ? 'active'
+      : 'expiring'
+  };
+
+}
+
+
+async function loadChannels(){
+
+  clearError(
+    $('channels-error')
+  );
+
+  $('channels-body')
+    .innerHTML=`
+      <tr>
+        <td colspan="5"
+            class="empty">
+          Loading…
+        </td>
+      </tr>
+    `;
+
+  try{
+
+    const search =
+      $('channels-search')
+      .value
+      .trim();
+
+    const q =
+      new URLSearchParams({
+        page:channelsPage,
+        limit:CHANNELS_LIMIT,
+        search
+      }).toString();
+
+    const data =
+      await api(
+        '/channels?'+q
+      );
+
+    if(!data.channels.length){
+
+      $('channels-body')
+        .innerHTML=`
+          <tr>
+            <td
+              colspan="5"
+              class="empty"
+            >
+              No channels found.
+            </td>
+          </tr>
+        `;
+
+    }else{
+
+      $('channels-body')
+        .innerHTML=
+        data.channels
+        .map(c=>{
+
+          const exp =
+            formatExpiry(
+              c.expiresAt
+            );
+
+          return`
+
+          <tr data-jid="${c.jid}">
+
+            <td class="mono">
+              ${c.jid}
+            </td>
+
+            <td class="mono">
+              ${c.number}
+            </td>
+
+            <td>
+              ${(c.emojis||[]).join(' ')}
+            </td>
+
+            <td>
+              <span
+                class="badge ${exp.cls}"
+              >
+                ${exp.text}
+              </span>
+            </td>
+
+            <td>
+
+              <div class="actions-cell">
+
+                <input
+                  type="number"
+                  class="inline-num"
+                  value="7"
+                >
+
+                <button
+                  class="btn gold"
+                  data-act="extend"
+                >
+                  Extend
+                </button>
+
+                <button
+                  class="btn danger"
+                  data-act="delete"
+                >
+                  Delete
+                </button>
+
+              </div>
+
+            </td>
+
+          </tr>
+
+          `;
+
+        })
+        .join('');
+
+    }
+
+    $('channels-pageinfo')
+      .textContent=
+      `Page ${data.page} of ${data.pages || 1} · ${data.total} total`;
+
+  }catch(e){
+
+    showError(
+      $('channels-error'),
+      e.message
+    );
+
+  }
+
+}
+
+
+$('btn-channels-search')
+.addEventListener(
+  'click',
+  ()=>{
+    channelsPage=1;
+    loadChannels();
+  }
+);
+
+
+$('channels-search')
+.addEventListener(
+  'keydown',
+  ev=>{
+
+    if(ev.key==='Enter'){
+
+      channelsPage=1;
+      loadChannels();
+
+    }
+
+  }
+);
+
+
+$('channels-prev')
+.addEventListener(
+  'click',
+  ()=>{
+
+    if(channelsPage>1){
+
+      channelsPage--;
+      loadChannels();
+
+    }
+
+  }
+);
+
+
+$('channels-next')
+.addEventListener(
+  'click',
+  ()=>{
+
+    channelsPage++;
+    loadChannels();
+
+  }
+);
+
+
+$('channels-body')
+.addEventListener(
+  'click',
+  async ev=>{
+
+    const btn =
+      ev.target.closest(
+        'button[data-act]'
+      );
+
+    if(!btn)
+      return;
+
+    const row =
+      btn.closest('tr');
+
+    const jid =
+      row.dataset.jid;
+
+    const act =
+      btn.dataset.act;
+
+
+    if(act==='delete'){
+
+      if(
+        !confirm(
+          `Delete channel ${jid}?`
+        )
+      )
+        return;
+
+      setBusy(btn,true);
+
+      try{
+
+        await api(
+          '/channels/delete',
+          {
+            method:'POST',
+            body:{jid},
+            confirm:true
+          }
+        );
+
+        loadChannels();
+        loadOverview();
+
+      }catch(e){
+
+        alert(
+          e.data?.error ||
+          e.message
+        );
+
+      }finally{
+
+        setBusy(
+          btn,
+          false,
+          'Delete'
+        );
+
+      }
+
+    }
+
+
+    if(act==='extend'){
+
+      const days =
+        Number(
+          row.querySelector(
+            '.inline-num'
+          ).value
+        );
+
+      if(
+        !Number.isInteger(days) ||
+        days<1
+      )
+        return alert(
+          'Enter valid days.'
+        );
+
+      setBusy(btn,true);
+
+      try{
+
+        await api(
+          '/channels/extend',
+          {
+            method:'POST',
+            body:{
+              jid,
+              days
+            }
+          }
+        );
+
+        loadChannels();
+
+      }catch(e){
+
+        alert(
+          e.data?.error ||
+          e.message
+        );
+
+      }finally{
+
+        setBusy(
+          btn,
+          false,
+          'Extend'
+        );
+
+      }
+
+    }
+
+  }
+);
+
+
+/* ================= SESSIONS ================= */
+
+async function loadSessions(){
+
+  clearError(
+    $('sessions-error')
+  );
+
+  $('sessions-body')
+    .innerHTML=`
+      <tr>
+        <td colspan="5"
+            class="empty">
+          Loading…
+        </td>
+      </tr>
+    `;
+
+  try{
+
+    const data =
+      await api(
+        '/sessions'
+      );
+
+    if(!data.sessions.length){
+
+      $('sessions-body')
+        .innerHTML=`
+          <tr>
+            <td colspan="5"
+                class="empty">
+              No sessions found.
+            </td>
+          </tr>
+        `;
+
+      return;
+
+    }
+
+
+    $('sessions-body')
+      .innerHTML=
+      data.sessions
+      .map(s=>`
+
+        <tr
+          data-number="${s.number}"
+        >
+
+          <td class="mono">
+            ${s.number}
+          </td>
+
+          <td>
+            ${
+              typeof s.dbIndex==='number'
+              ? s.dbIndex+1
+              : '—'
+            }
+          </td>
+
+          <td>
+            ${
+              s.updatedAt
+              ? new Date(
+                  s.updatedAt
+                ).toLocaleString()
+              : '—'
+            }
+          </td>
+
+          <td>
+
+            <span
+              class="badge ${
+                s.active
+                ? 'active'
+                : 'inactive'
+              }"
+            >
+              ${
+                s.active
+                ? 'Active'
+                : 'Offline'
+              }
+            </span>
+
+          </td>
+
+          <td>
+
+            <button
+              class="btn danger"
+              data-act="delete"
+            >
+              Delete
+            </button>
+
+          </td>
+
+        </tr>
+
+      `)
+      .join('');
+
+  }catch(e){
+
+    showError(
+      $('sessions-error'),
+      e.message
+    );
+
+  }
+
+}
+
+
+$('sessions-body')
+.addEventListener(
+  'click',
+  async ev=>{
+
+    const btn =
+      ev.target.closest(
+        'button[data-act="delete"]'
+      );
+
+    if(!btn)
+      return;
+
+    const row =
+      btn.closest('tr');
+
+    const number =
+      row.dataset.number;
+
+    if(
+      !confirm(
+        `Delete session ${number}?`
+      )
+    )
+      return;
+
+    setBusy(btn,true);
+
+    try{
+
+      await api(
+        '/sessions/delete',
+        {
+          method:'POST',
+          body:{number},
+          confirm:true
+        }
+      );
+
+      loadSessions();
+      loadOverview();
+
+    }catch(e){
+
+      alert(
+        e.data?.error ||
+        e.message
+      );
+
+    }finally{
+
+      setBusy(
+        btn,
+        false,
+        'Delete'
+      );
+
+    }
+
+  }
+);
+
+
+/* ================= AUTO REFRESH ================= */
+
+setInterval(
+  ()=>{
+    if(
+      $('view-dash')
+      .style
+      .display!=='none'
+    ){
+
+      loadOverview();
+
+    }
+  },
+  30000
+);
+
+
+/* ================= BOOT ================= */
+
+(function init(){
+
+  const stored =
+    loadStoredToken();
+
+  if(
+    stored &&
+    stored.token &&
+    stored.tokenExpiresAt >
+      Date.now()
+  ){
+
+    token =
+      stored.token;
+
+    tokenExpiresAt =
+      stored.tokenExpiresAt;
+
+    showDash();
+
+  }
+
+})();
+
+</script>
+
+</body>
+</html>

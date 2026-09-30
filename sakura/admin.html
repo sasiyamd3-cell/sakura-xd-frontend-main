@@ -1,0 +1,3420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>MIYORA MD — Admin Panel</title>
+
+<meta name="theme-color" content="#0b0812">
+
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --bg: #08060d;
+  --panel: #100c18;
+  --panel2: #15101e;
+  --border: rgba(255,255,255,.08);
+
+  --purple: #a855f7;
+  --purple2: #c084fc;
+  --pink: #ec4899;
+
+  --green: #22c55e;
+  --red: #ef4444;
+  --yellow: #f59e0b;
+
+  --text: #fff;
+  --muted: #918b9d;
+}
+
+body {
+  font-family: Inter, Arial, sans-serif;
+  background:
+    radial-gradient(circle at 20% 0%, rgba(168,85,247,.12), transparent 30%),
+    radial-gradient(circle at 100% 100%, rgba(236,72,153,.08), transparent 30%),
+    var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+/* ================= LOGIN ================= */
+
+.login-screen {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background:
+    radial-gradient(circle at center, rgba(168,85,247,.14), transparent 40%),
+    #08060d;
+  z-index: 9999;
+}
+
+.login-box {
+  width: 100%;
+  max-width: 410px;
+  padding: 35px;
+  border: 1px solid var(--border);
+  border-radius: 26px;
+  background: rgba(16,12,24,.88);
+  backdrop-filter: blur(25px);
+  box-shadow:
+    0 30px 100px rgba(0,0,0,.5),
+    0 0 60px rgba(168,85,247,.08);
+}
+
+.logo {
+  width: 65px;
+  height: 65px;
+  margin: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 20px;
+  background: linear-gradient(135deg,#a855f7,#ec4899);
+  box-shadow: 0 0 35px rgba(168,85,247,.35);
+  font-size: 28px;
+}
+
+.login-box h1 {
+  text-align: center;
+  margin-top: 20px;
+  font-size: 24px;
+}
+
+.login-box p {
+  text-align: center;
+  color: var(--muted);
+  font-size: 13px;
+  margin: 8px 0 28px;
+}
+
+.input {
+  width: 100%;
+  height: 50px;
+  padding: 0 15px;
+  border-radius: 13px;
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,.04);
+  color: white;
+  outline: none;
+  margin-bottom: 12px;
+}
+
+.input:focus {
+  border-color: rgba(168,85,247,.6);
+}
+
+.login-btn {
+  width: 100%;
+  height: 50px;
+  border: 0;
+  border-radius: 13px;
+  background: linear-gradient(135deg,#a855f7,#ec4899);
+  color: white;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 10px 30px rgba(168,85,247,.2);
+}
+
+.login-error {
+  color: #fb7185;
+  text-align: center;
+  margin-top: 12px;
+  font-size: 12px;
+}
+
+/* ================= APP ================= */
+
+.app {
+  display: none;
+  min-height: 100vh;
+}
+
+/* ================= SIDEBAR ================= */
+
+.sidebar {
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 245px;
+  padding: 22px 15px;
+  border-right: 1px solid var(--border);
+  background: rgba(10,7,15,.9);
+  backdrop-filter: blur(20px);
+  z-index: 100;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 10px 25px;
+}
+
+.brand-icon {
+  width: 43px;
+  height: 43px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg,#a855f7,#ec4899);
+  font-size: 20px;
+}
+
+.brand-title {
+  font-weight: 900;
+  font-size: 16px;
+}
+
+.brand-sub {
+  color: var(--muted);
+  font-size: 10px;
+  margin-top: 3px;
+}
+
+.nav-title {
+  color: #625d6d;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  padding: 18px 10px 8px;
+}
+
+.nav-btn {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: #a9a3b2;
+  padding: 12px;
+  border-radius: 12px;
+  text-align: left;
+  cursor: pointer;
+  margin-bottom: 4px;
+  font-size: 13px;
+  transition: .2s;
+}
+
+.nav-btn:hover,
+.nav-btn.active {
+  color: white;
+  background: rgba(168,85,247,.12);
+  box-shadow: inset 3px 0 0 var(--purple);
+}
+
+.logout-btn {
+  position: absolute;
+  bottom: 20px;
+  left: 15px;
+  width: calc(100% - 30px);
+  padding: 12px;
+  border: 1px solid rgba(239,68,68,.15);
+  background: rgba(239,68,68,.06);
+  color: #f87171;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+/* ================= MAIN ================= */
+
+.main {
+  margin-left: 245px;
+  padding: 28px;
+  min-height: 100vh;
+}
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 28px;
+}
+
+.page-title {
+  font-size: 27px;
+  font-weight: 900;
+}
+
+.page-subtitle {
+  color: var(--muted);
+  font-size: 12px;
+  margin-top: 5px;
+}
+
+.status-pill {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 13px;
+  border-radius: 30px;
+  border: 1px solid rgba(34,197,94,.2);
+  background: rgba(34,197,94,.07);
+  color: #86efac;
+  font-size: 11px;
+}
+
+.status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #22c55e;
+  box-shadow: 0 0 10px #22c55e;
+}
+
+/* ================= SECTIONS ================= */
+
+.section {
+  display: none;
+}
+
+.section.active {
+  display: block;
+}
+
+/* ================= CARDS ================= */
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4,1fr);
+  gap: 15px;
+}
+
+.card {
+  background:
+    linear-gradient(145deg,rgba(255,255,255,.045),rgba(255,255,255,.015));
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 20px;
+  backdrop-filter: blur(15px);
+  box-shadow: 0 15px 50px rgba(0,0,0,.15);
+}
+
+.stat-card {
+  min-height: 180px;
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-card::after {
+  content: "";
+  position: absolute;
+  width: 120px;
+  height: 120px;
+  right: -60px;
+  bottom: -60px;
+  background: var(--purple);
+  filter: blur(70px);
+  opacity: .12;
+}
+
+.stat-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.stat-label {
+  color: #85808e;
+  font-size: 10px;
+  letter-spacing: 1.4px;
+  font-weight: 800;
+}
+
+.stat-value {
+  margin-top: 8px;
+  font-size: 31px;
+  font-weight: 900;
+}
+
+.stat-sub {
+  margin-top: 7px;
+  color: #777180;
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.stat-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 13px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: rgba(168,85,247,.1);
+  border: 1px solid rgba(168,85,247,.2);
+  font-size: 19px;
+}
+
+/* ================= NUMBER ANALYTICS ================= */
+
+.mini-analytics {
+  position: relative;
+  margin-top: 16px;
+}
+
+.mini-chart {
+  width: 100%;
+  height: 62px;
+  overflow: hidden;
+}
+
+.mini-chart svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+#numbersLine {
+  filter: drop-shadow(0 0 5px rgba(168,85,247,.8));
+  transition: .35s;
+}
+
+#numbersArea {
+  transition: .35s;
+}
+
+.analytics-info {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 2px;
+}
+
+.analytics-info span {
+  font-size: 11px;
+  color: #c084fc;
+  font-weight: 900;
+}
+
+.analytics-info small {
+  color: #625d6d;
+  font-size: 9px;
+}
+
+.online-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #22c55e;
+  box-shadow: 0 0 9px #22c55e;
+}
+
+/* ================= HERO ================= */
+
+.hero {
+  margin-top: 18px;
+  min-height: 150px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 28px;
+  border-radius: 22px;
+  border: 1px solid rgba(168,85,247,.16);
+  background:
+    radial-gradient(circle at 90% 20%,rgba(236,72,153,.12),transparent 30%),
+    radial-gradient(circle at 20% 80%,rgba(168,85,247,.12),transparent 30%),
+    rgba(16,12,24,.7);
+}
+
+.hero h2 {
+  font-size: 25px;
+}
+
+.hero p {
+  color: var(--muted);
+  font-size: 12px;
+  margin-top: 8px;
+}
+
+.hero-badge {
+  font-size: 40px;
+}
+
+/* ================= GRID ================= */
+
+.content-grid {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap: 15px;
+  margin-top: 18px;
+}
+
+.card-title {
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.card-description {
+  color: var(--muted);
+  font-size: 10px;
+  margin-top: 4px;
+}
+
+/* ================= ACTIVITY ================= */
+
+.activity {
+  margin-top: 20px;
+}
+
+.activity-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.activity-label {
+  width: 75px;
+  font-size: 10px;
+  color: var(--muted);
+}
+
+.activity-track {
+  flex: 1;
+  height: 7px;
+  border-radius: 20px;
+  background: rgba(255,255,255,.05);
+  overflow: hidden;
+}
+
+.activity-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg,#a855f7,#ec4899);
+}
+
+/* ================= TABLE ================= */
+
+.table-wrap {
+  overflow-x: auto;
+  margin-top: 18px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 600px;
+}
+
+th {
+  text-align: left;
+  color: #696371;
+  font-size: 10px;
+  padding: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+td {
+  padding: 13px 12px;
+  border-bottom: 1px solid rgba(255,255,255,.04);
+  font-size: 12px;
+}
+
+.badge {
+  display: inline-flex;
+  padding: 5px 8px;
+  border-radius: 20px;
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.badge.green {
+  background: rgba(34,197,94,.1);
+  color: #86efac;
+}
+
+.badge.red {
+  background: rgba(239,68,68,.1);
+  color: #fca5a5;
+}
+
+.badge.yellow {
+  background: rgba(245,158,11,.1);
+  color: #fcd34d;
+}
+
+/* ================= BUTTONS ================= */
+
+.btn {
+  border: 0;
+  border-radius: 10px;
+  padding: 9px 13px;
+  color: white;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg,#a855f7,#ec4899);
+}
+
+.btn-danger {
+  background: rgba(239,68,68,.1);
+  color: #fca5a5;
+  border: 1px solid rgba(239,68,68,.15);
+}
+
+.btn-green {
+  background: rgba(34,197,94,.1);
+  color: #86efac;
+  border: 1px solid rgba(34,197,94,.15);
+}
+
+/* ================= TOOLBAR ================= */
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
+
+.search {
+  width: 250px;
+  height: 40px;
+  padding: 0 13px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,.035);
+  color: white;
+  outline: none;
+}
+
+.search:focus {
+  border-color: rgba(168,85,247,.5);
+}
+
+/* ================= FORM ================= */
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2,1fr);
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.form-input {
+  height: 43px;
+  padding: 0 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,.03);
+  color: white;
+  outline: none;
+}
+
+textarea.form-input {
+  height: 100px;
+  padding-top: 12px;
+  resize: vertical;
+}
+
+/* ================= ALERT ================= */
+
+.alert-box {
+  margin-top: 18px;
+  padding: 14px;
+  border-radius: 13px;
+  border: 1px solid rgba(245,158,11,.15);
+  background: rgba(245,158,11,.05);
+  color: #fcd34d;
+  font-size: 11px;
+}
+
+/* ================= MOBILE ================= */
+
+.mobile-menu {
+  display: none;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,.04);
+  color: white;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+@media(max-width:1100px) {
+
+  .stats-grid {
+    grid-template-columns: repeat(2,1fr);
+  }
+
+  .content-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media(max-width:760px) {
+
+  .sidebar {
+    transform: translateX(-100%);
+    transition: .25s;
+  }
+
+  .sidebar.open {
+    transform: translateX(0);
+  }
+
+  .main {
+    margin-left: 0;
+    padding: 17px;
+  }
+
+  .mobile-menu {
+    display: block;
+  }
+
+  .topbar {
+    gap: 10px;
+  }
+
+  .page-title {
+    font-size: 21px;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .hero {
+    padding: 22px;
+  }
+
+  .hero h2 {
+    font-size: 20px;
+  }
+
+  .hero-badge {
+    font-size: 28px;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .search {
+    width: 100%;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<!-- =====================================================
+     LOGIN
+===================================================== -->
+
+<div class="login-screen" id="loginScreen">
+
+  <div class="login-box">
+
+    <div class="logo">🌸</div>
+
+    <h1>MIYORA MD</h1>
+
+    <p>Premium Administration Panel</p>
+
+    <input
+      class="input"
+      id="loginUsername"
+      value="admin"
+      placeholder="Username"
+      autocomplete="username"
+    >
+
+    <input
+      class="input"
+      id="loginPassword"
+      type="password"
+      placeholder="Admin Password"
+      autocomplete="current-password"
+    >
+
+    <button class="login-btn" onclick="login()">
+      LOGIN TO PANEL
+    </button>
+
+    <div class="login-error" id="loginError"></div>
+
+  </div>
+
+</div>
+
+
+<!-- =====================================================
+     APP
+===================================================== -->
+
+<div class="app" id="app">
+
+  <!-- SIDEBAR -->
+
+  <aside class="sidebar" id="sidebar">
+
+    <div class="brand">
+
+      <div class="brand-icon">🌸</div>
+
+      <div>
+        <div class="brand-title">MIYORA MD</div>
+        <div class="brand-sub">ADMIN CONTROL CENTER</div>
+      </div>
+
+    </div>
+
+
+    <div class="nav-title">MAIN</div>
+
+    <button class="nav-btn active" onclick="showSection('dashboard',this)">
+      📊 Dashboard
+    </button>
+
+    <button class="nav-btn" onclick="showSection('wallets',this)">
+      🪙 Wallets
+    </button>
+
+    <button class="nav-btn" onclick="showSection('channels',this)">
+      📡 Channels
+    </button>
+
+    <button class="nav-btn" onclick="showSection('sessions',this)">
+      🤖 Sessions
+    </button>
+
+
+    <div class="nav-title">SYSTEM</div>
+
+    <button class="nav-btn" onclick="refreshAll()">
+      🔄 Refresh
+    </button>
+
+    <button class="nav-btn" onclick="showSystemInfo()">
+      ⚙️ System
+    </button>
+
+
+    <button class="logout-btn" onclick="logout()">
+      ⎋ Logout
+    </button>
+
+  </aside>
+
+
+  <!-- MAIN -->
+
+  <main class="main">
+
+    <div class="topbar">
+
+      <div style="display:flex;align-items:center;gap:12px">
+
+        <button class="mobile-menu" onclick="toggleSidebar()">
+          ☰
+        </button>
+
+        <div>
+          <div class="page-title" id="pageTitle">
+            Dashboard
+          </div>
+
+          <div class="page-subtitle">
+            MIYORA MINI BOT control & analytics
+          </div>
+        </div>
+
+      </div>
+
+
+      <div class="status-pill">
+        <span class="status-dot"></span>
+        SYSTEM ONLINE
+      </div>
+
+    </div>
+
+
+    <!-- =================================================
+         DASHBOARD
+    ================================================= -->
+
+    <section class="section active" id="dashboard">
+
+      <div class="stats-grid">
+
+
+        <!-- WALLETS -->
+
+        <div class="card stat-card">
+
+          <div class="stat-top">
+
+            <div>
+
+              <div class="stat-label">
+                TOTAL WALLETS
+              </div>
+
+              <div
+                class="stat-value"
+                id="totalWallets"
+              >
+                0
+              </div>
+
+              <div class="stat-sub">
+                Registered users
+              </div>
+
+            </div>
+
+            <div class="stat-icon">
+              👛
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <!-- COINS -->
+
+        <div class="card stat-card">
+
+          <div class="stat-top">
+
+            <div>
+
+              <div class="stat-label">
+                COINS IN CIRCULATION
+              </div>
+
+              <div
+                class="stat-value"
+                id="totalCoinsInCirculation"
+              >
+                0
+              </div>
+
+              <div class="stat-sub">
+                MIYORA economy
+              </div>
+
+            </div>
+
+            <div class="stat-icon">
+              🪙
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <!-- CHANNELS -->
+
+        <div class="card stat-card">
+
+          <div class="stat-top">
+
+            <div>
+
+              <div class="stat-label">
+                ACTIVE CHANNELS
+              </div>
+
+              <div
+                class="stat-value"
+                id="activeChannels"
+              >
+                0
+              </div>
+
+              <div class="stat-sub">
+                Connected channels
+              </div>
+
+            </div>
+
+            <div class="stat-icon">
+              📡
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <!-- BOT NUMBERS -->
+
+        <div class="card stat-card numbers-card">
+
+          <div class="stat-top">
+
+            <div>
+
+              <div class="stat-label">
+                BOT NUMBERS
+              </div>
+
+              <div
+                class="stat-value"
+                id="numbersCount"
+              >
+                0
+              </div>
+
+              <div class="stat-sub">
+                <span class="online-dot"></span>
+                Active Bot Numbers
+              </div>
+
+            </div>
+
+            <div class="stat-icon">
+              🤖
+            </div>
+
+          </div>
+
+
+          <!-- LINE ANALYTICS -->
+
+          <div class="mini-analytics">
+
+            <div class="mini-chart">
+
+              <svg
+                viewBox="0 0 300 70"
+                preserveAspectRatio="none"
+              >
+
+                <defs>
+
+                  <linearGradient
+                    id="numGlow"
+                    x1="0"
+                    x2="0"
+                    y1="0"
+                    y2="1"
+                  >
+
+                    <stop
+                      offset="0%"
+                      stop-color="#a855f7"
+                      stop-opacity=".38"
+                    />
+
+                    <stop
+                      offset="100%"
+                      stop-color="#a855f7"
+                      stop-opacity="0"
+                    />
+
+                  </linearGradient>
+
+                </defs>
+
+
+                <path
+                  id="numbersArea"
+                  d="M0,60 L30,55 L60,58 L90,45 L120,48 L150,35 L180,40 L210,25 L240,30 L270,15 L300,20 L300,70 L0,70 Z"
+                  fill="url(#numGlow)"
+                />
+
+
+                <polyline
+                  id="numbersLine"
+                  points="0,60 30,55 60,58 90,45 120,48 150,35 180,40 210,25 240,30 270,15 300,20"
+                  fill="none"
+                  stroke="#a855f7"
+                  stroke-width="3"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+
+              </svg>
+
+            </div>
+
+
+            <div class="analytics-info">
+
+              <span id="numbersChange">
+                +0
+              </span>
+
+              <small>
+                bot activity
+              </small>
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <!-- UPTIME -->
+
+        <div class="card stat-card">
+
+          <div class="stat-top">
+
+            <div>
+
+              <div class="stat-label">
+                UPTIME
+              </div>
+
+              <div
+                class="stat-value"
+                id="uptime"
+              >
+                0m
+              </div>
+
+              <div class="stat-sub">
+                Server running time
+              </div>
+
+            </div>
+
+            <div class="stat-icon">
+              ⚡
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <!-- EXPIRED -->
+
+        <div class="card stat-card">
+
+          <div class="stat-top">
+
+            <div>
+
+              <div class="stat-label">
+                EXPIRED CHANNELS
+              </div>
+
+              <div
+                class="stat-value"
+                id="expiredChannels"
+              >
+                0
+              </div>
+
+              <div class="stat-sub">
+                Require attention
+              </div>
+
+            </div>
+
+            <div class="stat-icon">
+              ⏰
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <!-- SESSIONS -->
+
+        <div class="card stat-card">
+
+          <div class="stat-top">
+
+            <div>
+
+              <div class="stat-label">
+                TOTAL SESSIONS
+              </div>
+
+              <div
+                class="stat-value"
+                id="totalSessions"
+              >
+                0
+              </div>
+
+              <div class="stat-sub">
+                Bot sessions
+              </div>
+
+            </div>
+
+            <div class="stat-icon">
+              🔐
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <!-- SOCKETS -->
+
+        <div class="card stat-card">
+
+          <div class="stat-top">
+
+            <div>
+
+              <div class="stat-label">
+                ACTIVE SOCKETS
+              </div>
+
+              <div
+                class="stat-value"
+                id="activeSockets"
+              >
+                0
+              </div>
+
+              <div class="stat-sub">
+                Live connections
+              </div>
+
+            </div>
+
+            <div class="stat-icon">
+              🔌
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- HERO -->
+
+      <div class="hero">
+
+        <div>
+
+          <h2>
+            🌸 First 20 — Thank You
+          </h2>
+
+          <p>
+            MIYORA MINI BOT community is growing.
+            Thank you for being part of the journey.
+          </p>
+
+        </div>
+
+        <div class="hero-badge">
+          🕊️
+        </div>
+
+      </div>
+
+
+      <!-- CONTENT -->
+
+      <div class="content-grid">
+
+
+        <!-- ACTIVITY -->
+
+        <div class="card">
+
+          <div class="card-title">
+            📈 System Activity
+          </div>
+
+          <div class="card-description">
+            Current platform activity overview
+          </div>
+
+
+          <div class="activity">
+
+            <div class="activity-row">
+
+              <div class="activity-label">
+                Wallets
+              </div>
+
+              <div class="activity-track">
+                <div
+                  class="activity-fill"
+                  id="walletActivity"
+                  style="width:35%"
+                ></div>
+              </div>
+
+            </div>
+
+
+            <div class="activity-row">
+
+              <div class="activity-label">
+                Channels
+              </div>
+
+              <div class="activity-track">
+                <div
+                  class="activity-fill"
+                  id="channelActivity"
+                  style="width:50%"
+                ></div>
+              </div>
+
+            </div>
+
+
+            <div class="activity-row">
+
+              <div class="activity-label">
+                Sessions
+              </div>
+
+              <div class="activity-track">
+                <div
+                  class="activity-fill"
+                  id="sessionActivity"
+                  style="width:25%"
+                ></div>
+              </div>
+
+            </div>
+
+
+            <div class="activity-row">
+
+              <div class="activity-label">
+                Numbers
+              </div>
+
+              <div class="activity-track">
+                <div
+                  class="activity-fill"
+                  id="numberActivity"
+                  style="width:20%"
+                ></div>
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <!-- QUICK -->
+
+        <div class="card">
+
+          <div class="card-title">
+            ⚡ Quick Stats
+          </div>
+
+          <div class="card-description">
+            Live platform information
+          </div>
+
+
+          <div style="margin-top:20px">
+
+            <div class="activity-row">
+
+              <div class="activity-label">
+                Wallets
+              </div>
+
+              <strong id="quickWallets">
+                0
+              </strong>
+
+            </div>
+
+
+            <div class="activity-row">
+
+              <div class="activity-label">
+                Coins
+              </div>
+
+              <strong id="quickCoins">
+                0
+              </strong>
+
+            </div>
+
+
+            <div class="activity-row">
+
+              <div class="activity-label">
+                Channels
+              </div>
+
+              <strong id="quickChannels">
+                0
+              </strong>
+
+            </div>
+
+
+            <div class="activity-row">
+
+              <div class="activity-label">
+                Sockets
+              </div>
+
+              <strong id="quickSockets">
+                0
+              </strong>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- ALERT -->
+
+      <div class="alert-box" id="systemAlert">
+        🟢 System is operating normally.
+      </div>
+
+    </section>
+
+
+    <!-- =================================================
+         WALLETS
+    ================================================= -->
+
+    <section class="section" id="wallets">
+
+      <div class="card">
+
+        <div class="card-title">
+          🪙 Wallet Management
+        </div>
+
+        <div class="card-description">
+          Manage user coins and balances
+        </div>
+
+
+        <div class="toolbar">
+
+          <input
+            class="search"
+            id="walletSearch"
+            placeholder="Search wallet / number..."
+            oninput="loadWallets()"
+          >
+
+          <button
+            class="btn btn-primary"
+            onclick="loadWallets()"
+          >
+            🔄 Refresh
+          </button>
+
+        </div>
+
+
+        <div class="table-wrap">
+
+          <table>
+
+            <thead>
+
+              <tr>
+                <th>USER</th>
+                <th>NUMBER</th>
+                <th>COINS</th>
+                <th>STATUS</th>
+                <th>ACTION</th>
+              </tr>
+
+            </thead>
+
+            <tbody id="walletTable">
+
+              <tr>
+                <td colspan="5">
+                  Loading...
+                </td>
+              </tr>
+
+            </tbody>
+
+          </table>
+
+        </div>
+
+      </div>
+
+
+      <div class="content-grid">
+
+        <div class="card">
+
+          <div class="card-title">
+            ➕ Give Coins
+          </div>
+
+          <div class="form-grid">
+
+            <input
+              class="form-input"
+              id="giveUser"
+              placeholder="User / Number"
+            >
+
+            <input
+              class="form-input"
+              id="giveAmount"
+              type="number"
+              placeholder="Amount"
+            >
+
+          </div>
+
+          <button
+            class="btn btn-primary"
+            style="margin-top:12px"
+            onclick="giveCoins()"
+          >
+            Give Coins
+          </button>
+
+        </div>
+
+
+        <div class="card">
+
+          <div class="card-title">
+            📢 Broadcast Coins
+          </div>
+
+          <input
+            class="form-input"
+            id="broadcastAmount"
+            type="number"
+            placeholder="Coins per user"
+            style="width:100%;margin-top:18px"
+          >
+
+          <button
+            class="btn btn-primary"
+            style="margin-top:12px"
+            onclick="broadcastCoins()"
+          >
+            Broadcast
+          </button>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- =================================================
+         CHANNELS
+    ================================================= -->
+
+    <section class="section" id="channels">
+
+      <div class="card">
+
+        <div class="card-title">
+          📡 Channel Manager
+        </div>
+
+        <div class="card-description">
+          Manage connected MIYORA channels
+        </div>
+
+
+        <div class="toolbar">
+
+          <input
+            class="search"
+            id="channelSearch"
+            placeholder="Search channel..."
+            oninput="loadChannels()"
+          >
+
+          <button
+            class="btn btn-primary"
+            onclick="loadChannels()"
+          >
+            🔄 Refresh
+          </button>
+
+        </div>
+
+
+        <div class="table-wrap">
+
+          <table>
+
+            <thead>
+
+              <tr>
+                <th>CHANNEL</th>
+                <th>OWNER</th>
+                <th>EMOJI</th>
+                <th>EXPIRES</th>
+                <th>STATUS</th>
+                <th>ACTION</th>
+              </tr>
+
+            </thead>
+
+            <tbody id="channelTable">
+
+              <tr>
+                <td colspan="6">
+                  Loading...
+                </td>
+              </tr>
+
+            </tbody>
+
+          </table>
+
+        </div>
+
+      </div>
+
+
+      <div class="card" style="margin-top:18px">
+
+        <div class="card-title">
+          ➕ Add Channel
+        </div>
+
+        <div class="form-grid">
+
+          <input
+            class="form-input"
+            id="channelId"
+            placeholder="Channel ID"
+          >
+
+          <input
+            class="form-input"
+            id="channelOwner"
+            placeholder="Owner"
+          >
+
+          <input
+            class="form-input"
+            id="channelEmoji"
+            placeholder="Emoji"
+            value="🌸"
+          >
+
+          <input
+            class="form-input"
+            id="channelDays"
+            type="number"
+            placeholder="Days"
+            value="30"
+          >
+
+        </div>
+
+        <button
+          class="btn btn-primary"
+          style="margin-top:12px"
+          onclick="addChannel()"
+        >
+          Add Channel
+        </button>
+
+      </div>
+
+    </section>
+
+
+    <!-- =================================================
+         SESSIONS
+    ================================================= -->
+
+    <section class="section" id="sessions">
+
+      <div class="card">
+
+        <div class="card-title">
+          🤖 Bot Session Manager
+        </div>
+
+        <div class="card-description">
+          Active MIYORA bot sessions
+        </div>
+
+
+        <div class="toolbar">
+
+          <button
+            class="btn btn-primary"
+            onclick="loadSessions()"
+          >
+            🔄 Refresh Sessions
+          </button>
+
+        </div>
+
+
+        <div class="table-wrap">
+
+          <table>
+
+            <thead>
+
+              <tr>
+                <th>NUMBER</th>
+                <th>SHARD</th>
+                <th>UPDATED</th>
+                <th>STATUS</th>
+                <th>ACTION</th>
+              </tr>
+
+            </thead>
+
+            <tbody id="sessionTable">
+
+              <tr>
+                <td colspan="5">
+                  Loading...
+                </td>
+              </tr>
+
+            </tbody>
+
+          </table>
+
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+</div>
+
+
+<script>
+
+/* =====================================================
+   CONFIG
+===================================================== */
+
+const API = "/code/api/admin";
+
+const STORE_KEY = "miyora_admin_token";
+
+let token =
+  localStorage.getItem(STORE_KEY) || "";
+
+
+/* =====================================================
+   NUMBER ANALYTICS
+===================================================== */
+
+let numberHistory = [];
+
+function updateNumberAnalytics(count) {
+
+  count = Number(count) || 0;
+
+  numberHistory.push(count);
+
+  if (numberHistory.length > 12) {
+    numberHistory.shift();
+  }
+
+  if (numberHistory.length < 2) {
+
+    numberHistory = [
+      Math.max(0, count - 1),
+      count
+    ];
+
+  }
+
+
+  const max =
+    Math.max(...numberHistory, 1);
+
+  const min =
+    Math.min(...numberHistory);
+
+  const range =
+    Math.max(max - min, 1);
+
+
+  const points =
+    numberHistory.map((value,index) => {
+
+      const x =
+        (index /
+        (numberHistory.length - 1)) * 300;
+
+      const y =
+        60 -
+        ((value - min) / range) * 45;
+
+      return `${x},${y}`;
+
+    });
+
+
+  const line =
+    document.getElementById("numbersLine");
+
+  const area =
+    document.getElementById("numbersArea");
+
+
+  if (!line || !area) return;
+
+
+  line.setAttribute(
+    "points",
+    points.join(" ")
+  );
+
+
+  area.setAttribute(
+    "d",
+    `M${points.join(" L")} L300,70 L0,70 Z`
+  );
+
+
+  const change =
+    numberHistory[
+      numberHistory.length - 1
+    ] -
+    numberHistory[0];
+
+
+  const changeEl =
+    document.getElementById(
+      "numbersChange"
+    );
+
+
+  changeEl.textContent =
+    change >= 0
+      ? `+${change}`
+      : `${change}`;
+
+
+  changeEl.style.color =
+    change >= 0
+      ? "#22c55e"
+      : "#ef4444";
+
+}
+
+
+/* =====================================================
+   API HELPER
+===================================================== */
+
+async function api(
+  endpoint,
+  options = {}
+) {
+
+  const headers = {
+    "Content-Type": "application/json",
+    ...(options.headers || {})
+  };
+
+
+  if (token) {
+    headers.Authorization =
+      `Bearer ${token}`;
+  }
+
+
+  const response =
+    await fetch(
+      API + endpoint,
+      {
+        ...options,
+        headers
+      }
+    );
+
+
+  if (response.status === 401) {
+
+    logout();
+
+    throw new Error(
+      "Unauthorized"
+    );
+
+  }
+
+
+  const data =
+    await response.json()
+      .catch(() => ({}));
+
+
+  if (!response.ok) {
+
+    throw new Error(
+      data.message ||
+      "Request failed"
+    );
+
+  }
+
+
+  return data;
+
+}
+
+
+/* =====================================================
+   LOGIN
+===================================================== */
+
+async function login() {
+
+  const username =
+    document.getElementById(
+      "loginUsername"
+    ).value.trim();
+
+  const password =
+    document.getElementById(
+      "loginPassword"
+    ).value;
+
+
+  const error =
+    document.getElementById(
+      "loginError"
+    );
+
+
+  error.textContent = "";
+
+
+  try {
+
+    const response =
+      await fetch(
+        API + "/login",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type":
+              "application/json"
+          },
+          body: JSON.stringify({
+            username,
+            password
+          })
+        }
+      );
+
+
+    const data =
+      await response.json();
+
+
+    if (!response.ok) {
+
+      throw new Error(
+        data.message ||
+        "Invalid login"
+      );
+
+    }
+
+
+    token =
+      data.token ||
+      data.accessToken;
+
+
+    if (!token) {
+
+      throw new Error(
+        "Token not returned by server"
+      );
+
+    }
+
+
+    localStorage.setItem(
+      STORE_KEY,
+      token
+    );
+
+
+    openApp();
+
+
+  } catch (err) {
+
+    error.textContent =
+      err.message;
+
+  }
+
+}
+
+
+/* =====================================================
+   SESSION CHECK
+===================================================== */
+
+function openApp() {
+
+  document.getElementById(
+    "loginScreen"
+  ).style.display = "none";
+
+
+  document.getElementById(
+    "app"
+  ).style.display = "block";
+
+
+  loadStats();
+
+}
+
+
+/* =====================================================
+   LOGOUT
+===================================================== */
+
+function logout() {
+
+  localStorage.removeItem(
+    STORE_KEY
+  );
+
+  token = "";
+
+  location.reload();
+
+}
+
+
+/* =====================================================
+   SHOW SECTION
+===================================================== */
+
+function showSection(
+  id,
+  button
+) {
+
+  document
+    .querySelectorAll(".section")
+    .forEach(section => {
+
+      section.classList.remove(
+        "active"
+      );
+
+    });
+
+
+  document
+    .getElementById(id)
+    .classList.add("active");
+
+
+  document
+    .querySelectorAll(".nav-btn")
+    .forEach(btn => {
+
+      btn.classList.remove(
+        "active"
+      );
+
+    });
+
+
+  if (button) {
+    button.classList.add(
+      "active"
+    );
+  }
+
+
+  const titles = {
+
+    dashboard: "Dashboard",
+    wallets: "Wallet Management",
+    channels: "Channel Manager",
+    sessions: "Bot Sessions"
+
+  };
+
+
+  document.getElementById(
+    "pageTitle"
+  ).textContent =
+    titles[id] || "Dashboard";
+
+
+  if (id === "wallets") {
+    loadWallets();
+  }
+
+  if (id === "channels") {
+    loadChannels();
+  }
+
+  if (id === "sessions") {
+    loadSessions();
+  }
+
+
+  document
+    .getElementById("sidebar")
+    .classList.remove("open");
+
+}
+
+
+/* =====================================================
+   LOAD STATS
+===================================================== */
+
+async function loadStats() {
+
+  try {
+
+    const data =
+      await api("/stats");
+
+
+    /*
+      Supports:
+
+      {
+        numbersCount: 20
+      }
+
+      OR
+
+      {
+        stats: {
+          numbersCount: 20
+        }
+      }
+    */
+
+    const s =
+      data.stats ||
+      data;
+
+
+    const wallets =
+      Number(
+        s.totalWallets ||
+        s.wallets ||
+        0
+      );
+
+
+    const coins =
+      Number(
+        s.totalCoinsInCirculation ||
+        s.totalCoins ||
+        s.coins ||
+        0
+      );
+
+
+    const channels =
+      Number(
+        s.activeChannels ||
+        s.channels ||
+        0
+      );
+
+
+    const expired =
+      Number(
+        s.expiredChannels ||
+        0
+      );
+
+
+    const sessions =
+      Number(
+        s.totalSessions ||
+        s.sessions ||
+        0
+      );
+
+
+    const sockets =
+      Number(
+        s.activeSockets ||
+        s.sockets ||
+        0
+      );
+
+
+    /*
+      THIS IS THE IMPORTANT ONE
+      ACTUAL BOT NUMBER COUNT
+    */
+
+    const botNumbers =
+      Number(
+        s.numbersCount ??
+        s.botNumbers ??
+        s.totalBotNumbers ??
+        0
+      );
+
+
+    /* ---------- DOM ---------- */
+
+    setText(
+      "totalWallets",
+      formatNumber(wallets)
+    );
+
+    setText(
+      "totalCoinsInCirculation",
+      formatNumber(coins)
+    );
+
+    setText(
+      "activeChannels",
+      formatNumber(channels)
+    );
+
+    setText(
+      "expiredChannels",
+      formatNumber(expired)
+    );
+
+    setText(
+      "totalSessions",
+      formatNumber(sessions)
+    );
+
+    setText(
+      "activeSockets",
+      formatNumber(sockets)
+    );
+
+    setText(
+      "numbersCount",
+      formatNumber(botNumbers)
+    );
+
+
+    /* ---------- UPTIME ---------- */
+
+    const uptime =
+      s.uptime ||
+      s.uptimeFormatted ||
+      null;
+
+
+    if (uptime) {
+
+      setText(
+        "uptime",
+        uptime
+      );
+
+    } else if (
+      s.uptimeSec !== undefined
+    ) {
+
+      setText(
+        "uptime",
+        formatUptime(
+          s.uptimeSec
+        )
+      );
+
+    }
+
+
+    /* ---------- QUICK ---------- */
+
+    setText(
+      "quickWallets",
+      formatNumber(wallets)
+    );
+
+    setText(
+      "quickCoins",
+      formatNumber(coins)
+    );
+
+    setText(
+      "quickChannels",
+      formatNumber(channels)
+    );
+
+    setText(
+      "quickSockets",
+      formatNumber(sockets)
+    );
+
+
+    /* ---------- ANALYTICS ---------- */
+
+    updateNumberAnalytics(
+      botNumbers
+    );
+
+
+    /* ---------- ACTIVITY ---------- */
+
+    updateActivity(
+      wallets,
+      channels,
+      sessions,
+      botNumbers
+    );
+
+
+    /* ---------- ALERT ---------- */
+
+    updateAlert(
+      expired,
+      sockets,
+      botNumbers
+    );
+
+
+  } catch (error) {
+
+    console.error(
+      "Stats error:",
+      error
+    );
+
+  }
+
+}
+
+
+/* =====================================================
+   ACTIVITY
+===================================================== */
+
+function updateActivity(
+  wallets,
+  channels,
+  sessions,
+  numbers
+) {
+
+  const values = [
+    wallets,
+    channels,
+    sessions,
+    numbers
+  ];
+
+
+  const max =
+    Math.max(
+      ...values,
+      1
+    );
+
+
+  setWidth(
+    "walletActivity",
+    wallets / max * 100
+  );
+
+  setWidth(
+    "channelActivity",
+    channels / max * 100
+  );
+
+  setWidth(
+    "sessionActivity",
+    sessions / max * 100
+  );
+
+  setWidth(
+    "numberActivity",
+    numbers / max * 100
+  );
+
+}
+
+
+/* =====================================================
+   ALERT
+===================================================== */
+
+function updateAlert(
+  expired,
+  sockets,
+  numbers
+) {
+
+  const alert =
+    document.getElementById(
+      "systemAlert"
+    );
+
+
+  if (expired > 0) {
+
+    alert.innerHTML =
+      `⚠️ ${expired} channel(s) have expired and require attention.`;
+
+    return;
+
+  }
+
+
+  if (numbers === 0) {
+
+    alert.innerHTML =
+      "🔴 No bot numbers are currently registered.";
+
+    return;
+
+  }
+
+
+  if (sockets === 0) {
+
+    alert.innerHTML =
+      "🟡 Bot numbers exist, but there are no active sockets.";
+
+    return;
+
+  }
+
+
+  alert.innerHTML =
+    "🟢 System is operating normally.";
+
+}
+
+
+/* =====================================================
+   WALLETS
+===================================================== */
+
+async function loadWallets() {
+
+  const search =
+    document.getElementById(
+      "walletSearch"
+    ).value.trim();
+
+
+  const table =
+    document.getElementById(
+      "walletTable"
+    );
+
+
+  table.innerHTML =
+    `<tr><td colspan="5">Loading...</td></tr>`;
+
+
+  try {
+
+    const data =
+      await api(
+        `/wallets?page=1&limit=50&search=${encodeURIComponent(search)}`
+      );
+
+
+    const wallets =
+      data.wallets ||
+      data.data ||
+      [];
+
+
+    if (!wallets.length) {
+
+      table.innerHTML =
+        `<tr><td colspan="5">No wallets found.</td></tr>`;
+
+      return;
+
+    }
+
+
+    table.innerHTML =
+      wallets.map(wallet => {
+
+        const id =
+          wallet._id ||
+          wallet.id ||
+          wallet.number ||
+          "-";
+
+
+        const user =
+          wallet.username ||
+          wallet.name ||
+          wallet.user ||
+          "-";
+
+
+        const number =
+          wallet.number ||
+          wallet.phone ||
+          "-";
+
+
+        const coins =
+          wallet.coins ??
+          wallet.balance ??
+          0;
+
+
+        return `
+
+          <tr>
+
+            <td>${escapeHtml(user)}</td>
+
+            <td>${escapeHtml(number)}</td>
+
+            <td>
+              <strong>
+                ${formatNumber(coins)}
+              </strong>
+            </td>
+
+            <td>
+              <span class="badge green">
+                ACTIVE
+              </span>
+            </td>
+
+            <td>
+
+              <button
+                class="btn btn-green"
+                onclick="giveTo('${escapeAttr(id)}')"
+              >
+                + COINS
+              </button>
+
+            </td>
+
+          </tr>
+
+        `;
+
+      }).join("");
+
+
+  } catch (error) {
+
+    table.innerHTML =
+      `<tr><td colspan="5">${escapeHtml(error.message)}</td></tr>`;
+
+  }
+
+}
+
+
+/* =====================================================
+   GIVE COINS
+===================================================== */
+
+async function giveCoins() {
+
+  const user =
+    document.getElementById(
+      "giveUser"
+    ).value.trim();
+
+
+  const amount =
+    Number(
+      document.getElementById(
+        "giveAmount"
+      ).value
+    );
+
+
+  if (!user || !amount) {
+
+    alert(
+      "Enter user and amount."
+    );
+
+    return;
+
+  }
+
+
+  try {
+
+    await api(
+      "/coins/give",
+      {
+        method: "POST",
+        body: JSON.stringify({
+          user,
+          amount
+        })
+      }
+    );
+
+
+    alert(
+      "Coins given successfully."
+    );
+
+
+    loadStats();
+    loadWallets();
+
+
+  } catch (error) {
+
+    alert(error.message);
+
+  }
+
+}
+
+
+/* =====================================================
+   GIVE TO USER
+===================================================== */
+
+function giveTo(id) {
+
+  document.getElementById(
+    "giveUser"
+  ).value = id;
+
+  document.getElementById(
+    "giveAmount"
+  ).focus();
+
+}
+
+
+/* =====================================================
+   BROADCAST
+===================================================== */
+
+async function broadcastCoins() {
+
+  const amount =
+    Number(
+      document.getElementById(
+        "broadcastAmount"
+      ).value
+    );
+
+
+  if (!amount) {
+
+    alert(
+      "Enter coin amount."
+    );
+
+    return;
+
+  }
+
+
+  if (!confirm(
+    `Broadcast ${amount} coins to all wallets?`
+  )) return;
+
+
+  try {
+
+    await api(
+      "/coins/broadcast",
+      {
+        method: "POST",
+        body: JSON.stringify({
+          amount
+        })
+      }
+    );
+
+
+    alert(
+      "Coins broadcast successfully."
+    );
+
+
+    loadStats();
+
+
+  } catch (error) {
+
+    alert(error.message);
+
+  }
+
+}
+
+
+/* =====================================================
+   CHANNELS
+===================================================== */
+
+async function loadChannels() {
+
+  const search =
+    document.getElementById(
+      "channelSearch"
+    ).value.trim();
+
+
+  const table =
+    document.getElementById(
+      "channelTable"
+    );
+
+
+  table.innerHTML =
+    `<tr><td colspan="6">Loading...</td></tr>`;
+
+
+  try {
+
+    const data =
+      await api(
+        `/channels?page=1&limit=50&search=${encodeURIComponent(search)}`
+      );
+
+
+    const channels =
+      data.channels ||
+      data.data ||
+      [];
+
+
+    if (!channels.length) {
+
+      table.innerHTML =
+        `<tr><td colspan="6">No channels found.</td></tr>`;
+
+      return;
+
+    }
+
+
+    table.innerHTML =
+      channels.map(channel => {
+
+        const id =
+          channel._id ||
+          channel.id ||
+          channel.channelId ||
+          "";
+
+
+        const name =
+          channel.name ||
+          channel.channelName ||
+          channel.channelId ||
+          "-";
+
+
+        const owner =
+          channel.owner ||
+          channel.ownerNumber ||
+          "-";
+
+
+        const emoji =
+          channel.emoji ||
+          "🌸";
+
+
+        const expires =
+          channel.expiresAt ||
+          channel.expireDate ||
+          "-";
+
+
+        const active =
+          channel.active !== false;
+
+
+        return `
+
+          <tr>
+
+            <td>
+              ${escapeHtml(name)}
+            </td>
+
+            <td>
+              ${escapeHtml(owner)}
+            </td>
+
+            <td>
+              ${escapeHtml(emoji)}
+            </td>
+
+            <td>
+              ${escapeHtml(
+                formatDate(expires)
+              )}
+            </td>
+
+            <td>
+
+              <span class="badge ${
+                active
+                  ? "green"
+                  : "red"
+              }">
+
+                ${
+                  active
+                    ? "ACTIVE"
+                    : "EXPIRED"
+                }
+
+              </span>
+
+            </td>
+
+            <td>
+
+              <button
+                class="btn btn-danger"
+                onclick="deleteChannel('${escapeAttr(id)}')"
+              >
+                DELETE
+              </button>
+
+            </td>
+
+          </tr>
+
+        `;
+
+      }).join("");
+
+
+  } catch (error) {
+
+    table.innerHTML =
+      `<tr><td colspan="6">${escapeHtml(error.message)}</td></tr>`;
+
+  }
+
+}
+
+
+/* =====================================================
+   ADD CHANNEL
+===================================================== */
+
+async function addChannel() {
+
+  const channelId =
+    document.getElementById(
+      "channelId"
+    ).value.trim();
+
+
+  const owner =
+    document.getElementById(
+      "channelOwner"
+    ).value.trim();
+
+
+  const emoji =
+    document.getElementById(
+      "channelEmoji"
+    ).value.trim();
+
+
+  const days =
+    Number(
+      document.getElementById(
+        "channelDays"
+      ).value
+    );
+
+
+  if (!channelId || !owner) {
+
+    alert(
+      "Channel ID and owner are required."
+    );
+
+    return;
+
+  }
+
+
+  try {
+
+    await api(
+      "/channels/add",
+      {
+        method: "POST",
+        body: JSON.stringify({
+          channelId,
+          owner,
+          emoji,
+          days
+        })
+      }
+    );
+
+
+    alert(
+      "Channel added successfully."
+    );
+
+
+    loadChannels();
+    loadStats();
+
+
+  } catch (error) {
+
+    alert(error.message);
+
+  }
+
+}
+
+
+/* =====================================================
+   DELETE CHANNEL
+===================================================== */
+
+async function deleteChannel(id) {
+
+  if (!confirm(
+    "Delete this channel?"
+  )) return;
+
+
+  try {
+
+    await api(
+      "/channels/delete",
+      {
+        method: "POST",
+        body: JSON.stringify({
+          id,
+          channelId: id
+        })
+      }
+    );
+
+
+    loadChannels();
+    loadStats();
+
+
+  } catch (error) {
+
+    alert(error.message);
+
+  }
+
+}
+
+
+/* =====================================================
+   SESSIONS
+===================================================== */
+
+async function loadSessions() {
+
+  const table =
+    document.getElementById(
+      "sessionTable"
+    );
+
+
+  table.innerHTML =
+    `<tr><td colspan="5">Loading...</td></tr>`;
+
+
+  try {
+
+    const data =
+      await api(
+        "/sessions"
+      );
+
+
+    const sessions =
+      data.sessions ||
+      data.data ||
+      [];
+
+
+    if (!sessions.length) {
+
+      table.innerHTML =
+        `<tr><td colspan="5">No sessions found.</td></tr>`;
+
+      return;
+
+    }
+
+
+    table.innerHTML =
+      sessions.map(session => {
+
+        const id =
+          session._id ||
+          session.id ||
+          session.number ||
+          "";
+
+
+        const number =
+          session.number ||
+          session.phone ||
+          session.botNumber ||
+          "-";
+
+
+        const shard =
+          session.shard ||
+          "MAIN";
+
+
+        const updated =
+          session.updatedAt ||
+          session.updated ||
+          "-";
+
+
+        const status =
+          session.status ||
+          "offline";
+
+
+        const online =
+          String(status).toLowerCase() ===
+          "online";
+
+
+        return `
+
+          <tr>
+
+            <td>
+              ${escapeHtml(number)}
+            </td>
+
+            <td>
+              ${escapeHtml(shard)}
+            </td>
+
+            <td>
+              ${escapeHtml(
+                formatDate(updated)
+              )}
+            </td>
+
+            <td>
+
+              <span class="badge ${
+                online
+                  ? "green"
+                  : "red"
+              }">
+
+                ${
+                  online
+                    ? "ONLINE"
+                    : "OFFLINE"
+                }
+
+              </span>
+
+            </td>
+
+            <td>
+
+              <button
+                class="btn btn-danger"
+                onclick="deleteSession('${escapeAttr(id)}')"
+              >
+                DELETE
+              </button>
+
+            </td>
+
+          </tr>
+
+        `;
+
+      }).join("");
+
+
+  } catch (error) {
+
+    table.innerHTML =
+      `<tr><td colspan="5">${escapeHtml(error.message)}</td></tr>`;
+
+  }
+
+}
+
+
+/* =====================================================
+   DELETE SESSION
+===================================================== */
+
+async function deleteSession(id) {
+
+  if (!confirm(
+    "Delete this bot session?"
+  )) return;
+
+
+  try {
+
+    await api(
+      "/sessions/delete",
+      {
+        method: "POST",
+        body: JSON.stringify({
+          id,
+          number: id
+        })
+      }
+    );
+
+
+    loadSessions();
+    loadStats();
+
+
+  } catch (error) {
+
+    alert(error.message);
+
+  }
+
+}
+
+
+/* =====================================================
+   REFRESH
+===================================================== */
+
+async function refreshAll() {
+
+  await loadStats();
+
+  const active =
+    document.querySelector(
+      ".section.active"
+    );
+
+
+  if (!active) return;
+
+
+  if (active.id === "wallets") {
+    loadWallets();
+  }
+
+  if (active.id === "channels") {
+    loadChannels();
+  }
+
+  if (active.id === "sessions") {
+    loadSessions();
+  }
+
+}
+
+
+/* =====================================================
+   SYSTEM INFO
+===================================================== */
+
+function showSystemInfo() {
+
+  alert(
+`MIYORA MD ADMIN PANEL
+
+Version: V1.0.0
+Dashboard: Online
+Auto Refresh: 10 seconds
+
+🌸 MIYORA MINI BOT`
+  );
+
+}
+
+
+/* =====================================================
+   MOBILE SIDEBAR
+===================================================== */
+
+function toggleSidebar() {
+
+  document
+    .getElementById("sidebar")
+    .classList.toggle("open");
+
+}
+
+
+/* =====================================================
+   HELPERS
+===================================================== */
+
+function setText(
+  id,
+  value
+) {
+
+  const element =
+    document.getElementById(id);
+
+  if (element) {
+    element.textContent = value;
+  }
+
+}
+
+
+function setWidth(
+  id,
+  width
+) {
+
+  const element =
+    document.getElementById(id);
+
+  if (!element) return;
+
+  element.style.width =
+    Math.max(
+      3,
+      Math.min(100,width)
+    ) + "%";
+
+}
+
+
+function formatNumber(
+  number
+) {
+
+  return Number(
+    number || 0
+  ).toLocaleString();
+
+}
+
+
+function formatUptime(
+  seconds
+) {
+
+  seconds =
+    Number(seconds) || 0;
+
+
+  const days =
+    Math.floor(
+      seconds / 86400
+    );
+
+  seconds %= 86400;
+
+
+  const hours =
+    Math.floor(
+      seconds / 3600
+    );
+
+  seconds %= 3600;
+
+
+  const minutes =
+    Math.floor(
+      seconds / 60
+    );
+
+
+  if (days > 0) {
+    return `${days}d ${hours}h`;
+  }
+
+  if (hours > 0) {
+    return `${hours}h ${minutes}m`;
+  }
+
+  return `${minutes}m`;
+
+}
+
+
+function formatDate(
+  value
+) {
+
+  if (
+    !value ||
+    value === "-"
+  ) {
+    return "-";
+  }
+
+
+  const date =
+    new Date(value);
+
+
+  if (
+    Number.isNaN(
+      date.getTime()
+    )
+  ) {
+    return String(value);
+  }
+
+
+  return date.toLocaleString();
+
+}
+
+
+function escapeHtml(
+  value
+) {
+
+  return String(
+    value ?? ""
+  )
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+
+}
+
+
+function escapeAttr(
+  value
+) {
+
+  return String(
+    value ?? ""
+  )
+    .replaceAll("\\","\\\\")
+    .replaceAll("'","\\'");
+
+}
+
+
+/* =====================================================
+   AUTO REFRESH
+===================================================== */
+
+setInterval(() => {
+
+  if (
+    token &&
+    document.getElementById(
+      "app"
+    ).style.display !== "none"
+  ) {
+
+    loadStats();
+
+  }
+
+}, 10000);
+
+
+/* =====================================================
+   ENTER LOGIN
+===================================================== */
+
+document
+  .getElementById("loginPassword")
+  .addEventListener(
+    "keydown",
+    event => {
+
+      if (
+        event.key === "Enter"
+      ) {
+        login();
+      }
+
+    }
+  );
+
+
+/* =====================================================
+   AUTO LOGIN
+===================================================== */
+
+if (token) {
+
+  openApp();
+
+}
+
+</script>
+
+</body>
+</html>

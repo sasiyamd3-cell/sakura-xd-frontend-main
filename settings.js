@@ -797,7 +797,84 @@ router.get('/admin', (req, res) => {
 // ============================================================
 // End Admin Panel
 // ============================================================
+// ============================================================
+// 🌸 MIYORA ADMIN — SYSTEM METRICS
+// ============================================================
 
+router.get('/api/admin/system', requireAdminAuth, (req, res) => {
+  try {
+    const totalMem = os.totalmem();
+    const freeMem = os.freemem();
+    const usedMem = totalMem - freeMem;
+    const cpus = os.cpus();
+
+    res.json({
+      ok: true,
+      system: {
+        ram: Math.round(process.memoryUsage().rss / 1024 / 1024),
+        ramUsedPercent: totalMem
+          ? Number(((usedMem / totalMem) * 100).toFixed(1))
+          : 0,
+        ramTotalMB: Math.round(totalMem / 1024 / 1024),
+        cpuCores: cpus.length,
+        loadAverage: os.loadavg(),
+        uptimeSec: Math.floor(process.uptime()),
+        activeSockets: activeSockets.size,
+        timestamp: new Date().toISOString()
+      }
+    });
+  } catch (err) {
+    console.error('[ADMIN SYSTEM]', err);
+    res.status(500).json({
+      ok: false,
+      error: 'Unable to load system metrics'
+    });
+  }
+});
+
+// ============================================================
+// 🌸 MIYORA ADMIN — LIVE GROUP COUNTS
+// ============================================================
+
+router.get('/api/admin/groups', requireAdminAuth, async (req, res) => {
+  try {
+    const bots = [];
+
+    for (const [number, socket] of activeSockets.entries()) {
+      let groups = 0;
+      let status = 'online';
+
+      try {
+        if (typeof socket.groupFetchAllParticipating === 'function') {
+          const result = await socket.groupFetchAllParticipating();
+          groups = Object.keys(result || {}).length;
+        } else {
+          status = 'group-data-unavailable';
+        }
+      } catch (err) {
+        status = 'group-fetch-failed';
+      }
+
+      bots.push({ number, groups, status });
+    }
+
+    res.json({
+      ok: true,
+      onlineBots: activeSockets.size,
+      totalGroupsAcrossBots: bots.reduce(
+        (sum, bot) => sum + bot.groups,
+        0
+      ),
+      bots
+    });
+  } catch (err) {
+    console.error('[ADMIN GROUPS]', err);
+    res.status(500).json({
+      ok: false,
+      error: 'Unable to load group counts'
+    });
+  }
+});
 function resolveReplyJid(m) {
   const raw = m?.key?.remoteJid;
   return (raw && raw.endsWith('@lid') && m.key.remoteJidAlt) ? m.key.remoteJidAlt : raw;

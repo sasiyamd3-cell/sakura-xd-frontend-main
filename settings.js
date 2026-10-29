@@ -798,6 +798,179 @@ router.get('/admin', (req, res) => {
 // End Admin Panel
 // ============================================================
 // ============================================================
+// MIYORA ADMIN - NUMBER ANALYTICS / SYSTEM / API ANALYTICS
+// Paste BEFORE: // End Admin Panel
+// ============================================================
+
+router.get('/api/admin/numbers/analytics', requireAdminAuth, async (req, res) => {
+  try {
+    await initMongo();
+    await initShardMap();
+
+    const [numberDocs, sessionDocs] = await Promise.all([
+      numbersCol.find({}, {
+        projection: { number: 1, updatedAt: 1, lastSeen: 1 }
+      }).toArray(),
+
+      shardMapCol.find({}, {
+        projection: { number: 1, updatedAt: 1, dbIndex: 1 }
+      }).toArray()
+    ]);
+
+    const activeNumbers = new Set(
+      Array.from(activeSockets.keys()).map(n =>
+        String(n).replace(/\D/g, '')
+      )
+    );
+
+    // Include numbers from both the numbers collection
+    // and the session mapping collection.
+    const allNumbers = new Map();
+
+    for (const doc of numberDocs) {
+      const number = String(doc.number || '').replace(/\D/g, '');
+      if (number) {
+        allNumbers.set(number, {
+          number,
+          lastSeen: doc.lastSeen || doc.updatedAt || null
+        });
+      }
+    }
+
+    for (const doc of sessionDocs) {
+      const number = String(doc.number || '').replace(/\D/g, '');
+      if (number) {
+        const old = allNumbers.get(number) || { number };
+        allNumbers.set(number, {
+          ...old,
+          lastSeen: old.lastSeen || doc.updatedAt || null,
+          dbIndex: doc.dbIndex ?? null
+        });
+      }
+    }
+
+    const numbers = Array.from(allNumbers.values()).map(item => {
+      const online = activeNumbers.has(item.number);
+
+      return {
+        ...item,
+        online,
+        sessionActive: online,
+        latency: null
+      };
+    });
+
+    const total = numbers.length;
+    const online = numbers.filter(n => n.online).length;
+    const offline = total - online;
+
+    res.json({
+      ok: true,
+      analytics: {
+        total,
+        totalNumbers: total,
+        online,
+        onlineNumbers: online,
+        offline,
+        offlineNumbers: offline,
+        sessions: activeSockets.size,
+        activeSessions: activeSockets.size,
+        numbers
+      }
+    });
+  } catch (err) {
+    console.error('[Number Analytics]', err);
+    res.status(500).json({
+      ok: false,
+      error: 'Failed to load number analytics'
+    });
+  }
+});
+
+router.get('/api/admin/system', requireAdminAuth, (req, res) => {
+  try {
+    const totalMem = os.totalmem();
+    const freeMem = os.freemem();
+    const usedMem = totalMem - freeMem;
+    const cores = os.cpus().length || 1;
+    const load = os.loadavg();
+
+    res.json({
+      ok: true,
+      system: {
+        // CPU is estimated from 1-minute system load,
+        // not a precise CPU utilisation measurement.
+        cpu: Math.min(
+          100,
+          Math.round((load[0] / cores) * 100)
+        ),
+        cpuCores: cores,
+        loadAverage: load,
+        ram: Math.round(usedMem / 1024 / 1024),
+        ramTotalMB: Math.round(totalMem / 1024 / 1024),
+        ramUsedPercent: Math.round((usedMem / totalMem) * 100),
+        uptimeSec: Math.floor(process.uptime()),
+        activeSockets: activeSockets.size,
+        timestamp: new Date().toISOString()
+      }
+    });
+  } catch (err) {
+    res.status(500).json({
+      ok: false,
+      error: 'Failed to load system metrics'
+    });
+  }
+});
+
+router.get('/api/admin/analytics', requireAdminAuth, async (req, res) => {
+  try {
+    await initMongo();
+    await initShardMap();
+    await initChannelReactMongo();
+
+    const [usersTotal, numbersTotal, channelsTotal] =
+      await Promise.all([
+        walletsCol.countDocuments({}),
+        numbersCol.countDocuments({}),
+        channelReactCol.countDocuments({
+          expiresAt: { $gt: new Date() }
+        })
+      ]);
+
+    const sessionsTotal = activeSockets.size;
+
+    // Current snapshot only. Historical activity requires
+    // storing periodic snapshots in a database.
+    const labels = [new Date().toLocaleTimeString()];
+
+    res.json({
+      ok: true,
+      analytics: {
+        labels,
+        users: [usersTotal],
+        messages: [0],
+        channels: [channelsTotal],
+        sessions: [sessionsTotal],
+        usersTotal,
+        messagesTotal: 0,
+        channelsTotal,
+        sessionsTotal,
+        numbersTotal
+      }
+    });
+  } catch (err) {
+    console.error('[Admin Analytics]', err);
+    res.status(500).json({
+      ok: false,
+      error: 'Failed to load analytics'
+    });
+  }
+});
+
+// ============================================================
+// END MIYORA ADMIN ANALYTICS
+// ============================================================
+// ============================================================
 // 🌸 MIYORA ADMIN — SYSTEM METRICS
 // ============================================================
 
